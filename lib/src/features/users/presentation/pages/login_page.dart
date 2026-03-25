@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../home/presentation/pages/dashboard_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -43,7 +44,9 @@ class LoginPage extends StatelessWidget {
               // Google Login Button
               ElevatedButton(
                 onPressed: () {
-                  // TODO: Implement Google Social Auth logic
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const DashboardPage()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
