@@ -69,6 +69,21 @@ flutter:
   assets:
     - assets/Google.svg
     - assets/logo_leasy_editable_blanco.svg
+    - assets/logo_leasy_azul.svg
+    - assets/logo_leasy_editable_azul.svg
+    - assets/logo_editable_leasy_fondoazul.svg
+    - assets/image.png
+    - assets/home.svg
+    - assets/history.svg
+    - assets/user.svg
+    - assets/List.svg
+    - assets/Bell.svg
+    - assets/plus.svg
+    - assets/check.svg
+    - assets/entrega.svg
+    - assets/GasPump.svg
+    - assets/traslado.svg
+    - assets/car.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
