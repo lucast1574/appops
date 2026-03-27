@@ -3,7 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dashboard_page.dart';
 import '../../../history/presentation/pages/history_page.dart';
-import '../../../users/presentation/pages/profile_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
+import '../widgets/custom_app_bar.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -16,7 +17,7 @@ class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
   final Color _selectedColor = const Color(0xFF4FA4B5);
   final Color _unselectedColor = const Color(0xFFB3B3B3);
-  final List<String> _titles = ['Inicio', 'Historial', 'Perfil'];
+  final List<String> _titles = ['Inicio', 'Historial de tareas', 'Perfil'];
   final Color _headerColor = const Color(0xFF002B4B);
   final Color _dividerColor = const Color(0xFFD2DADF);
 
@@ -29,49 +30,17 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w500,
-            color: _headerColor,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Center(
-          child: SvgPicture.asset(
-            'assets/List.svg',
-            colorFilter: ColorFilter.mode(_headerColor, BlendMode.srcIn),
-            width: 24,
-            height: 24,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20.0),
-            child: SvgPicture.asset(
-              'assets/Bell.svg',
-              colorFilter: ColorFilter.mode(_headerColor, BlendMode.srcIn),
-              width: 24,
-              height: 24,
-            ),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: _dividerColor,
-            height: 1.0,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: _titles[_selectedIndex],
+        showNotificationBell: _selectedIndex == 0,
+        headerColor: _headerColor,
+        dividerColor: _dividerColor,
+        titleSize: _selectedIndex == 1
+            ? 16
+            : null, // Smaller title for Historial
       ),
       body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: _pages,
-        ),
+        child: IndexedStack(index: _selectedIndex, children: _pages),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

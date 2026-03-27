@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../data/mock_task_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -13,43 +14,24 @@ class _DashboardPageState extends State<DashboardPage> {
   String selectedFilter = 'Todas';
   final List<String> filters = ['Todas', 'Verificación', 'Recupero', 'Entrega', 'Conversión'];
 
-  final List<Map<String, String>> mockTasks = [
-    {
-      'id': '1',
-      'type': 'Verificación',
-      'icon': 'assets/check.svg',
-      'time': '13:00',
-      'address': 'Avenida Pedro de Osma 789 Calle Centenario 156'
-    },
-    {
-      'id': '2',
-      'type': 'Entrega unidad',
-      'icon': 'assets/entrega.svg',
-      'time': '16:00',
-      'address': 'Calle Los Manzanos 341, Urb. Monterrico'
-    },
-    {
-      'id': '3',
-      'type': 'Conversión',
-      'icon': 'assets/GasPump.svg',
-      'time': '16:00',
-      'address': 'Calle Los Manzanos 341, Urb. Monterrico'
-    },
-    {
-      'id': '4',
-      'type': 'Traslado',
-      'icon': 'assets/traslado.svg',
-      'time': '16:00',
-      'address': 'Calle Los Manzanos 341, Urb. Monterrico'
-    },
-    {
-      'id': '5',
-      'type': 'Recupero',
-      'icon': 'assets/car.svg',
-      'time': '16:00',
-      'address': 'Calle Los Manzanos 341, Urb. Monterrico'
+  List<Map<String, String>> mockTasks = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    final tasks = await MockTaskService.loadTasks();
+    if (mounted) {
+      setState(() {
+        mockTasks = tasks;
+        isLoading = false;
+      });
     }
-  ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +42,10 @@ class _DashboardPageState extends State<DashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTopSection(),
-            _buildTaskListSection(),
+            if (isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()))
+            else
+              _buildTaskListSection(),
           ],
         ),
       ),

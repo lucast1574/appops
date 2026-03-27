@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "type": "Verificación",
+    "icon": "assets/check.svg",
+    "time": "16:00 - 17:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Avenida Pedro de Osma 789 Calle Centenario 156",
+    "status": "Pendiente"
+  },
+  {
+    "id": "2",
+    "type": "Recupero",
+    "icon": "assets/car.svg",
+    "time": "16:00 - 17:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Calle Los Manzanos 341, Urb. Monterrico",
+    "status": "Completada"
+  },
+  {
+    "id": "3",
+    "type": "Entrega unidad",
+    "icon": "assets/entrega.svg",
+    "time": "16:00 - 17:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Calle Los Manzanos 341, Urb. Monterrico",
+    "status": "Rechazada"
+  },
+  {
+    "id": "4",
+    "type": "Traslado",
+    "icon": "assets/traslado.svg",
+    "time": "16:00 - 17:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Calle Los Manzanos 341, Urb. Monterrico",
+    "status": "Reprogramada"
+  },
+  {
+    "id": "5",
+    "type": "Conversión",
+    "icon": "assets/GasPump.svg",
+    "time": "16:00 - 17:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Calle Los Manzanos 341, Urb. Monterrico",
+    "status": "Completada"
+  }
+]

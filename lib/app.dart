@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'src/features/users/presentation/pages/splash_page.dart';
+import 'src/features/auth/presentation/pages/splash_page.dart';
 
 class LeasyOpsApp extends StatelessWidget {
   const LeasyOpsApp({super.key});
