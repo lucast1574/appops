@@ -44,59 +44,90 @@ class LoginPage extends StatelessWidget {
           Container(
             width: double.infinity,
             color: const Color(0xFFE3F0F3),
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 32.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Inicia sesión para acceder a tu cuenta',
+                  'Bienvenido de nuevo',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Ingresa tus credenciales para continuar',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black54,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 32),
+                // Username Field
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Usuario',
+                    prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF002B4B)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Password Field
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Contraseña',
+                    prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF002B4B)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
                 const SizedBox(height: 24),
-                // Google Login Button
+                // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
+                      // Login logic will go here
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (context) => const MainPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      elevation: 2,
+                      backgroundColor: const Color(0xFF002B4B),
+                      foregroundColor: Colors.white,
+                      elevation: 4,
                       shadowColor: Colors.black26,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      padding: EdgeInsets.zero,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/Google.svg',
-                          height: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Continuar con Google',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Iniciar Sesión',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
