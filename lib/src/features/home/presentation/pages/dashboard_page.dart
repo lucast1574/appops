@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/mock_task_service.dart';
+import '../../../verification/presentation/pages/verification_page.dart';
+import '../../../recovery/presentation/pages/recovery_page.dart';
+import '../../../delivery/presentation/pages/delivery_page.dart';
+import '../../../conversion/presentation/pages/conversion_page.dart';
+import '../../../transfer/presentation/pages/transfer_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -12,7 +17,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String selectedFilter = 'Todas';
-  final List<String> filters = ['Todas', 'Verificación', 'Recupero', 'Entrega', 'Conversión'];
+  final List<String> filters = ['Todas', 'Verificación', 'Recupero', 'Entrega', 'Conversión', 'Traslado'];
 
   List<Map<String, String>> mockTasks = [];
   bool isLoading = true;
@@ -187,6 +192,28 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  void _navigateToTask(String type) {
+    Widget page;
+    if (type.contains('Verificación')) {
+      page = const VerificationPage();
+    } else if (type.contains('Recupero')) {
+      page = const RecoveryPage();
+    } else if (type.contains('Entrega')) {
+      page = const DeliveryPage();
+    } else if (type.contains('Conversión')) {
+      page = const ConversionPage();
+    } else if (type.contains('Traslado')) {
+      page = const TransferPage();
+    } else {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+  }
+
   Widget _buildTaskCard(Map<String, String> task) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -249,7 +276,7 @@ class _DashboardPageState extends State<DashboardPage> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _navigateToTask(task['type']!),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4FA4B5),
                 foregroundColor: Colors.white,
@@ -258,12 +285,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 elevation: 0,
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Iniciar tarea'),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+                  Text('Iniciar tarea'),
+                  SizedBox(width: 8),
+                  Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
                 ],
               ),
             ),

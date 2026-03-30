@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../home/data/mock_task_service.dart';
+import '../../../verification/presentation/pages/verification_page.dart';
+import '../../../recovery/presentation/pages/recovery_page.dart';
+import '../../../delivery/presentation/pages/delivery_page.dart';
+import '../../../conversion/presentation/pages/conversion_page.dart';
+import '../../../transfer/presentation/pages/transfer_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -18,6 +23,7 @@ class _HistoryPageState extends State<HistoryPage> {
     'Recupero',
     'Entrega',
     'Conversión',
+    'Traslado',
   ];
   List<Map<String, String>> mockTasks = [];
   bool isLoading = true;
@@ -202,108 +208,133 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
+  void _navigateToTask(String type) {
+    Widget page;
+    if (type.contains('Verificación')) {
+      page = const VerificationPage();
+    } else if (type.contains('Recupero')) {
+      page = const RecoveryPage();
+    } else if (type.contains('Entrega')) {
+      page = const DeliveryPage();
+    } else if (type.contains('Conversión')) {
+      page = const ConversionPage();
+    } else if (type.contains('Traslado')) {
+      page = const TransferPage();
+    } else {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+  }
+
   Widget _buildTaskCard(Map<String, String> task) {
     final String status = task['status'] ?? 'Pendiente';
     final Color statusColor = _getStatusColor(status);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: IntrinsicHeight(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      SvgPicture.asset(
-                        task['icon']!,
-                        width: 22,
-                        height: 22,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFF002B4B),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          task['type']!,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF002B4B),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        status,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Text(
-                        task['date'] ?? 'Fecha no disponible',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF99AAB7),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        task['time'] ?? '',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF99AAB7),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    task['address']!,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: const Color(0xFF002B4B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              height: 4,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                ),
-              ),
+    return GestureDetector(
+      onTap: () => _navigateToTask(task['type']!),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: IntrinsicHeight(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          task['icon']!,
+                          width: 22,
+                          height: 22,
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF002B4B),
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            task['type']!,
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF002B4B),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          status,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          task['date'] ?? 'Fecha no disponible',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF99AAB7),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          task['time'] ?? '',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF99AAB7),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      task['address']!,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        color: const Color(0xFF002B4B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 4,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -54,6 +54,13 @@ dev_dependencies:
   json_serializable: ^6.9.0
   mocktail: ^1.0.4
   bloc_test: ^10.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default:21
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -73,6 +80,7 @@ flutter:
     - assets/logo_leasy_editable_azul.svg
     - assets/logo_editable_leasy_fondoazul.svg
     - assets/image.png
+    - assets/icon.png
     - assets/home.svg
     - assets/history.svg
     - assets/user.svg
