@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/mock_task_service.dart';
+import '../../../auth/data/auth_service.dart';
 import '../../../verification/presentation/pages/verification_page.dart';
 import '../../../recovery/presentation/pages/recovery_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
@@ -21,11 +22,22 @@ class _DashboardPageState extends State<DashboardPage> {
 
   List<Map<String, String>> mockTasks = [];
   bool isLoading = true;
+  String _userName = '';
 
   @override
   void initState() {
     super.initState();
     _loadTasks();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService().getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _userName = user['first_name'] ?? '';
+      });
+    }
   }
 
   Future<void> _loadTasks() async {
@@ -65,7 +77,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const SizedBox(height: 24),
           Text(
-            '¡Bienvenido, Julian!',
+            '¡Bienvenido, $_userName!',
             style: GoogleFonts.inter(
               fontSize: 22,
               fontWeight: FontWeight.bold,

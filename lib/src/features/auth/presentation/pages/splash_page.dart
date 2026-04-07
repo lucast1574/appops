@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../data/auth_service.dart';
 import 'login_page.dart';
+import '../../../home/presentation/pages/main_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -33,7 +35,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     );
 
     _controller.forward();
-    _navigateToLogin();
+    _checkAuthAndNavigate();
   }
 
   @override
@@ -42,22 +44,42 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  Future<void> _navigateToLogin() async {
-    await Future.delayed(const Duration(seconds: 4)); // Slightly longer for premium feel
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 1600),
-        ),
-      );
+  Future<void> _checkAuthAndNavigate() async {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    final authService = AuthService();
+    final isLoggedIn = await authService.isAuthenticated();
+
+    Widget destination;
+    if (isLoggedIn) {
+      // Verify token is still valid by fetching user data
+      try {
+        await authService.fetchMe();
+        destination = const MainPage();
+      } catch (_) {
+        // Token expired or invalid, go to login
+        await authService.logout();
+        destination = const LoginPage();
+      }
+    } else {
+      destination = const LoginPage();
     }
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => destination,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 1600),
+      ),
+    );
   }
 
   @override
@@ -66,7 +88,6 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       backgroundColor: const Color(0xFF002B4A),
       body: Stack(
         children: [
-          // Background subtle gradient
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -131,5 +152,3 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     );
   }
 }
-
-
