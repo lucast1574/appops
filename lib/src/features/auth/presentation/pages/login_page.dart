@@ -16,7 +16,9 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId: '863779943763-7l7o5lmp30qv548aofrkpfat1t4a6e3d.apps.googleusercontent.com',
+    // serverClientId must be the WEB client ID (same as backend GOOGLE_CLIENT_ID)
+    // so the ID token can be verified server-side
+    serverClientId: '863779943763-cm4lce3c93qmo0k2a9apfne998j8t0ba.apps.googleusercontent.com',
   );
 
   bool _isLoading = false;
