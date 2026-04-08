@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  static const String _baseUrl = 'https://django-backend-alb-290863292.us-east-2.elb.amazonaws.com/api/v1';
+  // 10.0.2.2 = host machine from Android emulator
+  // Change to ALB URL for production builds
+  static const String _baseUrl = 'http://10.0.2.2:8000/api/v1';
 
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
@@ -13,8 +15,8 @@ class ApiClient {
   ApiClient._internal() {
     dio = Dio(BaseOptions(
       baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       headers: {'Content-Type': 'application/json'},
     ));
 

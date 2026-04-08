@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:dio/dio.dart';
 import '../../data/auth_service.dart';
 import '../../../home/presentation/pages/main_page.dart';
 
@@ -32,11 +33,18 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // 1. Trigger Google Sign-In flow
+      debugPrint('DEBUG: Starting Google Sign-In...');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      debugPrint('DEBUG: Google Sign-In result: $googleUser');
       if (googleUser == null) {
-        setState(() => _isLoading = false);
+        debugPrint('DEBUG: User cancelled or sign-in failed silently');
+        setState(() {
+          _error = 'Inicio de sesión cancelado. Intenta de nuevo.';
+          _isLoading = false;
+        });
         return;
       }
+      debugPrint('DEBUG: Signed in as: ${googleUser.email}');
 
       // 2. Get the ID token
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -79,9 +87,15 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainPage()),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('DEBUG: Google Sign-In ERROR: $e');
+      if (e is DioException && e.response != null) {
+        debugPrint('DEBUG: Response status: ${e.response?.statusCode}');
+        debugPrint('DEBUG: Response body: ${e.response?.data}');
+      }
+      debugPrint('DEBUG: Stack trace: $stackTrace');
       if (!mounted) return;
-      String errorMessage = 'Error al iniciar sesión';
+      String errorMessage = 'Error al iniciar sesión: ${e.toString()}';
 
       if (e.toString().contains('403')) {
         errorMessage = 'Solo se permiten correos @leasyauto.com y @floty.mx';
