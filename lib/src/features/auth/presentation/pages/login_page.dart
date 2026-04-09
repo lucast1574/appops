@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../../data/auth_service.dart';
+import '../../data/location_service.dart';
 import '../../../home/presentation/pages/main_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -83,7 +84,14 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // 5. Success - navigate to main page
+      // 5. Success - send location and start tracking
+      final locationService = LocationService();
+      await locationService.sendCurrentLocation();
+      locationService.startTracking();
+
+      if (!mounted) return;
+
+      // 6. Navigate to main page
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainPage()),
       );
