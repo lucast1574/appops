@@ -2,9 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  // 10.0.2.2 = host machine from Android emulator
-  // Change to ALB URL for production builds
-  static const String _baseUrl = 'http://10.0.2.2:8000/api/v1';
+  // Production API
+  static const String _baseUrl = 'https://api.opps-app.leasyauto.com/api/v1';
 
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
