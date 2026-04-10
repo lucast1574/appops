@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../data/auth_service.dart';
+import '../../data/location_service.dart';
 import 'login_page.dart';
+import 'location_gate_page.dart';
 import '../../../home/presentation/pages/main_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -11,7 +13,8 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -56,7 +59,12 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       // Verify token is still valid by fetching user data
       try {
         await authService.fetchMe();
-        destination = const MainPage();
+
+        // Token valid — check if "always" location permission is already granted.
+        final locationService = LocationService();
+        final hasAlways = await locationService.hasAlwaysPermission();
+
+        destination = hasAlways ? const MainPage() : const LocationGatePage();
       } catch (_) {
         // Token expired or invalid, go to login
         await authService.logout();
@@ -73,7 +81,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart),
+            opacity: CurvedAnimation(
+                parent: animation, curve: Curves.easeInOutQuart),
             child: child,
           );
         },
@@ -115,7 +124,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         child: SvgPicture.asset(
                           'assets/logo_leasy_editable_blanco.svg',
                           width: 250,
-                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                          colorFilter: const ColorFilter.mode(
+                              Colors.white, BlendMode.srcIn),
                         ),
                       ),
                     ),
@@ -139,7 +149,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     ),
                   ],

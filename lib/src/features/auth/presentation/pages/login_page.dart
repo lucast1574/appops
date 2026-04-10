@@ -4,8 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../../data/auth_service.dart';
-import '../../data/location_service.dart';
-import '../../../home/presentation/pages/main_page.dart';
+import 'location_gate_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,7 +19,8 @@ class _LoginPageState extends State<LoginPage> {
     scopes: ['email', 'profile'],
     // serverClientId must be the WEB client ID (same as backend GOOGLE_CLIENT_ID)
     // so the ID token can be verified server-side
-    serverClientId: '863779943763-cm4lce3c93qmo0k2a9apfne998j8t0ba.apps.googleusercontent.com',
+    serverClientId:
+        '863779943763-cm4lce3c93qmo0k2a9apfne998j8t0ba.apps.googleusercontent.com',
   );
 
   bool _isLoading = false;
@@ -48,7 +48,8 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint('DEBUG: Signed in as: ${googleUser.email}');
 
       // 2. Get the ID token
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -60,7 +61,8 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       // 3. Send token to backend with source='mobile'
-      final result = await _authService.loginWithGoogle(idToken, source: 'mobile');
+      final result =
+          await _authService.loginWithGoogle(idToken, source: 'mobile');
 
       if (!mounted) return;
 
@@ -84,16 +86,11 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // 5. Success - send location and start tracking
-      final locationService = LocationService();
-      await locationService.sendCurrentLocation();
-      locationService.startTracking();
-
+      // 5. Navigate to location permission gate
+      //    (location sending & tracking start after permission is confirmed)
       if (!mounted) return;
-
-      // 6. Navigate to main page
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainPage()),
+        MaterialPageRoute(builder: (_) => const LocationGatePage()),
       );
     } catch (e, stackTrace) {
       debugPrint('DEBUG: Google Sign-In ERROR: $e');
@@ -109,7 +106,8 @@ class _LoginPageState extends State<LoginPage> {
         errorMessage = 'Solo se permiten correos @leasyauto.com y @floty.mx';
       } else if (e.toString().contains('400')) {
         errorMessage = 'Token de Google inválido';
-      } else if (e.toString().contains('SocketException') || e.toString().contains('TimeoutException')) {
+      } else if (e.toString().contains('SocketException') ||
+          e.toString().contains('TimeoutException')) {
         errorMessage = 'Sin conexión al servidor';
       }
 
@@ -140,7 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: SvgPicture.asset(
                       'assets/logo_leasy_editable_blanco.svg',
                       height: 100,
-                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      colorFilter:
+                          const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                       semanticsLabel: 'Leasy Logo',
                     ),
                   ),
@@ -151,7 +150,8 @@ class _LoginPageState extends State<LoginPage> {
           Container(
             width: double.infinity,
             color: const Color(0xFFE3F0F3),
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -174,7 +174,6 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-
                 if (_error != null) ...[
                   Container(
                     width: double.infinity,
@@ -182,17 +181,19 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFED7D7),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFC53030).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFC53030).withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       _error!,
-                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFC53030)),
+                      style: GoogleFonts.inter(
+                          fontSize: 13, color: const Color(0xFFC53030)),
                       textAlign: TextAlign.center,
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
-
                 SizedBox(
                   width: double.infinity,
                   height: 56,
