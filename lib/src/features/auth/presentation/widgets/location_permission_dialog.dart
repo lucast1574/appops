@@ -61,7 +61,7 @@ class _DialogContent extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFF4FA4B5).withOpacity(0.12),
+                color: const Color(0xFF4FA4B5).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -106,10 +106,10 @@ class _DialogContent extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF4FA4B5).withOpacity(0.08),
+                color: const Color(0xFF4FA4B5).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFF4FA4B5).withOpacity(0.3),
+                  color: const Color(0xFF4FA4B5).withValues(alpha: 0.3),
                 ),
               ),
               child: Row(

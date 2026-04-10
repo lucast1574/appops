@@ -72,4 +72,7 @@ flutter:
     - assets/GasPump.svg
     - assets/traslado.svg
     - assets/car.svg
+    - assets/gestiones.svg
+    - assets/notaria.svg
+    - assets/verificar.svg
     - assets/task_data.json
