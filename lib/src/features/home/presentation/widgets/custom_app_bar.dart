@@ -9,6 +9,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color dividerColor;
   final double? titleSize;
 
+  final VoidCallback? onNotificationTap;
+
   const CustomAppBar({
     super.key,
     required this.title,
@@ -16,6 +18,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.headerColor = const Color(0xFF002B4B),
     this.dividerColor = const Color(0xFFD2DADF),
     this.titleSize,
+    this.onNotificationTap,
   });
 
   @override
@@ -44,11 +47,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (showNotificationBell)
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
-            child: SvgPicture.asset(
-              'assets/Bell.svg',
-              colorFilter: ColorFilter.mode(headerColor, BlendMode.srcIn),
-              width: 24,
-              height: 24,
+            child: GestureDetector(
+              onTap: onNotificationTap,
+              child: SvgPicture.asset(
+                'assets/Bell.svg',
+                colorFilter: ColorFilter.mode(headerColor, BlendMode.srcIn),
+                width: 24,
+                height: 24,
+              ),
             ),
           ),
       ],

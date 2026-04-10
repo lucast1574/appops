@@ -5,6 +5,7 @@ import 'dashboard_page.dart';
 import '../../../history/presentation/pages/history_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../widgets/custom_app_bar.dart';
+import '../../../notifications/presentation/pages/notifications_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -35,9 +36,13 @@ class _MainPageState extends State<MainPage> {
         showNotificationBell: _selectedIndex == 0,
         headerColor: _headerColor,
         dividerColor: _dividerColor,
-        titleSize: _selectedIndex == 1
-            ? 16
-            : null, // Smaller title for Historial
+        titleSize: _selectedIndex == 1 ? 16 : null,
+        onNotificationTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NotificationsPage()),
+          );
+        },
       ),
       body: SafeArea(
         child: IndexedStack(index: _selectedIndex, children: _pages),

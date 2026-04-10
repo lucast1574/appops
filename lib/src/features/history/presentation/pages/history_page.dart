@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../home/data/mock_task_service.dart';
-import '../../../verification/presentation/pages/verification_page.dart';
-import '../../../recovery/presentation/pages/recovery_page.dart';
-import '../../../delivery/presentation/pages/delivery_page.dart';
-import '../../../conversion/presentation/pages/conversion_page.dart';
-import '../../../transfer/presentation/pages/transfer_page.dart';
+import '../../../task_summary/presentation/pages/task_summary_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -19,6 +15,7 @@ class _HistoryPageState extends State<HistoryPage> {
   String selectedFilter = 'Todas';
   final List<String> filters = [
     'Todas',
+    'En curso',
     'Verificación',
     'Recupero',
     'Entrega',
@@ -158,11 +155,28 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _buildTaskList() {
-    final filteredTasks = selectedFilter == 'Todas'
-        ? mockTasks
-        : mockTasks
-              .where((task) => task['type']!.contains(selectedFilter))
-              .toList();
+    late List<Map<String, String>> filteredTasks;
+
+    if (selectedFilter == 'Todas') {
+      filteredTasks = List.from(mockTasks);
+    } else if (selectedFilter == 'En curso') {
+      filteredTasks = mockTasks
+          .where((task) => task['status'] == 'En curso')
+          .toList();
+    } else {
+      filteredTasks = mockTasks
+          .where((task) => task['type']!.contains(selectedFilter))
+          .toList();
+    }
+
+    // Sort: Completed/Rejected tasks at the end
+    filteredTasks.sort((a, b) {
+      final aIsDone = a['status'] == 'Completada' || a['status'] == 'Rechazada';
+      final bIsDone = b['status'] == 'Completada' || b['status'] == 'Rechazada';
+      if (aIsDone && !bIsDone) return 1;
+      if (!aIsDone && bIsDone) return -1;
+      return 0;
+    });
 
     if (filteredTasks.isEmpty) {
       return Center(
@@ -197,36 +211,23 @@ class _HistoryPageState extends State<HistoryPage> {
     switch (status) {
       case 'Pendiente':
         return const Color(0xFFFBC108);
+      case 'En curso':
+        return const Color(0xFFF104DD);
       case 'Completada':
         return const Color(0xFF23A26D);
       case 'Rechazada':
         return const Color(0xFFE53935);
       case 'Reprogramada':
-        return const Color(0xFF4FA4B5); // Navy Blue
+        return const Color(0xFF4FA4B5);
       default:
         return const Color(0xFF002B4B);
     }
   }
 
   void _navigateToTask(String type) {
-    Widget page;
-    if (type.contains('Verificación')) {
-      page = const VerificationPage();
-    } else if (type.contains('Recupero')) {
-      page = const RecoveryPage();
-    } else if (type.contains('Entrega')) {
-      page = const DeliveryPage();
-    } else if (type.contains('Conversión')) {
-      page = const ConversionPage();
-    } else if (type.contains('Traslado')) {
-      page = const TransferPage();
-    } else {
-      return;
-    }
-
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => page),
+      MaterialPageRoute(builder: (context) => const TaskSummaryPage()),
     );
   }
 
@@ -292,12 +293,16 @@ class _HistoryPageState extends State<HistoryPage> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Text(
-                          task['date'] ?? 'Fecha no disponible',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF99AAB7),
+                        Flexible(
+                          child: Text(
+                            task['date'] ?? 'Fecha no disponible',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF99AAB7),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                         const Spacer(),

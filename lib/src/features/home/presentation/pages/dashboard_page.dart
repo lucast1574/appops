@@ -23,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String selectedFilter = 'Todas';
   final List<String> filters = [
     'Todas',
+    'En curso',
     'Verificación',
     'Recupero',
     'Entrega',
@@ -134,8 +135,15 @@ class _DashboardPageState extends State<DashboardPage> {
           itemCount: mockTasks.length,
           itemBuilder: (context, index) {
             final task = mockTasks[index];
+            final status = task['status'];
             // Filtration logic mock
-            if (selectedFilter != 'Todas' && !task['type']!.contains(selectedFilter)) {
+            if (status == 'Completada' || status == 'Rechazada') {
+              return const SizedBox.shrink();
+            }
+
+            if (selectedFilter == 'En curso') {
+              if (status != 'En curso') return const SizedBox.shrink();
+            } else if (selectedFilter != 'Todas' && !task['type']!.contains(selectedFilter)) {
               return const SizedBox.shrink();
             }
             return _buildTaskCard(task);
@@ -198,6 +206,10 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildTaskCard(Map<String, String> task) {
+    final bool isInProgress = task['status'] == 'En curso';
+    final Color buttonColor = isInProgress ? const Color(0xFFFBDF83) : const Color(0xFF4FA4B5);
+    final String buttonText = isInProgress ? 'En curso' : 'Iniciar tarea';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -261,19 +273,26 @@ class _DashboardPageState extends State<DashboardPage> {
             child: ElevatedButton(
               onPressed: () => _navigateToTask(task['type']!),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4FA4B5),
-                foregroundColor: Colors.white,
+                backgroundColor: buttonColor,
+                foregroundColor: isInProgress ? const Color(0xFF002B4B) : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 0,
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Iniciar tarea'),
-                  SizedBox(width: 8),
-                  Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+                  Text(
+                    buttonText,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (!isInProgress) ...[
+                    const SizedBox(width: 8),
+                    const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+                  ],
                 ],
               ),
             ),
@@ -282,4 +301,5 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
 }

@@ -3,7 +3,7 @@
     "id": "1",
     "type": "Verificación",
     "icon": "assets/check.svg",
-    "time": "16:00 - 17:00",
+    "time": "13:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Avenida Pedro de Osma 789 Calle Centenario 156",
     "status": "Pendiente"
@@ -12,7 +12,7 @@
     "id": "2",
     "type": "Recupero",
     "icon": "assets/car.svg",
-    "time": "16:00 - 17:00",
+    "time": "16:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
     "status": "Completada"
@@ -21,7 +21,7 @@
     "id": "3",
     "type": "Entrega unidad",
     "icon": "assets/entrega.svg",
-    "time": "16:00 - 17:00",
+    "time": "16:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
     "status": "Rechazada"
@@ -30,16 +30,16 @@
     "id": "4",
     "type": "Traslado",
     "icon": "assets/traslado.svg",
-    "time": "16:00 - 17:00",
+    "time": "14:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
-    "status": "Reprogramada"
+    "status": "En curso"
   },
   {
     "id": "5",
     "type": "Conversión",
     "icon": "assets/GasPump.svg",
-    "time": "16:00 - 17:00",
+    "time": "16:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
     "status": "Completada"
@@ -48,7 +48,7 @@
     "id": "6",
     "type": "Verificar Vehículo",
     "icon": "assets/verificar.svg",
-    "time": "09:00 - 10:00",
+    "time": "09:00",
     "date": "Jueves, 19 de marzo de 2026",
     "address": "Av. Javier Prado Este 1234, San Isidro",
     "status": "Pendiente"
@@ -57,18 +57,18 @@
     "id": "7",
     "type": "Notaría",
     "icon": "assets/notaria.svg",
-    "time": "11:00 - 12:00",
+    "time": "11:00",
     "date": "Jueves, 19 de marzo de 2026",
     "address": "Calle Las Begonias 456, San Isidro",
-    "status": "Pendiente"
+    "status": "En curso"
   },
   {
     "id": "8",
     "type": "Gestiones/Otros",
     "icon": "assets/gestiones.svg",
-    "time": "14:00 - 15:30",
+    "time": "14:00",
     "date": "Viernes, 20 de marzo de 2026",
     "address": "Pasaje Los Pinos 789, Miraflores",
-    "status": "Pendiente"
+    "status": "Reprogramada"
   }
 ]
