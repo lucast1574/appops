@@ -55,10 +55,9 @@ class _LocationGatePageState extends State<LocationGatePage>
     // 1. Ensure the device location service is enabled.
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Prompt to enable location services.
       await Geolocator.openLocationSettings();
       _waitingForSettings = true;
-      return; // Will re-check on resume.
+      return;
     }
 
     // 2. Request basic "while in use" permission (shows OS dialog).
@@ -80,7 +79,7 @@ class _LocationGatePageState extends State<LocationGatePage>
 
     // 5. Check if already "always".
     if (await _locationService.hasAlwaysPermission()) {
-      _goToMain();
+      await _goToMain();
       return;
     }
 
@@ -92,17 +91,14 @@ class _LocationGatePageState extends State<LocationGatePage>
   /// Shows the mandatory bottom-sheet dialog, then opens system app settings.
   /// Loops until the user grants "always" permission.
   Future<void> _showDialogAndOpenSettings() async {
-    // Dialog always returns true (it's the only action available).
     await LocationPermissionDialog.show(context);
     if (!mounted) return;
 
     _waitingForSettings = true;
     await _locationService.openLocationSettings();
-    // Will re-check in didChangeAppLifecycleState when user comes back.
   }
 
   Future<void> _checkAndProceed() async {
-    // Re-verify service is enabled (user might have toggled it off in settings).
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (!mounted) return;
@@ -111,19 +107,24 @@ class _LocationGatePageState extends State<LocationGatePage>
     }
 
     if (await _locationService.hasAlwaysPermission()) {
-      _goToMain();
+      await _goToMain();
     } else {
       if (!mounted) return;
       await _showDialogAndOpenSettings();
     }
   }
 
-  void _goToMain() {
+  Future<void> _goToMain() async {
     if (!mounted) return;
 
-    // Start background tracking now that we have full permission.
-    _locationService.sendCurrentLocation();
+    // Send location to backend BEFORE navigating — this ensures the user's
+    // city is assigned on first login.
+    await _locationService.sendCurrentLocation();
+
+    // Start periodic background tracking.
     _locationService.startTracking();
+
+    if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const MainPage()),
@@ -136,7 +137,6 @@ class _LocationGatePageState extends State<LocationGatePage>
 
   @override
   Widget build(BuildContext context) {
-    // Block back navigation — user MUST grant the permission.
     return PopScope(
       canPop: false,
       child: Scaffold(

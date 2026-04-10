@@ -64,7 +64,15 @@ class _SplashPageState extends State<SplashPage>
         final locationService = LocationService();
         final hasAlways = await locationService.hasAlwaysPermission();
 
-        destination = hasAlways ? const MainPage() : const LocationGatePage();
+        if (hasAlways) {
+          // Send current location to backend (assigns city if missing)
+          // and start background tracking.
+          await locationService.sendCurrentLocation();
+          locationService.startTracking();
+          destination = const MainPage();
+        } else {
+          destination = const LocationGatePage();
+        }
       } catch (_) {
         // Token expired or invalid, go to login
         await authService.logout();
