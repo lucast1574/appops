@@ -43,5 +43,32 @@
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
     "status": "Completada"
+  },
+  {
+    "id": "6",
+    "type": "Verificar Vehículo",
+    "icon": "assets/verificar.svg",
+    "time": "09:00 - 10:00",
+    "date": "Jueves, 19 de marzo de 2026",
+    "address": "Av. Javier Prado Este 1234, San Isidro",
+    "status": "Pendiente"
+  },
+  {
+    "id": "7",
+    "type": "Notaría",
+    "icon": "assets/notaria.svg",
+    "time": "11:00 - 12:00",
+    "date": "Jueves, 19 de marzo de 2026",
+    "address": "Calle Las Begonias 456, San Isidro",
+    "status": "Pendiente"
+  },
+  {
+    "id": "8",
+    "type": "Gestiones/Otros",
+    "icon": "assets/gestiones.svg",
+    "time": "14:00 - 15:30",
+    "date": "Viernes, 20 de marzo de 2026",
+    "address": "Pasaje Los Pinos 789, Miraflores",
+    "status": "Pendiente"
   }
 ]

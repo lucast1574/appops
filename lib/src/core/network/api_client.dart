@@ -9,7 +9,10 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   late final Dio dio;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
 
   ApiClient._internal() {
     dio = Dio(BaseOptions(
@@ -22,7 +25,7 @@ class ApiClient {
     // Attach JWT token to every request
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _storage.read(key: 'access_token');
+        final token = await _readSafe('access_token');
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -30,16 +33,13 @@ class ApiClient {
       },
       onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
-          // Try to refresh token
           final refreshed = await _tryRefreshToken();
           if (refreshed) {
-            // Retry the original request
-            final token = await _storage.read(key: 'access_token');
+            final token = await _readSafe('access_token');
             error.requestOptions.headers['Authorization'] = 'Bearer $token';
             final response = await dio.fetch(error.requestOptions);
             return handler.resolve(response);
           }
-          // If refresh fails, clear tokens (user must re-login)
           await clearTokens();
         }
         return handler.next(error);
@@ -47,9 +47,20 @@ class ApiClient {
     ));
   }
 
+  /// Safe read that catches decryption failures (e.g. after device restart
+  /// where Android Keystore keys were invalidated). Returns null on error.
+  Future<String?> _readSafe(String key) async {
+    try {
+      return await _storage.read(key: key);
+    } catch (e) {
+      _debugLog('SecureStorage read failed for "$key": $e');
+      return null;
+    }
+  }
+
   Future<bool> _tryRefreshToken() async {
     try {
-      final refreshToken = await _storage.read(key: 'refresh_token');
+      final refreshToken = await _readSafe('refresh_token');
       if (refreshToken == null) return false;
 
       final response = await Dio().post(
@@ -73,17 +84,27 @@ class ApiClient {
   }
 
   Future<void> clearTokens() async {
-    await _storage.delete(key: 'access_token');
-    await _storage.delete(key: 'refresh_token');
-    await _storage.delete(key: 'user_data');
+    try {
+      await _storage.deleteAll();
+    } catch (_) {
+      // If deleteAll fails due to corrupt storage, ignore silently
+    }
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: 'access_token');
+    return await _readSafe('access_token');
   }
 
   Future<bool> isLoggedIn() async {
-    final token = await _storage.read(key: 'access_token');
+    final token = await _readSafe('access_token');
     return token != null;
+  }
+
+  static void _debugLog(String message) {
+    assert(() {
+      // ignore: avoid_print
+      print(message);
+      return true;
+    }());
   }
 }

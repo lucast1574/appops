@@ -4,7 +4,10 @@ import '../../../core/network/api_client.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
 
   /// Sends the Google ID token to the backend for verification.
   /// [source] should be 'mobile' or 'backoffice'.
@@ -34,9 +37,14 @@ class AuthService {
 
   /// Get the currently stored user data.
   Future<Map<String, dynamic>?> getCurrentUser() async {
-    final userData = await _storage.read(key: 'user_data');
-    if (userData == null) return null;
-    return jsonDecode(userData);
+    try {
+      final userData = await _storage.read(key: 'user_data');
+      if (userData == null) return null;
+      return jsonDecode(userData);
+    } catch (e) {
+      // Storage decryption failed after restart
+      return null;
+    }
   }
 
   /// Fetch fresh user data from backend.

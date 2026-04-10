@@ -8,6 +8,9 @@ import '../../../recovery/presentation/pages/recovery_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
 import '../../../conversion/presentation/pages/conversion_page.dart';
 import '../../../transfer/presentation/pages/transfer_page.dart';
+import '../../../vehicle_verification/presentation/pages/vehicle_verification_page.dart';
+import '../../../notary/presentation/pages/notary_page.dart';
+import '../../../management/presentation/pages/management_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -18,7 +21,17 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String selectedFilter = 'Todas';
-  final List<String> filters = ['Todas', 'Verificación', 'Recupero', 'Entrega', 'Conversión', 'Traslado'];
+  final List<String> filters = [
+    'Todas',
+    'Verificación',
+    'Recupero',
+    'Entrega',
+    'Conversión',
+    'Traslado',
+    'Verificar Vehículo',
+    'Notaría',
+    'Gestiones/Otros'
+  ];
 
   List<Map<String, String>> mockTasks = [];
   bool isLoading = true;
@@ -84,55 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
               color: const Color(0xFF002B4B),
             ),
           ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE3F0F3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Nueva tarea',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF002B4B),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4FA4B5),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/plus.svg',
-                        height: 14,
-                        width: 14,
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Crear tarea',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
         ],
       ),
     );
@@ -216,6 +181,12 @@ class _DashboardPageState extends State<DashboardPage> {
       page = const ConversionPage();
     } else if (type.contains('Traslado')) {
       page = const TransferPage();
+    } else if (type.contains('Verificar Vehículo')) {
+      page = const VehicleVerificationPage();
+    } else if (type.contains('Notaría')) {
+      page = const NotaryPage();
+    } else if (type.contains('Gestiones/Otros')) {
+      page = const ManagementPage();
     } else {
       return;
     }

@@ -20,18 +20,23 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.leasy.ops.leasy_ops_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // Es mejor poner 21 directamente para asegurar que el ZTE no se queje
+        minSdk = flutter.minSdkVersion 
+        targetSdk = 34
+        
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Esto garantiza que el APK siempre lleve los "motores" para 32 y 64 bits
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+        }
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
