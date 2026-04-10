@@ -75,4 +75,7 @@ flutter:
     - assets/gestiones.svg
     - assets/notaria.svg
     - assets/verificar.svg
+    - assets/alarm.svg
+    - assets/warning.svg
+    - assets/CalendarCheck.svg
     - assets/task_data.json
