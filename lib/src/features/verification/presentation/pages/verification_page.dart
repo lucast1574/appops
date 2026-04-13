@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Import Shared Widgets
@@ -46,13 +47,31 @@ class _VerificationPageState extends State<VerificationPage> {
 
   // States for Garage (Step 7)
   bool? _isGarageAtHome;
+  bool _garageFacadeUploaded = false;
+  String? _garageFacadeTag;
   bool? _hasSecurity;
   bool? _hasCameras;
+  bool _garageCamerasUploaded = false;
+  String? _garageCamerasTag;
   String? _accessType;
   bool? _isRoofing;
+  bool _garageRoofingUploaded = false;
+  String? _garageRoofingTag;
   bool? _isBasement;
+  bool _garageBasementUploaded = false;
+  String? _garageBasementTag;
   String? _garageDirection;
+  bool _garageDirectionUploaded = false;
+  String? _garageDirectionTag;
   String? _streetAccessibility;
+  bool _streetAccessibilityUploaded = false;
+  String? _streetAccessibilityTag;
+  
+  // Extra garage images (for when it's not at home)
+  int _extraGarageImagesCount = 1; // 1 to 3
+  bool _isCocheraFuera = false;
+  final List<bool> _extraGarageImagesUploaded = [false, false, false];
+  final List<String?> _extraGarageImagesTags = [null, null, null];
 
   // States for Result (Step 8)
   String? _verificationResult;
@@ -60,7 +79,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
   void _nextStep() {
     setState(() {
-      if (_currentStep == 2 && _selectedRecipient == 'Titular') {
+      if (_currentStep == 2 && _selectedRecipient == 'Cliente') {
         _currentStep = 3;
       } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
         _currentStep = 4;
@@ -110,7 +129,6 @@ class _VerificationPageState extends State<VerificationPage> {
   Widget build(BuildContext context) {
     bool showAppBar =
         _currentStep == 0 ||
-        _currentStep == 1 ||
         _currentStep == 2 ||
         _currentStep == 3 ||
         _currentStep == 4 ||
@@ -139,15 +157,27 @@ class _VerificationPageState extends State<VerificationPage> {
                 ),
               ),
               centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/warning.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.red,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  onPressed: () {},
+                ),
+              ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(10),
                 child: VerificationProgressBar(currentStep: _currentStep),
               ),
             )
           : null,
-      body: SafeArea(
-        child: _buildCurrentStep(),
-      ),
+      body: SafeArea(child: _buildCurrentStep()),
     );
   }
 
@@ -156,11 +186,15 @@ class _VerificationPageState extends State<VerificationPage> {
       case 0:
         return TaskInfoStep(onContinue: _nextStep);
       case 1:
-        return BeforeStartingStep(onContinue: _nextStep);
+        return BeforeStartingStep(
+          onContinue: _nextStep,
+          onBack: _previousStep,
+        );
       case 2:
         return WhoReceivedStep(
           selectedRecipient: _selectedRecipient,
-          onRecipientSelected: (val) => setState(() => _selectedRecipient = val),
+          onRecipientSelected: (val) =>
+              setState(() => _selectedRecipient = val),
           onBack: _previousStep,
           onContinue: _nextStep,
         );
@@ -174,9 +208,11 @@ class _VerificationPageState extends State<VerificationPage> {
           reciboTag: _reciboTag,
           onDniUploadedChanged: (val) => setState(() => _dniUploaded = val),
           onDniTagChanged: (val) => setState(() => _dniTag = val),
-          onBreveteUploadedChanged: (val) => setState(() => _breveteUploaded = val),
+          onBreveteUploadedChanged: (val) =>
+              setState(() => _breveteUploaded = val),
           onBreveteTagChanged: (val) => setState(() => _breveteTag = val),
-          onReciboUploadedChanged: (val) => setState(() => _reciboUploaded = val),
+          onReciboUploadedChanged: (val) =>
+              setState(() => _reciboUploaded = val),
           onReciboTagChanged: (val) => setState(() => _reciboTag = val),
           onBack: _previousStep,
           onContinue: () => setState(() => _currentStep = 6),
@@ -185,8 +221,10 @@ class _VerificationPageState extends State<VerificationPage> {
         return FamiliarFormStep(
           selectedRelationship: _selectedRelationship,
           signaturePoints: _signaturePoints,
-          onRelationshipChanged: (val) => setState(() => _selectedRelationship = val),
-          onSignaturePointAdded: (point) => setState(() => _signaturePoints.add(point)),
+          onRelationshipChanged: (val) =>
+              setState(() => _selectedRelationship = val),
+          onSignaturePointAdded: (point) =>
+              setState(() => _signaturePoints.add(point)),
           onClearSignature: () => setState(() => _signaturePoints.clear()),
           onBack: _previousStep,
           onContinue: () => setState(() => _currentStep = 5),
@@ -207,21 +245,71 @@ class _VerificationPageState extends State<VerificationPage> {
       case 7:
         return GarageStep(
           isGarageAtHome: _isGarageAtHome,
+          garageFacadeUploaded: _garageFacadeUploaded,
+          garageFacadeTag: _garageFacadeTag,
           hasSecurity: _hasSecurity,
           hasCameras: _hasCameras,
+          garageCamerasUploaded: _garageCamerasUploaded,
+          garageCamerasTag: _garageCamerasTag,
           accessType: _accessType,
           isRoofing: _isRoofing,
+          garageRoofingUploaded: _garageRoofingUploaded,
+          garageRoofingTag: _garageRoofingTag,
           isBasement: _isBasement,
+          garageBasementUploaded: _garageBasementUploaded,
+          garageBasementTag: _garageBasementTag,
           garageDirection: _garageDirection,
+          garageDirectionUploaded: _garageDirectionUploaded,
+          garageDirectionTag: _garageDirectionTag,
           streetAccessibility: _streetAccessibility,
-          onGarageAtHomeChanged: (val) => setState(() => _isGarageAtHome = val),
+          streetAccessibilityUploaded: _streetAccessibilityUploaded,
+          streetAccessibilityTag: _streetAccessibilityTag,
+          extraImagesCount: _extraGarageImagesCount,
+          isCocheraFuera: _isCocheraFuera,
+          extraImagesUploaded: _extraGarageImagesUploaded,
+          extraImagesTags: _extraGarageImagesTags,
+          onGarageAtHomeChanged: (val) {
+            setState(() {
+              _isGarageAtHome = val;
+              if (val == true) _isCocheraFuera = false;
+              if (val == false) _isCocheraFuera = true;
+            });
+          },
+          onCocheraFueraChanged: (val) => setState(() => _isCocheraFuera = val ?? false),
+          onFacadeUploadedChanged: (val) => setState(() => _garageFacadeUploaded = val),
+          onFacadeTagChanged: (val) => setState(() => _garageFacadeTag = val),
           onSecurityChanged: (val) => setState(() => _hasSecurity = val),
           onCamerasChanged: (val) => setState(() => _hasCameras = val),
+          onCamerasUploadedChanged: (val) => setState(() => _garageCamerasUploaded = val),
+          onCamerasTagChanged: (val) => setState(() => _garageCamerasTag = val),
           onAccessTypeChanged: (val) => setState(() => _accessType = val),
           onRoofingChanged: (val) => setState(() => _isRoofing = val),
+          onRoofingUploadedChanged: (val) => setState(() => _garageRoofingUploaded = val),
+          onRoofingTagChanged: (val) => setState(() => _garageRoofingTag = val),
           onBasementChanged: (val) => setState(() => _isBasement = val),
+          onBasementUploadedChanged: (val) => setState(() => _garageBasementUploaded = val),
+          onBasementTagChanged: (val) => setState(() => _garageBasementTag = val),
           onGarageDirectionChanged: (val) => setState(() => _garageDirection = val),
+          onDirectionUploadedChanged: (val) => setState(() => _garageDirectionUploaded = val),
+          onDirectionTagChanged: (val) => setState(() => _garageDirectionTag = val),
           onStreetAccessibilityChanged: (val) => setState(() => _streetAccessibility = val),
+          onAccessibilityUploadedChanged: (val) => setState(() => _streetAccessibilityUploaded = val),
+          onAccessibilityTagChanged: (val) => setState(() => _streetAccessibilityTag = val),
+          onAddExtraImage: () {
+            if (_extraGarageImagesCount < 3) {
+              setState(() => _extraGarageImagesCount++);
+            }
+          },
+          onExtraImageUploadedChanged: (index, val) {
+            setState(() {
+              _extraGarageImagesUploaded[index] = val;
+            });
+          },
+          onExtraImageTagChanged: (index, val) {
+            setState(() {
+              _extraGarageImagesTags[index] = val;
+            });
+          },
           onBack: _previousStep,
           onContinue: () => setState(() => _currentStep = 8),
         );

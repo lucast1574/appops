@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../shared/verification_upload_button.dart';
-import '../shared/verification_step_navigation.dart';
+import '../../../../../shared/widgets/flow_upload_button.dart';
+import '../../../../../shared/widgets/flow_step_navigation.dart';
+import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class DocumentValidationStep extends StatelessWidget {
   final bool dniUploaded;
@@ -39,21 +40,32 @@ class DocumentValidationStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool allUploaded = dniUploaded && breveteUploaded && reciboUploaded;
+
     return Column(
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Validación de documentos',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 _buildValidationSection(
                   'DNI',
                   isUploaded: dniUploaded,
                   child: dniUploaded
-                      ? _buildImagePreview(
-                          'Imagen-x122.png',
-                          dniTag,
+                      ? FlowImagePreview(
+                          fileName: 'Imagen-x122.png',
+                          tag: dniTag,
                           onDeleteImage: () {
                             onDniUploadedChanged(false);
                             onDniTagChanged(null);
@@ -61,24 +73,10 @@ class DocumentValidationStep extends StatelessWidget {
                           onDeleteTag: () => onDniTagChanged(null),
                           onTagAdded: (val) => onDniTagChanged(val),
                         )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: VerificationUploadButton(
-                                text: 'Tomar foto',
-                                icon: Icons.add_a_photo_outlined,
-                                onTap: () => onDniUploadedChanged(true),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: VerificationUploadButton(
-                                text: 'Subir archivo',
-                                icon: Icons.file_upload_outlined,
-                                onTap: () => onDniUploadedChanged(true),
-                              ),
-                            ),
-                          ],
+                      : FlowUploadButton(
+                          text: 'Tomar foto',
+                          iconAsset: 'assets/CameraPlus.svg',
+                          onTap: () => onDniUploadedChanged(true),
                         ),
                 ),
                 const SizedBox(height: 16),
@@ -86,9 +84,9 @@ class DocumentValidationStep extends StatelessWidget {
                   'Brevete',
                   isUploaded: breveteUploaded,
                   child: breveteUploaded
-                      ? _buildImagePreview(
-                          'Brevete-scan.png',
-                          breveteTag,
+                      ? FlowImagePreview(
+                          fileName: 'Brevete-scan.png',
+                          tag: breveteTag,
                           onDeleteImage: () {
                             onBreveteUploadedChanged(false);
                             onBreveteTagChanged(null);
@@ -96,10 +94,9 @@ class DocumentValidationStep extends StatelessWidget {
                           onDeleteTag: () => onBreveteTagChanged(null),
                           onTagAdded: (val) => onBreveteTagChanged(val),
                         )
-                      : VerificationUploadButton(
+                      : FlowUploadButton(
                           text: 'Tomar foto',
-                          icon: Icons.add_a_photo_outlined,
-                          isFullWidth: true,
+                          iconAsset: 'assets/CameraPlus.svg',
                           onTap: () => onBreveteUploadedChanged(true),
                         ),
                 ),
@@ -108,9 +105,9 @@ class DocumentValidationStep extends StatelessWidget {
                   'Recibo de servicios',
                   isUploaded: reciboUploaded,
                   child: reciboUploaded
-                      ? _buildImagePreview(
-                          'Recibo-digital.png',
-                          reciboTag,
+                      ? FlowImagePreview(
+                          fileName: 'Recibo-digital.png',
+                          tag: reciboTag,
                           onDeleteImage: () {
                             onReciboUploadedChanged(false);
                             onReciboTagChanged(null);
@@ -118,10 +115,9 @@ class DocumentValidationStep extends StatelessWidget {
                           onDeleteTag: () => onReciboTagChanged(null),
                           onTagAdded: (val) => onReciboTagChanged(val),
                         )
-                      : VerificationUploadButton(
+                      : FlowUploadButton(
                           text: 'Tomar foto',
-                          icon: Icons.add_a_photo_outlined,
-                          isFullWidth: true,
+                          iconAsset: 'assets/CameraPlus.svg',
                           onTap: () => onReciboUploadedChanged(true),
                         ),
                 ),
@@ -129,9 +125,10 @@ class DocumentValidationStep extends StatelessWidget {
             ),
           ),
         ),
-        VerificationStepNavigation(
+        FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
+          isContinueEnabled: allUploaded,
         ),
       ],
     );
@@ -142,109 +139,31 @@ class DocumentValidationStep extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E9EB)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)),
-              ),
-              if (isUploaded)
-                Row(
-                  children: [
-                    Text(
-                      'Ver imagen',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF002B4B), decoration: TextDecoration.underline),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.check_circle, color: Color(0xFF27A376), size: 16),
-                  ],
-                ),
-            ],
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF002B4B),
+            ),
           ),
           const SizedBox(height: 12),
           child,
         ],
       ),
-    );
-  }
-
-  Widget _buildImagePreview(
-    String fileName,
-    String? tag, {
-    required VoidCallback onDeleteImage,
-    required VoidCallback onDeleteTag,
-    required Function(String) onTagAdded,
-  }) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))),
-          child: Row(
-            children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFB9DBE1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.image_outlined, color: Color(0xFF002B4B))),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  fileName,
-                  style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B)),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Color(0xFFE35959)),
-                onPressed: onDeleteImage,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        tag != null
-            ? Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          Chip(
-                            label: Text(tag, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF002B4B))),
-                            backgroundColor: const Color(0xFFB9DBE1),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
-                            deleteIcon: const Icon(Icons.close, size: 14, color: Color(0xFF002B4B)),
-                            onDeleted: onDeleteTag,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : TextField(
-                onSubmitted: onTagAdded,
-                decoration: InputDecoration(
-                  hintText: 'Agregar etiqueta',
-                  hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
-                  filled: true,
-                  fillColor: const Color(0xFFF8F9FA),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF002B4B))),
-                ),
-              ),
-      ],
     );
   }
 }

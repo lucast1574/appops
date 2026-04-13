@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../shared/verification_step_navigation.dart';
+import '../../../../../shared/widgets/flow_step_navigation.dart';
 
 class VerificationResultStep extends StatelessWidget {
   final String? verificationResult;
@@ -94,7 +94,7 @@ class VerificationResultStep extends StatelessWidget {
             ),
           ),
         ),
-        VerificationStepNavigation(
+        FlowStepNavigation(
           isContinueEnabled: verificationResult != null,
           onBack: onBack,
           onContinue: onContinue,

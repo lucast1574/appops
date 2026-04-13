@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../shared/verification_step_navigation.dart';
+import '../../../../../shared/widgets/flow_step_navigation.dart';
 
 class RescheduleResultStep extends StatelessWidget {
   final VoidCallback onBack;
@@ -55,7 +55,7 @@ class RescheduleResultStep extends StatelessWidget {
             ),
           ),
         ),
-        VerificationStepNavigation(
+        FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
           buttonText: 'Finalizar',

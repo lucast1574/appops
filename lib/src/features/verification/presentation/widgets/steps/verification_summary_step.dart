@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../shared/summary_widgets.dart';
+import '../../../../../shared/widgets/flow_summary_widgets.dart';
 
 class VerificationSummaryStep extends StatelessWidget {
   final String? selectedRecipient;
@@ -69,78 +69,78 @@ class VerificationSummaryStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                SummarySection(
+                FlowSummarySection(
                   title: 'Información de la tarea',
                   onEdit: onEditTaskInfo,
                   children: const [
-                    SummaryItem(label: 'Cliente', value: 'Juan Ortiz'),
-                    SummaryItem(label: 'Hora inicio', value: '16:00', secondLabel: 'Hora fin', secondValue: '18:00'),
-                    SummaryItem(label: 'Dirección', value: 'Avenida Pedro de Osma 789 Calle Centenario 156'),
-                    SummaryItem(label: 'DNI cliente', value: '9999129912'),
-                    SummaryItem(label: 'Observaciones', value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
+                    FlowSummaryItem(label: 'Cliente', value: 'Juan Ortiz'),
+                    FlowSummaryItem(label: 'Hora inicio', value: '16:00', secondLabel: 'Hora fin', secondValue: '18:00'),
+                    FlowSummaryItem(label: 'Dirección', value: 'Avenida Pedro de Osma 789 Calle Centenario 156'),
+                    FlowSummaryItem(label: 'DNI cliente', value: '9999129912'),
+                    FlowSummaryItem(label: 'Observaciones', value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
                   ],
                 ),
                 const SizedBox(height: 24),
-                SummarySection(
+                FlowSummarySection(
                   title: '¿Quién te recibió?',
                   onEdit: onEditRecipient,
                   children: [
-                    SummaryStatus(label: selectedRecipient ?? '---', isComplete: true),
+                    FlowSummaryStatus(label: selectedRecipient ?? '---', isComplete: true),
                     if (selectedRecipient == 'Familiar') ...[
-                      const SummaryItem(label: 'DNI del familiar', value: '9999129912'),
-                      const SummaryItem(label: 'Nombre completo', value: 'Ana Ortiz'),
-                      SummaryItem(label: 'Parentesco con el cliente', value: selectedRelationship ?? '---'),
-                      const SummaryStatus(label: 'Firma de familiar', isComplete: true),
+                      const FlowSummaryItem(label: 'DNI del familiar', value: '9999129912'),
+                      const FlowSummaryItem(label: 'Nombre completo', value: 'Ana Ortiz'),
+                      FlowSummaryItem(label: 'Parentesco con el cliente', value: selectedRelationship ?? '---'),
+                      const FlowSummaryStatus(label: 'Firma de familiar', isComplete: true),
                     ],
                   ],
                 ),
                 const SizedBox(height: 24),
-                SummarySection(
+                FlowSummarySection(
                   title: 'Validación de documentos',
                   onEdit: onEditDocuments,
                   children: [
-                    SummaryStatus(label: 'DNI', isComplete: dniUploaded),
-                    SummaryStatus(label: 'Recibo de servicios', isComplete: reciboUploaded),
-                    SummaryStatus(label: 'Brevete', isComplete: breveteUploaded),
+                    FlowSummaryStatus(label: 'DNI', isComplete: dniUploaded),
+                    FlowSummaryStatus(label: 'Recibo de servicios', isComplete: reciboUploaded),
+                    FlowSummaryStatus(label: 'Brevete', isComplete: breveteUploaded),
                   ],
                 ),
                 const SizedBox(height: 24),
-                SummarySection(
+                FlowSummarySection(
                   title: 'Tipo de vivienda',
                   onEdit: onEditHousing,
                   children: [
-                    SummaryItem(label: 'Tipo de vivienda', value: housingType ?? '---'),
-                    SummaryItem(label: '¿Vivienda es también la cochera?', value: isGarageAtHome == true ? 'Si' : 'No'),
-                    const SummaryStatus(label: 'Foto de la vivienda / fachada', isComplete: true),
-                    const SummaryStatus(label: 'Link Google Maps · Ubicación de vivienda', isComplete: true),
+                    FlowSummaryItem(label: 'Tipo de vivienda', value: housingType ?? '---'),
+                    FlowSummaryItem(label: '¿Vivienda es también la cochera?', value: isGarageAtHome == true ? 'Si' : 'No'),
+                    const FlowSummaryStatus(label: 'Foto de la vivienda / fachada', isComplete: true),
+                    const FlowSummaryStatus(label: 'Link Google Maps · Ubicación de vivienda', isComplete: true),
                   ],
                 ),
                 const SizedBox(height: 24),
-                SummarySection(
+                FlowSummarySection(
                   title: 'Cochera',
                   onEdit: onEditGarage,
                   children: [
-                    SummaryStatus(label: '¿Cochera cuenta con cámara de vigilancia?', isComplete: hasCameras == true),
-                    const SummaryStatus(label: 'Foto de la cámara de vigilancia', isComplete: true),
-                    SummaryItem(label: 'Tipo de via de acceso a la cochera', value: accessType ?? '---'),
-                    SummaryItem(label: 'Cochera es techada?', value: isRoofing == true ? 'Si' : 'No'),
-                    const SummaryStatus(label: 'Foto de la cochera', isComplete: true),
-                    SummaryItem(label: 'Cochera se ubica en sótano', value: isBasement == true ? 'Si' : 'No'),
-                    const SummaryStatus(label: 'Foto de la cochera', isComplete: true),
-                    SummaryItem(label: 'Hacia dónde da la cochera?', value: garageDirection ?? '---'),
-                    const SummaryStatus(label: 'Foto de calle / condominio', isComplete: true),
-                    SummaryItem(label: 'Accesibilidad de la calle', value: streetAccessibility ?? '---'),
-                    const SummaryStatus(label: 'Foto accesibilidad de la calle', isComplete: true),
+                    FlowSummaryStatus(label: '¿Cochera cuenta con cámara de vigilancia?', isComplete: hasCameras == true),
+                    const FlowSummaryStatus(label: 'Foto de la cámara de vigilancia', isComplete: true),
+                    FlowSummaryItem(label: 'Tipo de via de acceso a la cochera', value: accessType ?? '---'),
+                    FlowSummaryItem(label: 'Cochera es techada?', value: isRoofing == true ? 'Si' : 'No'),
+                    const FlowSummaryStatus(label: 'Foto de la cochera', isComplete: true),
+                    FlowSummaryItem(label: 'Cochera se ubica en sótano', value: isBasement == true ? 'Si' : 'No'),
+                    const FlowSummaryStatus(label: 'Foto de la cochera', isComplete: true),
+                    FlowSummaryItem(label: 'Hacia dónde da la cochera?', value: garageDirection ?? '---'),
+                    const FlowSummaryStatus(label: 'Foto de calle / condominio', isComplete: true),
+                    FlowSummaryItem(label: 'Accesibilidad de la calle', value: streetAccessibility ?? '---'),
+                    const FlowSummaryStatus(label: 'Foto accesibilidad de la calle', isComplete: true),
                     const SizedBox(height: 12),
                     Text(
                       'En caso de que la cochera no quede en el domicilio se debe adjuntar 3 fotos más',
                       style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF99AAB7)),
                     ),
                     const SizedBox(height: 8),
-                    const SummaryStatus(label: 'Foto 1', isComplete: false),
-                    const SummaryStatus(label: 'Foto 2', isComplete: false),
-                    const SummaryStatus(label: 'Foto 3', isComplete: false),
-                    const SummaryStatus(label: 'Link Google Maps · Ubicación de cochera', isComplete: true),
+                    const FlowSummaryStatus(label: 'Foto 1', isComplete: false),
+                    const FlowSummaryStatus(label: 'Foto 2', isComplete: false),
+                    const FlowSummaryStatus(label: 'Foto 3', isComplete: false),
+                    const FlowSummaryStatus(label: 'Link Google Maps · Ubicación de cochera', isComplete: true),
                   ],
                 ),
               ],

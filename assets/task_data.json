@@ -9,6 +9,15 @@
     "status": "Pendiente"
   },
   {
+    "id": "9",
+    "type": "Conversión",
+    "icon": "assets/GasPump.svg",
+    "time": "10:00",
+    "date": "Miércoles, 18 de marzo de 2026",
+    "address": "Av. Argentina 2045, Lima",
+    "status": "Pendiente"
+  },
+  {
     "id": "2",
     "type": "Recupero",
     "icon": "assets/car.svg",
@@ -42,7 +51,7 @@
     "time": "16:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
-    "status": "Completada"
+    "status": "Pendiente"
   },
   {
     "id": "6",

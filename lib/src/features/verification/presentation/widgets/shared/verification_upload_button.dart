@@ -1,48 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../shared/widgets/flow_upload_button.dart';
 
 class VerificationUploadButton extends StatelessWidget {
   final String text;
-  final IconData icon;
-  final bool isFullWidth;
+  final String iconAsset;
   final VoidCallback? onTap;
 
   const VerificationUploadButton({
     super.key,
     required this.text,
-    required this.icon,
-    this.isFullWidth = false,
+    required this.iconAsset,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return FlowUploadButton(
+      text: text,
+      iconAsset: iconAsset,
       onTap: onTap,
-      child: Container(
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FBFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFB9DBE1)),
-        ),
-        child: Row(
-          mainAxisAlignment: isFullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
-          children: [
-            Icon(icon, color: const Color(0xFF002B4B), size: 24),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF002B4B),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

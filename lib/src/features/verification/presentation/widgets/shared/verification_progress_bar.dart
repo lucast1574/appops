@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../shared/widgets/flow_progress_bar.dart';
 
 class VerificationProgressBar extends StatelessWidget {
   final int currentStep;
@@ -26,38 +27,13 @@ class VerificationProgressBar extends StatelessWidget {
     } else if (currentStep == 8) {
       activeIndex = 5;
     } else if (currentStep == 9) {
-      activeIndex = 5; // All full
+      activeIndex = 5;
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: List.generate(6, (index) {
-          bool isActive = index == activeIndex;
-          bool isCompleted = index < activeIndex || currentStep == 9;
-
-          return Expanded(
-            child: Container(
-              height: 7,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? const Color(0xFF27A376)
-                    : (isActive ? null : const Color(0xFFE5E9EB)),
-                gradient: isActive
-                    ? const LinearGradient(
-                        colors: [Color(0xFF27A376), Color(0xFFF1F4F5)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        stops: [0.3, 1.0],
-                      )
-                    : null,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          );
-        }),
-      ),
+    return FlowProgressBar(
+      totalSteps: 6,
+      activeIndex: activeIndex,
+      allComplete: currentStep == 9,
     );
   }
 }

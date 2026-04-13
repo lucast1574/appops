@@ -78,4 +78,8 @@ flutter:
     - assets/alarm.svg
     - assets/warning.svg
     - assets/CalendarCheck.svg
+    - assets/doble.svg
+    - assets/CameraPlus.svg
+    - assets/Trash.svg
+    - assets/close.svg
     - assets/task_data.json

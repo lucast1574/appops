@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../shared/verification_step_navigation.dart';
+import '../../../../../shared/widgets/flow_step_navigation.dart';
 
 class FamiliarFormStep extends StatelessWidget {
   final String? selectedRelationship;
@@ -128,7 +128,7 @@ class FamiliarFormStep extends StatelessWidget {
             ),
           ),
         ),
-        VerificationStepNavigation(
+        FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
         ),

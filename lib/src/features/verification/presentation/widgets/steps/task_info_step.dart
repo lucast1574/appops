@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class TaskInfoStep extends StatelessWidget {
@@ -17,28 +18,77 @@ class TaskInfoStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader('Cliente'),
+                Text(
+                  'Información de la tarea',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildHeader('Fecha'),
                 const SizedBox(height: 8),
                 _buildValueContainer(
-                  child: Text(
-                    'Juan Ortiz',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: const Color(0xFF002B4B),
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Miércoles, 18 de marzo de 2026',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          color: const Color(0xFF002B4B),
+                        ),
+                      ),
+                      const Spacer(),
+                      SvgPicture.asset(
+                        'assets/doble.svg',
+                        width: 10,
+                        height: 10,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildHeader('Hora inicio'),
-                const SizedBox(height: 8),
-                _buildValueContainer(
-                  child: Text(
-                    '16:00',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: const Color(0xFF002B4B),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader('Hora inicio'),
+                          const SizedBox(height: 8),
+                          _buildValueContainer(
+                            child: Text(
+                              '16:00',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                color: const Color(0xFF002B4B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader('Hora fin'),
+                          const SizedBox(height: 8),
+                          _buildValueContainer(
+                            child: Text(
+                              '18:00',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                color: const Color(0xFF002B4B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _buildHeader('Dirección'),
@@ -46,6 +96,30 @@ class TaskInfoStep extends StatelessWidget {
                 _buildValueContainer(
                   child: Text(
                     'Avenida Pedro de Osma 789 Calle Centenario 156',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      color: const Color(0xFF002B4B),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildHeader('Nombre del cliente'),
+                const SizedBox(height: 8),
+                _buildValueContainer(
+                  child: Text(
+                    'Juan Ramos',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      color: const Color(0xFF002B4B),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildHeader('DNI cliente'),
+                const SizedBox(height: 8),
+                _buildValueContainer(
+                  child: Text(
+                    '12999312232',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF002B4B),
@@ -99,15 +173,15 @@ class TaskInfoStep extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onContinue,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF002B4B),
+                backgroundColor: const Color(0xFF27A376),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(28),
                 ),
                 elevation: 0,
               ),
               child: Text(
-                'Iniciar tarea',
+                'Comenzar tarea',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -126,7 +200,7 @@ class TaskInfoStep extends StatelessWidget {
       style: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF002B4B),
+        color: const Color(0xFF333333),
       ),
     );
   }
@@ -138,9 +212,7 @@ class TaskInfoStep extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE5E9EB).withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: const Color(0xFFE5E9EB)),
       ),
       child: child,
     );

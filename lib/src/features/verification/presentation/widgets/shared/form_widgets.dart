@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../shared/widgets/flow_form_widgets.dart';
 
+// Re-export shared widgets with verification-specific names for backward compatibility
 class YesNoQuestion extends StatelessWidget {
   final String question;
   final bool? currentValue;
@@ -15,38 +16,10 @@ class YesNoQuestion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          question,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF002B4B),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: ToggleOption(
-                text: 'Si',
-                isActive: currentValue == true,
-                onTap: () => onChanged(true),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ToggleOption(
-                text: 'No',
-                isActive: currentValue == false,
-                onTap: () => onChanged(false),
-              ),
-            ),
-          ],
-        ),
-      ],
+    return FlowYesNoQuestion(
+      question: question,
+      currentValue: currentValue,
+      onChanged: onChanged,
     );
   }
 }
@@ -69,38 +42,12 @@ class DualOptionQuestion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          question,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF002B4B),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: ToggleOption(
-                text: opt1,
-                isActive: currentValue == opt1,
-                onTap: () => onChanged(opt1),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ToggleOption(
-                text: opt2,
-                isActive: currentValue == opt2,
-                onTap: () => onChanged(opt2),
-              ),
-            ),
-          ],
-        ),
-      ],
+    return FlowDualOptionQuestion(
+      question: question,
+      opt1: opt1,
+      opt2: opt2,
+      currentValue: currentValue,
+      onChanged: onChanged,
     );
   }
 }
@@ -119,28 +66,10 @@ class ToggleOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return FlowToggleOption(
+      text: text,
+      isActive: isActive,
       onTap: onTap,
-      child: Container(
-        height: 48,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFB9DBE1) : const Color(0xFFF8FBFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFB9DBE1),
-            width: 1.0,
-          ),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF002B4B),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -152,13 +81,6 @@ class FormSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
-        color: const Color(0xFF002B4B),
-      ),
-    );
+    return FlowSectionLabel(label: label);
   }
 }
