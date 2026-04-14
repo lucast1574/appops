@@ -3,52 +3,43 @@
     "id": "1",
     "type": "Verificación",
     "icon": "assets/check.svg",
-    "time": "13:00",
+    "time": "09:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Avenida Pedro de Osma 789 Calle Centenario 156",
-    "status": "Pendiente"
-  },
-  {
-    "id": "9",
-    "type": "Conversión",
-    "icon": "assets/GasPump.svg",
-    "time": "10:00",
-    "date": "Miércoles, 18 de marzo de 2026",
-    "address": "Av. Argentina 2045, Lima",
     "status": "Pendiente"
   },
   {
     "id": "2",
     "type": "Recupero",
     "icon": "assets/car.svg",
-    "time": "16:00",
+    "time": "10:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
-    "status": "Completada"
+    "status": "Pendiente"
   },
   {
     "id": "3",
     "type": "Entrega unidad",
     "icon": "assets/entrega.svg",
-    "time": "16:00",
+    "time": "11:00",
     "date": "Miércoles, 18 de marzo de 2026",
-    "address": "Calle Los Manzanos 341, Urb. Monterrico",
-    "status": "Rechazada"
+    "address": "Av. Javier Prado Este 1234, San Isidro",
+    "status": "Pendiente"
   },
   {
     "id": "4",
-    "type": "Traslado",
-    "icon": "assets/traslado.svg",
-    "time": "14:00",
+    "type": "Conversión",
+    "icon": "assets/GasPump.svg",
+    "time": "12:00",
     "date": "Miércoles, 18 de marzo de 2026",
-    "address": "Calle Los Manzanos 341, Urb. Monterrico",
-    "status": "En curso"
+    "address": "Av. Argentina 2045, Lima",
+    "status": "Pendiente"
   },
   {
     "id": "5",
-    "type": "Conversión",
-    "icon": "assets/GasPump.svg",
-    "time": "16:00",
+    "type": "Traslado",
+    "icon": "assets/traslado.svg",
+    "time": "13:00",
     "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Los Manzanos 341, Urb. Monterrico",
     "status": "Pendiente"
@@ -57,8 +48,8 @@
     "id": "6",
     "type": "Verificar Vehículo",
     "icon": "assets/verificar.svg",
-    "time": "09:00",
-    "date": "Jueves, 19 de marzo de 2026",
+    "time": "14:00",
+    "date": "Miércoles, 18 de marzo de 2026",
     "address": "Av. Javier Prado Este 1234, San Isidro",
     "status": "Pendiente"
   },
@@ -66,18 +57,18 @@
     "id": "7",
     "type": "Notaría",
     "icon": "assets/notaria.svg",
-    "time": "11:00",
-    "date": "Jueves, 19 de marzo de 2026",
+    "time": "15:00",
+    "date": "Miércoles, 18 de marzo de 2026",
     "address": "Calle Las Begonias 456, San Isidro",
-    "status": "En curso"
+    "status": "Pendiente"
   },
   {
     "id": "8",
     "type": "Gestiones/Otros",
     "icon": "assets/gestiones.svg",
-    "time": "14:00",
-    "date": "Viernes, 20 de marzo de 2026",
+    "time": "16:00",
+    "date": "Miércoles, 18 de marzo de 2026",
     "address": "Pasaje Los Pinos 789, Miraflores",
-    "status": "Reprogramada"
+    "status": "Pendiente"
   }
 ]
