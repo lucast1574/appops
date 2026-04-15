@@ -8,6 +8,8 @@ import '../widgets/shared/confirmation_sheet.dart';
 
 // Import Step Widgets
 import '../widgets/steps/task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/before_starting_step.dart';
 import '../widgets/steps/who_received_step.dart';
 import '../widgets/steps/document_validation_step.dart';
@@ -29,6 +31,8 @@ class VerificationPage extends StatefulWidget {
 
 class _VerificationPageState extends State<VerificationPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
   String? _selectedRecipient;
   String? _selectedRelationship;
 
@@ -185,7 +189,7 @@ class _VerificationPageState extends State<VerificationPage> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return TaskInfoStep(onContinue: _nextStep);
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1:
         return BeforeStartingStep(
           onContinue: _nextStep,
@@ -348,11 +352,54 @@ class _VerificationPageState extends State<VerificationPage> {
       case 10:
         return SuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
-        return TaskInfoStep(onContinue: _nextStep);
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
 
-  void _showConfirmationBottomSheet(BuildContext context) {
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'who_received': _selectedRecipient,
+          'relationship': _selectedRelationship,
+          'documents': {
+            'dni_uploaded': _dniUploaded,
+            'brevete_uploaded': _breveteUploaded,
+            'recibo_uploaded': _reciboUploaded,
+          },
+          'housing_type': _housingType,
+          'garage': {
+            'is_at_home': _isGarageAtHome,
+            'has_security': _hasSecurity,
+            'has_cameras': _hasCameras,
+            'access_type': _accessType,
+            'is_roofing': _isRoofing,
+            'is_basement': _isBasement,
+            'garage_direction': _garageDirection,
+            'street_accessibility': _streetAccessibility,
+          },
+          'verification_result': _verificationResult,
+        },
+        observations: _observationsController.text,
+      );
+      if (mounted) setState(() => _currentStep = 10);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: \$e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+    void _showConfirmationBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -365,11 +412,9 @@ class _VerificationPageState extends State<VerificationPage> {
       builder: (context) {
         return ConfirmationSheet(
           onCancel: () => Navigator.pop(context),
-          onConfirm: () {
+          onConfirm: () async {
             Navigator.pop(context);
-            setState(() {
-              _currentStep = 10;
-            });
+            await _submitTask();
           },
         );
       },

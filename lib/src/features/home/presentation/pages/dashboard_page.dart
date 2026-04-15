@@ -62,8 +62,9 @@ class _DashboardPageState extends State<DashboardPage> {
         setState(() {
           // Filter out completed/rejected — operario doesn't need those on dashboard
           _tasks = tasks
-              .where((t) =>
-                  t['status'] != 'completed' && t['status'] != 'rejected')
+              .where(
+                (t) => t['status'] != 'completed' && t['status'] != 'rejected',
+              )
               .toList();
           isLoading = false;
         });
@@ -82,8 +83,9 @@ class _DashboardPageState extends State<DashboardPage> {
     if (selectedFilter == 'Todas') return _tasks;
     if (selectedFilter == 'En curso') {
       return _tasks
-          .where((t) =>
-              t['status'] == 'in_progress' || t['status'] == 'rescheduled')
+          .where(
+            (t) => t['status'] == 'in_progress' || t['status'] == 'rescheduled',
+          )
           .toList();
     }
     if (selectedFilter == 'Pendiente') {
@@ -110,10 +112,11 @@ class _DashboardPageState extends State<DashboardPage> {
               _buildTopSection(),
               if (isLoading)
                 const Center(
-                    child: Padding(
-                        padding: EdgeInsets.all(40.0),
-                        child: CircularProgressIndicator(
-                            color: Color(0xFF4FA4B5))))
+                  child: Padding(
+                    padding: EdgeInsets.all(40.0),
+                    child: CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+                  ),
+                )
               else if (_error != null)
                 _buildErrorState()
               else
@@ -162,19 +165,31 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(40),
         child: Column(
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFFCCD5DB)),
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 48,
+              color: Color(0xFFCCD5DB),
+            ),
             const SizedBox(height: 16),
             Text(
               _error ?? 'Error desconocido',
-              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF668093)),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF668093),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             TextButton.icon(
               onPressed: _loadTasks,
               icon: const Icon(Icons.refresh, size: 18),
-              label: Text('Reintentar', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              style: TextButton.styleFrom(foregroundColor: const Color(0xFF4FA4B5)),
+              label: Text(
+                'Reintentar',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF4FA4B5),
+              ),
             ),
           ],
         ),
@@ -202,8 +217,9 @@ class _DashboardPageState extends State<DashboardPage> {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
-            children:
-                filters.map((filter) => _buildFilterButton(filter)).toList(),
+            children: filters
+                .map((filter) => _buildFilterButton(filter))
+                .toList(),
           ),
         ),
         const SizedBox(height: 20),
@@ -229,13 +245,18 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(40),
         child: Column(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                size: 48, color: Color(0xFFCCD5DB)),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              size: 48,
+              color: Color(0xFFCCD5DB),
+            ),
             const SizedBox(height: 16),
             Text(
               'No tienes tareas pendientes',
               style: GoogleFonts.inter(
-                  fontSize: 14, color: const Color(0xFF668093)),
+                fontSize: 14,
+                color: const Color(0xFF668093),
+              ),
             ),
           ],
         ),
@@ -251,9 +272,7 @@ class _DashboardPageState extends State<DashboardPage> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF002B4B)
-              : const Color(0xFFCCD5DB),
+          color: isSelected ? const Color(0xFF002B4B) : const Color(0xFFCCD5DB),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
@@ -270,7 +289,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _navigateToTask(Map<String, dynamic> task) {
     final slug = task['type']?['slug'] ?? '';
-    final int taskId = task['id'] ?? 0;
     Widget page;
 
     switch (slug) {
@@ -331,8 +349,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final String status = task['status'] ?? 'pending';
     final bool isInProgress =
         status == 'in_progress' || status == 'rescheduled';
-    final Color buttonColor =
-        isInProgress ? const Color(0xFFFBDF83) : const Color(0xFF4FA4B5);
+    final Color buttonColor = isInProgress
+        ? const Color(0xFFFBDF83)
+        : const Color(0xFF4FA4B5);
     final String buttonText = isInProgress ? 'Continuar' : 'Iniciar tarea';
 
     // Extract task data
@@ -374,7 +393,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 width: 20,
                 height: 20,
                 colorFilter: const ColorFilter.mode(
-                    Color(0xFF002B4B), BlendMode.srcIn),
+                  Color(0xFF002B4B),
+                  BlendMode.srcIn,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -389,8 +410,10 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               if (isRescheduled)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE3F2FD),
                     borderRadius: BorderRadius.circular(6),
@@ -425,9 +448,10 @@ class _DashboardPageState extends State<DashboardPage> {
             Padding(
               padding: const EdgeInsets.only(left: 32),
               child: Text(
-                [clientName, if (placa.isNotEmpty) placa]
-                    .where((s) => s.isNotEmpty)
-                    .join(' \u00b7 '),
+                [
+                  clientName,
+                  if (placa.isNotEmpty) placa,
+                ].where((s) => s.isNotEmpty).join(' \u00b7 '),
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -497,8 +521,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   if (!isInProgress) ...[
                     const SizedBox(width: 8),
-                    const Icon(Icons.keyboard_double_arrow_right_rounded,
-                        size: 20),
+                    const Icon(
+                      Icons.keyboard_double_arrow_right_rounded,
+                      size: 20,
+                    ),
                   ],
                 ],
               ),

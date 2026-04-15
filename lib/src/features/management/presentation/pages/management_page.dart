@@ -7,6 +7,8 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
 import '../widgets/steps/management_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/management_before_starting_step.dart';
 import '../widgets/steps/management_result_step.dart';
 import '../widgets/steps/management_payment_step.dart';
@@ -24,6 +26,8 @@ class ManagementPage extends StatefulWidget {
 
 class _ManagementPageState extends State<ManagementPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
 
   // The management type — in production comes from task data
   // Options: 'Prueba de Bloqueo / Desbloqueo', 'Pago servicio',
@@ -244,6 +248,47 @@ class _ManagementPageState extends State<ManagementPage> {
           onContinue: _nextStep,
         );
     }
+  }
+
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'management_type': _managementType,
+          'verification_result': _verificationResult,
+          'fine_type': _fineType,
+          'municipality': _municipality,
+          'start_time': _startTimeController.text,
+          'end_time': _endTimeController.text,
+          'motivo': _motivoController.text,
+          'comisaria': _comisariaController.text,
+          'expediente': _expedienteController.text,
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 4;
   }
 
   void _showConfirmationBottomSheet(BuildContext context) {

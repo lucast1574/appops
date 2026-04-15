@@ -7,6 +7,8 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
 import '../widgets/steps/vv_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/vv_detail_step.dart';
 import '../widgets/steps/vv_summary_step.dart';
 
@@ -23,6 +25,8 @@ class VehicleVerificationPage extends StatefulWidget {
 
 class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
   bool? _isVisible;
   final TextEditingController _observationsController = TextEditingController();
 
@@ -65,7 +69,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: return VehicleVerificationTaskInfoStep(onContinue: _nextStep);
+      case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return ManagementBeforeStartingStep(onContinue: _nextStep, onBack: _previousStep);
       case 2: return VehicleVerificationDetailStep(
         isVisible: _isVisible,
@@ -82,8 +86,42 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
         onSend: () => _showConfirmation(context),
       );
       case 4: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
-      default: return VehicleVerificationTaskInfoStep(onContinue: _nextStep);
+      default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
+  }
+
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'is_visible': _isVisible,
+          'observations': _observationsController.text,
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 4;
   }
 
   void _showConfirmation(BuildContext context) {
@@ -92,7 +130,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
       builder: (context) => FlowConfirmationSheet(
         onCancel: () => Navigator.pop(context),
-        onConfirm: () { Navigator.pop(context); setState(() => _currentStep = 4); },
+        onConfirm: () async { Navigator.pop(context); await _submitTask(); },
       ),
     );
   }

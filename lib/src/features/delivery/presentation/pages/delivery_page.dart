@@ -7,6 +7,8 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
 import '../widgets/steps/delivery_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/delivery_info_step.dart';
 import '../widgets/steps/delivery_confirmation_step.dart';
 import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dart';
@@ -22,6 +24,8 @@ class DeliveryPage extends StatefulWidget {
 
 class _DeliveryPageState extends State<DeliveryPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
 
   // Step 1 — delivery info
   final TextEditingController _clientNameController = TextEditingController();
@@ -85,7 +89,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: return DeliveryTaskInfoStep(onContinue: _nextStep);
+      case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return DeliveryInfoStep(
         clientNameController: _clientNameController, dniController: _dniController,
         deliverVehicle: _deliverVehicle, dniPhotoUploaded: _dniPhotoUploaded, dniPhotoTag: _dniPhotoTag,
@@ -137,13 +141,49 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onSend: () => _showConfirmation(context),
       );
       case 5: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
-      default: return DeliveryTaskInfoStep(onContinue: _nextStep);
+      default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
+  }
+
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'client_name': _clientNameController.text,
+          'dni': _dniController.text,
+          'deliver_vehicle': _deliverVehicle,
+          'delivery_time': _deliveryTimeController.text,
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 5;
   }
 
   void _showConfirmation(BuildContext context) {
     showModalBottomSheet(context: context, backgroundColor: Colors.white, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-      builder: (context) => FlowConfirmationSheet(onCancel: () => Navigator.pop(context), onConfirm: () { Navigator.pop(context); setState(() => _currentStep = 5); }),
+      builder: (context) => FlowConfirmationSheet(onCancel: () => Navigator.pop(context), onConfirm: () async { Navigator.pop(context); await _submitTask(); }),
     );
   }
 }

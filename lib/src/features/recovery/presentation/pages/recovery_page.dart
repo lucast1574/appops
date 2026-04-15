@@ -7,6 +7,8 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
 import '../widgets/steps/recovery_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../../../management/presentation/widgets/steps/management_before_starting_step.dart';
 import '../widgets/steps/recovery_who_delivered_step.dart';
 import '../widgets/steps/recovery_vehicle_state_step.dart';
@@ -23,6 +25,8 @@ class RecoveryPage extends StatefulWidget {
 
 class _RecoveryPageState extends State<RecoveryPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
 
   // Step 2 — who delivered
   String? _selectedPerson;
@@ -90,7 +94,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: return RecoveryTaskInfoStep(onContinue: _nextStep);
+      case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return ManagementBeforeStartingStep(onContinue: _nextStep, onBack: _previousStep);
       case 2: return RecoveryWhoDeliveredStep(selectedPerson: _selectedPerson, onPersonSelected: (v) => setState(() => _selectedPerson = v), onBack: _previousStep, onContinue: _nextStep);
       case 3: return RecoveryVehicleStateStep(
@@ -143,13 +147,66 @@ class _RecoveryPageState extends State<RecoveryPage> {
         onSend: () => _showConfirmation(context),
       );
       case 6: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
-      default: return RecoveryTaskInfoStep(onContinue: _nextStep);
+      default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
+  }
+
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'who_delivered': _selectedPerson,
+          'vehicle_state': {
+            'fuel_level': _selectedFuelLevel,
+            'has_visible_damage': _hasVisibleDamage,
+            'damage_description': _damageDescController.text,
+          },
+          'documents': {
+            'tarjeta_propiedad': _tarjetaUploaded,
+            'soat': _soatUploaded,
+            'revision_tecnica': _revisionUploaded,
+            'acta_recupero': _actaUploaded,
+          },
+          'accessories': {
+            'llave_original': _llaveOriginal,
+            'llave_repuesto': _llaveRepuesto,
+            'gata': _gata,
+            'llanta_repuesto': _llantaRepuesto,
+            'extintor': _extintor,
+            'triangulo': _triangulo,
+            'manual_conductor': _manualConductor,
+          },
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 6;
   }
 
   void _showConfirmation(BuildContext context) {
     showModalBottomSheet(context: context, backgroundColor: Colors.white, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-      builder: (context) => FlowConfirmationSheet(onCancel: () => Navigator.pop(context), onConfirm: () { Navigator.pop(context); setState(() => _currentStep = 6); }),
+      builder: (context) => FlowConfirmationSheet(onCancel: () => Navigator.pop(context), onConfirm: () async { Navigator.pop(context); await _submitTask(); }),
     );
   }
 }

@@ -9,6 +9,8 @@ import '../../../../shared/widgets/flow_success_step.dart';
 
 // Step widgets
 import '../widgets/steps/notary_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/notary_receive_docs_step.dart';
 import '../widgets/steps/notary_deliver_docs_step.dart';
 import '../widgets/steps/notary_summary_step.dart';
@@ -23,6 +25,8 @@ class NotaryPage extends StatefulWidget {
 
 class _NotaryPageState extends State<NotaryPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
 
   // Step 0 - Task info
   String? _selectedPickupNotary;
@@ -184,6 +188,42 @@ class _NotaryPageState extends State<NotaryPage> {
     }
   }
 
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'pickup_notary': _selectedPickupNotary,
+          'delivery_notary': _selectedDeliveryNotary,
+          'receiver_name': _receiverNameController.text,
+          'delivery_name': _deliveryNameController.text,
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 4;
+  }
+
   void _showConfirmationBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -197,11 +237,10 @@ class _NotaryPageState extends State<NotaryPage> {
       builder: (context) {
         return FlowConfirmationSheet(
           onCancel: () => Navigator.pop(context),
-          onConfirm: () {
+          onConfirm: () async {
             Navigator.pop(context);
-            setState(() {
-              _currentStep = 4;
-            });
+            await _submitTask();
+          }
           },
         );
       },

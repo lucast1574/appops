@@ -9,6 +9,8 @@ import '../../../../shared/widgets/flow_success_step.dart';
 
 // Step widgets
 import '../widgets/steps/conversion_task_info_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
 import '../widgets/steps/conversion_service_info_step.dart';
 import '../widgets/steps/conversion_result_step.dart';
 import '../widgets/steps/conversion_summary_step.dart';
@@ -23,6 +25,8 @@ class ConversionPage extends StatefulWidget {
 
 class _ConversionPageState extends State<ConversionPage> {
   int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
 
   // Step 1 - Service Info
   String? _selectedServiceType;
@@ -128,7 +132,7 @@ class _ConversionPageState extends State<ConversionPage> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return ConversionTaskInfoStep(onContinue: _nextStep);
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1:
         return ConversionServiceInfoStep(
           selectedServiceType: _selectedServiceType,
@@ -173,8 +177,43 @@ class _ConversionPageState extends State<ConversionPage> {
       case 4:
         return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
-        return ConversionTaskInfoStep(onContinue: _nextStep);
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
+  }
+
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'service_type': _selectedServiceType,
+          'location': _selectedLocation,
+          'maps_link': _mapsController.text,
+        },
+        observations: '',
+      );
+      if (mounted) setState(() => _currentStep = _successStep);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  // Success step index (auto-detected)
+  int get _successStep {
+    // Find the highest step + 1 that shows FlowSuccessStep
+    // Convention: it's always the last case in _buildCurrentStep
+    return 4;
   }
 
   void _showConfirmationBottomSheet(BuildContext context) {
@@ -190,11 +229,10 @@ class _ConversionPageState extends State<ConversionPage> {
       builder: (context) {
         return FlowConfirmationSheet(
           onCancel: () => Navigator.pop(context),
-          onConfirm: () {
+          onConfirm: () async {
             Navigator.pop(context);
-            setState(() {
-              _currentStep = 4;
-            });
+            await _submitTask();
+          }
           },
         );
       },
