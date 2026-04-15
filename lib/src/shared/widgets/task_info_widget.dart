@@ -35,6 +35,16 @@ class TaskInfoWidget extends StatelessWidget {
     final String color = task['color'] ?? '';
     final String observations = task['observations'] ?? '';
 
+    // Type-specific metadata
+    final metadata = task['metadata'] as Map<String, dynamic>? ?? {};
+    final String managementType = metadata['management_type'] ?? '';
+    final String pickupNotary = metadata['pickup_notary'] ?? '';
+    final String deliveryNotary = metadata['delivery_notary'] ?? '';
+    final String origin = metadata['origin'] ?? '';
+    final String destination = metadata['destination'] ?? '';
+    final String serviceType = metadata['service_type'] ?? '';
+    final String conversionLocation = metadata['location'] ?? '';
+
     // Build vehicle string
     final vehicleParts = <String>[
       if (marca.isNotEmpty) marca,
@@ -169,6 +179,74 @@ class TaskInfoWidget extends StatelessWidget {
                   const SizedBox(height: 8),
                   _buildValueContainer(
                     child: Text(vehicleInfo, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Management type
+                if (managementType.isNotEmpty) ...[
+                  _buildHeader('Tipo de gesti\u00f3n'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(managementType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Notary fields
+                if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
+                  if (pickupNotary.isNotEmpty) ...[
+                    _buildHeader('Notar\u00eda recojo'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(pickupNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (deliveryNotary.isNotEmpty) ...[
+                    _buildHeader('Notar\u00eda entrega'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(deliveryNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+
+                // Transfer origin/destination
+                if (origin.isNotEmpty || destination.isNotEmpty) ...[
+                  if (origin.isNotEmpty) ...[
+                    _buildHeader('Origen'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(origin, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (destination.isNotEmpty) ...[
+                    _buildHeader('Destino'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(destination, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+
+                // Conversion service type
+                if (serviceType.isNotEmpty) ...[
+                  _buildHeader('Tipo de servicio'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(serviceType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (conversionLocation.isNotEmpty) ...[
+                  _buildHeader('Taller / Ubicaci\u00f3n'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(conversionLocation, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
                   ),
                   const SizedBox(height: 16),
                 ],
