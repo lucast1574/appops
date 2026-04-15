@@ -7,7 +7,6 @@ import '../widgets/shared/verification_progress_bar.dart';
 import '../widgets/shared/confirmation_sheet.dart';
 
 // Import Step Widgets
-import '../widgets/steps/task_info_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/before_starting_step.dart';

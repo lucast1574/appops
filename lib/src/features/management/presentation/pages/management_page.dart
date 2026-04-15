@@ -6,8 +6,6 @@ import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
-import '../widgets/steps/management_task_info_step.dart';
-import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/management_before_starting_step.dart';
 import '../widgets/steps/management_result_step.dart';
@@ -15,6 +13,7 @@ import '../widgets/steps/management_payment_step.dart';
 import '../widgets/steps/management_detail_step.dart';
 import '../widgets/steps/management_police_step.dart';
 import '../widgets/steps/management_summary_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
 
 class ManagementPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -155,10 +154,7 @@ class _ManagementPageState extends State<ManagementPage> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return ManagementTaskInfoStep(
-          managementType: _managementType,
-          onContinue: _nextStep,
-        );
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1:
         return ManagementBeforeStartingStep(
           onContinue: _nextStep,
@@ -188,10 +184,7 @@ class _ManagementPageState extends State<ManagementPage> {
       case 4:
         return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
-        return ManagementTaskInfoStep(
-          managementType: _managementType,
-          onContinue: _nextStep,
-        );
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
 
@@ -272,23 +265,16 @@ class _ManagementPageState extends State<ManagementPage> {
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = _successStep);
+      if (mounted) setState(() => _currentStep = 4);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  // Success step index (auto-detected)
-  int get _successStep {
-    // Find the highest step + 1 that shows FlowSuccessStep
-    // Convention: it's always the last case in _buildCurrentStep
-    return 4;
   }
 
   void _showConfirmationBottomSheet(BuildContext context) {
@@ -304,9 +290,9 @@ class _ManagementPageState extends State<ManagementPage> {
       builder: (context) {
         return FlowConfirmationSheet(
           onCancel: () => Navigator.pop(context),
-          onConfirm: () {
+          onConfirm: () async {
             Navigator.pop(context);
-            setState(() => _currentStep = 4);
+            await _submitTask();
           },
         );
       },

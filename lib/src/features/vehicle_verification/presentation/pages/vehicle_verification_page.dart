@@ -6,7 +6,6 @@ import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
-import '../widgets/steps/vv_task_info_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/vv_detail_step.dart';
@@ -105,23 +104,16 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = _successStep);
+      if (mounted) setState(() => _currentStep = 4);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  // Success step index (auto-detected)
-  int get _successStep {
-    // Find the highest step + 1 that shows FlowSuccessStep
-    // Convention: it's always the last case in _buildCurrentStep
-    return 4;
   }
 
   void _showConfirmation(BuildContext context) {

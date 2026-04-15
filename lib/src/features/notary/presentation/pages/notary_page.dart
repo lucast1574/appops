@@ -8,12 +8,11 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
 // Step widgets
-import '../widgets/steps/notary_task_info_step.dart';
-import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/notary_receive_docs_step.dart';
 import '../widgets/steps/notary_deliver_docs_step.dart';
 import '../widgets/steps/notary_summary_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
 
 class NotaryPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -134,13 +133,7 @@ class _NotaryPageState extends State<NotaryPage> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return NotaryTaskInfoStep(
-          selectedPickupNotary: _selectedPickupNotary,
-          selectedDeliveryNotary: _selectedDeliveryNotary,
-          onPickupNotaryChanged: (val) => setState(() => _selectedPickupNotary = val),
-          onDeliveryNotaryChanged: (val) => setState(() => _selectedDeliveryNotary = val),
-          onContinue: _nextStep,
-        );
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1:
         return NotaryReceiveDocsStep(
           photoUploaded: _receivePhotoUploaded,
@@ -178,13 +171,7 @@ class _NotaryPageState extends State<NotaryPage> {
       case 4:
         return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
-        return NotaryTaskInfoStep(
-          selectedPickupNotary: _selectedPickupNotary,
-          selectedDeliveryNotary: _selectedDeliveryNotary,
-          onPickupNotaryChanged: (val) => setState(() => _selectedPickupNotary = val),
-          onDeliveryNotaryChanged: (val) => setState(() => _selectedDeliveryNotary = val),
-          onContinue: _nextStep,
-        );
+        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
 
@@ -205,23 +192,16 @@ class _NotaryPageState extends State<NotaryPage> {
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = _successStep);
+      if (mounted) setState(() => _currentStep = 4);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  // Success step index (auto-detected)
-  int get _successStep {
-    // Find the highest step + 1 that shows FlowSuccessStep
-    // Convention: it's always the last case in _buildCurrentStep
-    return 4;
   }
 
   void _showConfirmationBottomSheet(BuildContext context) {
@@ -240,7 +220,6 @@ class _NotaryPageState extends State<NotaryPage> {
           onConfirm: () async {
             Navigator.pop(context);
             await _submitTask();
-          }
           },
         );
       },

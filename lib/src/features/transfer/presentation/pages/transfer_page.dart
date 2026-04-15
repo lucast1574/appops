@@ -6,13 +6,12 @@ import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 
-import '../widgets/steps/transfer_task_info_step.dart';
-import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/transfer_info_step.dart';
 import '../widgets/steps/transfer_delivery_info_step.dart';
 import '../widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
+import '../../../../shared/widgets/task_info_widget.dart';
 
 class TransferPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -92,12 +91,7 @@ class _TransferPageState extends State<TransferPage> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: return TransferTaskInfoStep(
-        selectedPlaca: _selectedPlaca, selectedDestination: _selectedDestination,
-        onPlacaChanged: (v) => setState(() => _selectedPlaca = v),
-        onDestinationChanged: (v) => setState(() => _selectedDestination = v),
-        onContinue: _nextStep,
-      );
+      case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return TransferInfoStep(
         placa: _placa, originLocation: _origin, destinationLocation: _destination,
         exitPhotoUploaded: _exitPhotoUploaded, exitPhotoTag: _exitPhotoTag,
@@ -150,7 +144,7 @@ class _TransferPageState extends State<TransferPage> {
         onSend: () => _showConfirmation(context),
       );
       case 5: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
-      default: return TransferTaskInfoStep(selectedPlaca: _selectedPlaca, selectedDestination: _selectedDestination, onPlacaChanged: (v) => setState(() => _selectedPlaca = v), onDestinationChanged: (v) => setState(() => _selectedDestination = v), onContinue: _nextStep);
+      default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
 
@@ -171,23 +165,16 @@ class _TransferPageState extends State<TransferPage> {
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = _successStep);
+      if (mounted) setState(() => _currentStep = 5);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar: ${e}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  // Success step index (auto-detected)
-  int get _successStep {
-    // Find the highest step + 1 that shows FlowSuccessStep
-    // Convention: it's always the last case in _buildCurrentStep
-    return 5;
   }
 
   void _showConfirmation(BuildContext context) {
