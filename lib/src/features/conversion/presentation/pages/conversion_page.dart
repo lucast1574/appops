@@ -14,7 +14,8 @@ import '../widgets/steps/conversion_result_step.dart';
 import '../widgets/steps/conversion_summary_step.dart';
 
 class ConversionPage extends StatefulWidget {
-  const ConversionPage({super.key});
+  final Map<String, dynamic> task;
+  const ConversionPage({super.key, required this.task});
 
   @override
   State<ConversionPage> createState() => _ConversionPageState();

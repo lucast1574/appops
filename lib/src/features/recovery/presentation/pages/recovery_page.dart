@@ -14,7 +14,8 @@ import '../widgets/steps/recovery_docs_step.dart';
 import '../widgets/steps/recovery_summary_step.dart';
 
 class RecoveryPage extends StatefulWidget {
-  const RecoveryPage({super.key});
+  final Map<String, dynamic> task;
+  const RecoveryPage({super.key, required this.task});
 
   @override
   State<RecoveryPage> createState() => _RecoveryPageState();

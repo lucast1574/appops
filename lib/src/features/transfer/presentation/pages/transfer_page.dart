@@ -13,7 +13,8 @@ import '../widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
 
 class TransferPage extends StatefulWidget {
-  const TransferPage({super.key});
+  final Map<String, dynamic> task;
+  const TransferPage({super.key, required this.task});
 
   @override
   State<TransferPage> createState() => _TransferPageState();

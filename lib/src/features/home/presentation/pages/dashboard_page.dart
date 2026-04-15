@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/mock_task_service.dart';
+import '../../data/task_service.dart';
 import '../../../auth/data/auth_service.dart';
 import '../../../verification/presentation/pages/verification_page.dart';
 import '../../../recovery/presentation/pages/recovery_page.dart';
@@ -24,25 +24,21 @@ class _DashboardPageState extends State<DashboardPage> {
   final List<String> filters = [
     'Todas',
     'En curso',
-    'Verificación',
-    'Recupero',
-    'Entrega',
-    'Conversión',
-    'Traslado',
-    'Verificar Vehículo',
-    'Notaría',
-    'Gestiones/Otros'
+    'Pendiente',
+    'Reprogramada',
   ];
 
-  List<Map<String, String>> mockTasks = [];
+  final TaskService _taskService = TaskService();
+  List<Map<String, dynamic>> _tasks = [];
   bool isLoading = true;
+  String? _error;
   String _userName = '';
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
     _loadUser();
+    _loadTasks();
   }
 
   Future<void> _loadUser() async {
@@ -55,29 +51,75 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadTasks() async {
-    final tasks = await MockTaskService.loadTasks();
-    if (mounted) {
-      setState(() {
-        mockTasks = tasks;
-        isLoading = false;
-      });
+    setState(() {
+      isLoading = true;
+      _error = null;
+    });
+    try {
+      // Load ALL active tasks (not just today) so operario sees pending + in_progress
+      final tasks = await _taskService.getMyTasks();
+      if (mounted) {
+        setState(() {
+          // Filter out completed/rejected — operario doesn't need those on dashboard
+          _tasks = tasks
+              .where((t) =>
+                  t['status'] != 'completed' && t['status'] != 'rejected')
+              .toList();
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Error al cargar tareas';
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  List<Map<String, dynamic>> get _filteredTasks {
+    if (selectedFilter == 'Todas') return _tasks;
+    if (selectedFilter == 'En curso') {
+      return _tasks
+          .where((t) =>
+              t['status'] == 'in_progress' || t['status'] == 'rescheduled')
+          .toList();
+    }
+    if (selectedFilter == 'Pendiente') {
+      return _tasks.where((t) => t['status'] == 'pending').toList();
+    }
+    if (selectedFilter == 'Reprogramada') {
+      return _tasks.where((t) => t['status'] == 'rescheduled').toList();
+    }
+    return _tasks;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTopSection(),
-            if (isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()))
-            else
-              _buildTaskListSection(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _loadTasks,
+        color: const Color(0xFF4FA4B5),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTopSection(),
+              if (isLoading)
+                const Center(
+                    child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: CircularProgressIndicator(
+                            color: Color(0xFF4FA4B5))))
+              else if (_error != null)
+                _buildErrorState()
+              else
+                _buildTaskListSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -91,15 +133,51 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           const SizedBox(height: 24),
           Text(
-            '¡Bienvenido, $_userName!',
+            _userName.isNotEmpty
+                ? '\u00a1Bienvenido, $_userName!'
+                : '\u00a1Bienvenido!',
             style: GoogleFonts.inter(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF002B4B),
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            '${_filteredTasks.length} tarea${_filteredTasks.length == 1 ? '' : 's'} activa${_filteredTasks.length == 1 ? '' : 's'}',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF668093),
+            ),
+          ),
           const SizedBox(height: 10),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFFCCD5DB)),
+            const SizedBox(height: 16),
+            Text(
+              _error ?? 'Error desconocido',
+              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF668093)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: _loadTasks,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text('Reintentar', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFF4FA4B5)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -124,33 +202,44 @@ class _DashboardPageState extends State<DashboardPage> {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
-            children: filters.map((filter) => _buildFilterButton(filter)).toList(),
+            children:
+                filters.map((filter) => _buildFilterButton(filter)).toList(),
           ),
         ),
         const SizedBox(height: 20),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: mockTasks.length,
-          itemBuilder: (context, index) {
-            final task = mockTasks[index];
-            final status = task['status'];
-            // Filtration logic mock
-            if (status == 'Completada' || status == 'Rechazada') {
-              return const SizedBox.shrink();
-            }
-
-            if (selectedFilter == 'En curso') {
-              if (status != 'En curso') return const SizedBox.shrink();
-            } else if (selectedFilter != 'Todas' && !task['type']!.contains(selectedFilter)) {
-              return const SizedBox.shrink();
-            }
-            return _buildTaskCard(task);
-          },
-        ),
+        if (_filteredTasks.isEmpty)
+          _buildEmptyState()
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _filteredTasks.length,
+            itemBuilder: (context, index) =>
+                _buildTaskCard(_filteredTasks[index]),
+          ),
         const SizedBox(height: 40),
       ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            const Icon(Icons.check_circle_outline_rounded,
+                size: 48, color: Color(0xFFCCD5DB)),
+            const SizedBox(height: 16),
+            Text(
+              'No tienes tareas pendientes',
+              style: GoogleFonts.inter(
+                  fontSize: 14, color: const Color(0xFF668093)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -162,7 +251,9 @@ class _DashboardPageState extends State<DashboardPage> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF002B4B) : const Color(0xFFCCD5DB),
+          color: isSelected
+              ? const Color(0xFF002B4B)
+              : const Color(0xFFCCD5DB),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
@@ -177,38 +268,86 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  void _navigateToTask(String type) {
+  void _navigateToTask(Map<String, dynamic> task) {
+    final slug = task['type']?['slug'] ?? '';
+    final int taskId = task['id'] ?? 0;
     Widget page;
-    if (type.contains('Verificación')) {
-      page = const VerificationPage();
-    } else if (type.contains('Recupero')) {
-      page = const RecoveryPage();
-    } else if (type.contains('Entrega')) {
-      page = const DeliveryPage();
-    } else if (type.contains('Conversión')) {
-      page = const ConversionPage();
-    } else if (type.contains('Traslado')) {
-      page = const TransferPage();
-    } else if (type.contains('Verificar Vehículo')) {
-      page = const VehicleVerificationPage();
-    } else if (type.contains('Notaría')) {
-      page = const NotaryPage();
-    } else if (type.contains('Gestiones/Otros')) {
-      page = const ManagementPage();
-    } else {
-      return;
+
+    switch (slug) {
+      case 'verificacion':
+        page = VerificationPage(task: task);
+        break;
+      case 'recupero':
+        page = RecoveryPage(task: task);
+        break;
+      case 'entrega':
+        page = DeliveryPage(task: task);
+        break;
+      case 'conversion':
+        page = ConversionPage(task: task);
+        break;
+      case 'traslado':
+        page = TransferPage(task: task);
+        break;
+      case 'verificar_vehiculo':
+        page = VehicleVerificationPage(task: task);
+        break;
+      case 'notaria':
+        page = NotaryPage(task: task);
+        break;
+      case 'gestiones':
+        page = ManagementPage(task: task);
+        break;
+      default:
+        return;
     }
 
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => page),
-    );
+    ).then((_) => _loadTasks()); // Reload tasks when coming back
   }
 
-  Widget _buildTaskCard(Map<String, String> task) {
-    final bool isInProgress = task['status'] == 'En curso';
-    final Color buttonColor = isInProgress ? const Color(0xFFFBDF83) : const Color(0xFF4FA4B5);
-    final String buttonText = isInProgress ? 'En curso' : 'Iniciar tarea';
+  Future<void> _onStartTask(Map<String, dynamic> task) async {
+    final int taskId = task['id'] ?? 0;
+    if (taskId == 0) return;
+
+    try {
+      await _taskService.startTask(taskId);
+      _navigateToTask(task);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar tarea: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildTaskCard(Map<String, dynamic> task) {
+    final String status = task['status'] ?? 'pending';
+    final bool isInProgress =
+        status == 'in_progress' || status == 'rescheduled';
+    final Color buttonColor =
+        isInProgress ? const Color(0xFFFBDF83) : const Color(0xFF4FA4B5);
+    final String buttonText = isInProgress ? 'Continuar' : 'Iniciar tarea';
+
+    // Extract task data
+    final type = task['type'] as Map<String, dynamic>?;
+    final String typeName = type?['name'] ?? 'Tarea';
+    final String typeSlug = type?['slug'] ?? '';
+    final String icon = TaskService.getIconForType(typeSlug);
+    final String time = TaskService.formatTime(task['start_time']);
+    final String address = task['address'] ?? '';
+    final String clientName = task['client_name'] ?? '';
+    final String placa = task['placa'] ?? '';
+    final String scheduledDate = task['scheduled_date'] ?? '';
+
+    // Status badge for rescheduled
+    final bool isRescheduled = status == 'rescheduled';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -227,54 +366,123 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: type + time
           Row(
             children: [
               SvgPicture.asset(
-                task['icon']!,
+                icon,
                 width: 20,
                 height: 20,
-                colorFilter: const ColorFilter.mode(Color(0xFF002B4B), BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                    Color(0xFF002B4B), BlendMode.srcIn),
               ),
               const SizedBox(width: 12),
-              Text(
-                task['type']!,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF002B4B),
+              Expanded(
+                child: Text(
+                  typeName,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                task['time']!,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF002B4B),
+              if (isRescheduled)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Reprogramada',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1565C0),
+                    ),
+                  ),
                 ),
-              ),
+              if (time.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(
+                  time,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
+              ],
             ],
           ),
+
           const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 32),
-            child: Text(
-              task['address']!,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: const Color(0xFF002B4B).withValues(alpha: 0.8),
+
+          // Client / placa info
+          if (clientName.isNotEmpty || placa.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 32),
+              child: Text(
+                [clientName, if (placa.isNotEmpty) placa]
+                    .where((s) => s.isNotEmpty)
+                    .join(' \u00b7 '),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF002B4B),
+                ),
               ),
             ),
-          ),
+
+          // Address
+          if (address.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 32, top: 2),
+              child: Text(
+                address,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF002B4B).withValues(alpha: 0.6),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+          // Date
+          if (scheduledDate.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 32, top: 4),
+              child: Text(
+                scheduledDate,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF99AAB7),
+                ),
+              ),
+            ),
+
           const SizedBox(height: 16),
+
+          // Action button
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () => _navigateToTask(task['type']!),
+              onPressed: () {
+                if (isInProgress) {
+                  _navigateToTask(task);
+                } else {
+                  _onStartTask(task);
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
-                foregroundColor: isInProgress ? const Color(0xFF002B4B) : Colors.white,
+                foregroundColor: isInProgress
+                    ? const Color(0xFF002B4B)
+                    : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -285,13 +493,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   Text(
                     buttonText,
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                   ),
                   if (!isInProgress) ...[
                     const SizedBox(width: 8),
-                    const Icon(Icons.keyboard_double_arrow_right_rounded, size: 20),
+                    const Icon(Icons.keyboard_double_arrow_right_rounded,
+                        size: 20),
                   ],
                 ],
               ),
@@ -301,5 +508,4 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-
 }

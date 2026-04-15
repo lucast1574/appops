@@ -13,7 +13,8 @@ import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dar
 import '../widgets/steps/delivery_summary_step.dart';
 
 class DeliveryPage extends StatefulWidget {
-  const DeliveryPage({super.key});
+  final Map<String, dynamic> task;
+  const DeliveryPage({super.key, required this.task});
 
   @override
   State<DeliveryPage> createState() => _DeliveryPageState();

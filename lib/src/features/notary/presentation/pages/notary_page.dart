@@ -14,7 +14,8 @@ import '../widgets/steps/notary_deliver_docs_step.dart';
 import '../widgets/steps/notary_summary_step.dart';
 
 class NotaryPage extends StatefulWidget {
-  const NotaryPage({super.key});
+  final Map<String, dynamic> task;
+  const NotaryPage({super.key, required this.task});
 
   @override
   State<NotaryPage> createState() => _NotaryPageState();

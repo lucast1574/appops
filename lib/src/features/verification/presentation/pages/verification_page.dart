@@ -20,7 +20,8 @@ import '../widgets/steps/verification_summary_step.dart';
 import '../widgets/steps/success_step.dart';
 
 class VerificationPage extends StatefulWidget {
-  const VerificationPage({super.key});
+  final Map<String, dynamic> task;
+  const VerificationPage({super.key, required this.task});
 
   @override
   State<VerificationPage> createState() => _VerificationPageState();

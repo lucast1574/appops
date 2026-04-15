@@ -15,7 +15,8 @@ import '../widgets/steps/management_police_step.dart';
 import '../widgets/steps/management_summary_step.dart';
 
 class ManagementPage extends StatefulWidget {
-  const ManagementPage({super.key});
+  final Map<String, dynamic> task;
+  const ManagementPage({super.key, required this.task});
 
   @override
   State<ManagementPage> createState() => _ManagementPageState();

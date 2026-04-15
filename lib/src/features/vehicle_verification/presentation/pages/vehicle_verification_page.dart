@@ -14,7 +14,8 @@ import '../widgets/steps/vv_summary_step.dart';
 import '../../../management/presentation/widgets/steps/management_before_starting_step.dart';
 
 class VehicleVerificationPage extends StatefulWidget {
-  const VehicleVerificationPage({super.key});
+  final Map<String, dynamic> task;
+  const VehicleVerificationPage({super.key, required this.task});
 
   @override
   State<VehicleVerificationPage> createState() => _VehicleVerificationPageState();
