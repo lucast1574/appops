@@ -8,7 +8,8 @@ import '../../../../shared/widgets/flow_success_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/conversion_service_info_step.dart';
-import '../widgets/steps/conversion_result_step.dart';
+import '../widgets/steps/conversion_certificate_step.dart';
+import '../widgets/steps/conversion_checklist_step.dart';
 import '../widgets/steps/conversion_summary_step.dart';
 
 /// Conversion flow:
@@ -29,17 +30,50 @@ class _ConversionPageState extends State<ConversionPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  late Map<String, dynamic> _task;
+  bool _loadingDetail = true;
 
-  // Step 2 — photo upload state
+  @override
+  void initState() {
+    super.initState();
+    _task = widget.task;
+    _fetchFullDetail();
+  }
+
+  /// The dashboard passes a lightweight task (TaskListSerializer) which
+  /// is missing metadata, google_maps_link, etc. We fetch the full
+  /// detail immediately so all steps have the complete data.
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = _task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
+        if (mounted) {
+          setState(() {
+            _task = full;
+            _loadingDetail = false;
+          });
+        }
+      } else {
+        setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      // Fallback to the lightweight task if detail fetch fails
+      if (mounted) setState(() => _loadingDetail = false);
+    }
+  }
+
+  // Photo upload state (one per step)
   bool _certificateUploaded = false;
-  String? _certificateKey;
+  String? _certificateTag;
+  String? _certificateLocalPath;
   bool _checklistUploaded = false;
-  String? _checklistKey;
-  bool _creativeUploaded = false;
-  String? _creativeKey;
+  String? _checklistTag;
+  String? _checklistLocalPath;
 
   int _getProgressIndex() {
-    if (_currentStep >= 3) return 3;
+    if (_currentStep >= 5) return 4;
+    if (_currentStep >= 4) return 4;
     return _currentStep;
   }
 
@@ -56,15 +90,19 @@ class _ConversionPageState extends State<ConversionPage> {
   Future<void> _startAndContinue() async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final int taskId = widget.task['id'] ?? 0;
-      final status = widget.task['status'] ?? 'pending';
-      // Only call startTask if task hasn't been started yet.
-      // Backend accepts: pending, rescheduled. Already in_progress = skip.
-      if (status == 'pending' || status == 'rescheduled') {
-        await _taskService.startTask(taskId);
-      }
+      final int taskId = _task['id'] ?? 0;
+      // Try to start the task. If it's already in_progress the backend
+      // returns 400 — that's fine, we just move on to the next step.
+      await _taskService.startTask(taskId);
       _nextStep();
     } catch (e) {
+      // Check if the error is a 400 (task already started) — treat as success
+      final is400 = e.toString().contains('400');
+      if (is400) {
+        // Task was already in_progress/rescheduled, just advance
+        _nextStep();
+        return;
+      }
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
@@ -78,7 +116,7 @@ class _ConversionPageState extends State<ConversionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool showAppBar = _currentStep != 4;
+    final bool showAppBar = _currentStep != 5;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -100,31 +138,45 @@ class _ConversionPageState extends State<ConversionPage> {
               ),
               centerTitle: true,
               actions: [
-                IconButton(
-                  icon: SvgPicture.asset(
-                    'assets/warning.svg',
-                    width: 24,
-                    height: 24,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.red,
-                      BlendMode.srcIn,
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton.icon(
+                    onPressed: () => _showRescheduleDialog(context),
+                    icon: SvgPicture.asset(
+                      'assets/warning.svg',
+                      width: 18,
+                      height: 18,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.red,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    label: Text(
+                      'Reportar',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
                     ),
                   ),
-                  onPressed: () => _showRescheduleDialog(context),
-                  tooltip: 'Reprogramar',
                 ),
               ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(10),
                 child: FlowProgressBar(
-                  totalSteps: 4,
+                  totalSteps: 5,
                   activeIndex: _getProgressIndex(),
-                  allComplete: _currentStep == 3,
+                  allComplete: _currentStep == 4,
                 ),
               ),
             )
           : null,
-      body: SafeArea(child: _buildCurrentStep()),
+      body: SafeArea(
+        child: _loadingDetail && _currentStep > 0
+          ? const Center(child: CircularProgressIndicator())
+          : _buildCurrentStep(),
+      ),
     );
   }
 
@@ -132,57 +184,61 @@ class _ConversionPageState extends State<ConversionPage> {
     switch (_currentStep) {
       case 0:
         return TaskInfoWidget(
-          task: widget.task,
+          task: _task,
           onContinue: _startAndContinue,
         );
       case 1:
         return ConversionServiceInfoStep(
-          task: widget.task,
+          task: _task,
           onBack: _previousStep,
           onContinue: _nextStep,
         );
       case 2:
-        return ConversionResultStep(
-          taskId: widget.task['id'] ?? 0,
-          googleMapsLink: widget.task['google_maps_link'] as String?,
-          certificateUploaded: _certificateUploaded,
-          certificateKey: _certificateKey,
-          onCertificateChanged: (uploaded, key) => setState(() {
+        return ConversionCertificateStep(
+          taskId: _task['id'] ?? 0,
+          googleMapsLink: _task['google_maps_link'] as String?,
+          uploaded: _certificateUploaded,
+          tag: _certificateTag,
+          imagePath: _certificateLocalPath,
+          onChanged: (uploaded, res) => setState(() {
             _certificateUploaded = uploaded;
-            _certificateKey = key;
+            if (res is Map) _certificateLocalPath = res['localPath'];
           }),
-          checklistUploaded: _checklistUploaded,
-          checklistKey: _checklistKey,
-          onChecklistChanged: (uploaded, key) => setState(() {
-            _checklistUploaded = uploaded;
-            _checklistKey = key;
-          }),
-          creativeUploaded: _creativeUploaded,
-          creativeKey: _creativeKey,
-          onCreativeChanged: (uploaded, key) => setState(() {
-            _creativeUploaded = uploaded;
-            _creativeKey = key;
-          }),
+          onTagChanged: (val) => setState(() => _certificateTag = val),
           onBack: _previousStep,
           onContinue: _nextStep,
         );
       case 3:
+        return ConversionChecklistStep(
+          taskId: _task['id'] ?? 0,
+          googleMapsLink: _task['google_maps_link'] as String?,
+          uploaded: _checklistUploaded,
+          tag: _checklistTag,
+          imagePath: _checklistLocalPath,
+          onChanged: (uploaded, res) => setState(() {
+            _checklistUploaded = uploaded;
+            if (res is Map) _checklistLocalPath = res['localPath'];
+          }),
+          onTagChanged: (val) => setState(() => _checklistTag = val),
+          onBack: _previousStep,
+          onContinue: _nextStep,
+        );
+      case 4:
         return ConversionSummaryStep(
-          task: widget.task,
+          task: _task,
           certificateUploaded: _certificateUploaded,
           checklistUploaded: _checklistUploaded,
-          creativeUploaded: _creativeUploaded,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditServiceInfo: () => setState(() => _currentStep = 1),
           onEditResult: () => setState(() => _currentStep = 2),
           onEditAll: () => setState(() => _currentStep = 0),
           onSend: () => _showConfirmationBottomSheet(context),
         );
-      case 4:
+      case 5:
         return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
         return TaskInfoWidget(
-          task: widget.task,
+          task: _task,
           onContinue: _startAndContinue,
         );
     }
@@ -193,21 +249,21 @@ class _ConversionPageState extends State<ConversionPage> {
     setState(() => _submitting = true);
 
     try {
-      final int taskId = widget.task['id'] ?? 0;
-      final metadata = widget.task['metadata'] as Map<String, dynamic>? ?? {};
+      final int taskId = _task['id'] ?? 0;
+      final metadata = _task['metadata'] as Map<String, dynamic>? ?? {};
 
       await _taskService.submitTask(
         taskId,
         resultData: {
           'service_type': metadata['service_type'] ?? '',
-          'google_maps_link': widget.task['google_maps_link'] ?? '',
+          'google_maps_link': _task['google_maps_link'] ?? '',
           'certificate_uploaded': _certificateUploaded,
           'checklist_uploaded': _checklistUploaded,
-          'creative_uploaded': _creativeUploaded,
+
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = 4);
+      if (mounted) setState(() => _currentStep = 5);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
@@ -267,7 +323,7 @@ class _ConversionPageState extends State<ConversionPage> {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(ctx);
               try {
-                final taskId = widget.task['id'] ?? 0;
+                final taskId = _task['id'] ?? 0;
                 await _taskService.rescheduleTask(taskId);
                 if (mounted) nav.pop();
               } catch (e) {

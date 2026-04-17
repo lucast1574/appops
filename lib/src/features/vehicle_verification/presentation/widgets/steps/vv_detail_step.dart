@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class VehicleVerificationDetailStep extends StatelessWidget {
+  final Map<String, dynamic> task;
   final bool? isVisible;
   final TextEditingController observationsController;
   final Function(bool) onVisibleChanged;
@@ -13,6 +13,7 @@ class VehicleVerificationDetailStep extends StatelessWidget {
 
   const VehicleVerificationDetailStep({
     super.key,
+    required this.task,
     this.isVisible,
     required this.observationsController,
     required this.onVisibleChanged,
@@ -22,6 +23,9 @@ class VehicleVerificationDetailStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String scheduledDate = task['scheduled_date'] ?? '—';
+    final String address = task['address'] ?? '—';
+
     return Column(
       children: [
         Expanded(
@@ -33,15 +37,11 @@ class VehicleVerificationDetailStep extends StatelessWidget {
               children: [
                 _header('Fecha'),
                 const SizedBox(height: 8),
-                _readOnly(Row(children: [
-                  Text('Miércoles, 18 de marzo de 2026', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  const Spacer(),
-                  SvgPicture.asset('assets/doble.svg', width: 10, height: 10),
-                ])),
+                _readOnly(Text(scheduledDate, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 16),
                 _header('Ubicación de verificación'),
                 const SizedBox(height: 8),
-                _readOnly(Text('Avenida Pedro de Osma 789 Calle Centenario 156', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
+                _readOnly(Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 24),
                 Text('Detalle de verificación', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 24),
@@ -58,7 +58,7 @@ class VehicleVerificationDetailStep extends StatelessWidget {
                   maxLines: 5,
                   style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
                   decoration: InputDecoration(
-                    hintText: 'Lorem ipsum dolor sit amet consectetur...',
+                    hintText: 'Escribe tus observaciones aquí...',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
                     filled: true, fillColor: const Color(0xFFF8F9FA),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
@@ -73,7 +73,7 @@ class VehicleVerificationDetailStep extends StatelessWidget {
         FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
-          buttonText: 'Finalizar',
+          buttonText: 'Próximo',
           isContinueEnabled: isVisible != null,
         ),
       ],

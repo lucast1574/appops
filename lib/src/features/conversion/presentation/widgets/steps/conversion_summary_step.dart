@@ -11,7 +11,6 @@ class ConversionSummaryStep extends StatelessWidget {
   // Upload status (from parent state)
   final bool certificateUploaded;
   final bool checklistUploaded;
-  final bool creativeUploaded;
 
   // Edit callbacks (go back to specific step)
   final VoidCallback onEditTaskInfo;
@@ -25,7 +24,7 @@ class ConversionSummaryStep extends StatelessWidget {
     required this.task,
     required this.certificateUploaded,
     required this.checklistUploaded,
-    required this.creativeUploaded,
+
     required this.onEditTaskInfo,
     required this.onEditServiceInfo,
     required this.onEditResult,
@@ -123,10 +122,7 @@ class ConversionSummaryStep extends StatelessWidget {
                       label: 'Foto del checklist',
                       isComplete: checklistUploaded,
                     ),
-                    FlowSummaryStatus(
-                      label: 'Foto creativa',
-                      isComplete: creativeUploaded,
-                    ),
+
                   ],
                 ),
               ],

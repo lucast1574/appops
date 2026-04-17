@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,14 +8,14 @@ class PhotoUploadHelper {
   static final TaskService _taskService = TaskService();
   static final ImagePicker _picker = ImagePicker();
 
-  /// Pick an image from camera or gallery, upload to S3, and confirm.
-  /// Returns the s3_key on success, or null on failure/cancel.
-  static Future<String?> pickAndUpload({
+  /// Take a photo with the camera, upload to S3, and confirm.
+  /// Returns a Map with {'s3Key': string, 'localPath': string} on success, or null on failure.
+  static Future<Map<String, String>?> pickAndUpload({
     required int taskId,
     required String label,
     String tag = '',
-    ImageSource source = ImageSource.camera,
   }) async {
+    const ImageSource source = ImageSource.camera;
     try {
       // 1. Pick image
       final XFile? image = await _picker.pickImage(
@@ -58,7 +57,10 @@ class PhotoUploadHelper {
         tag: tag,
       );
 
-      return s3Key;
+      return {
+        's3Key': s3Key,
+        'localPath': image.path,
+      };
     } catch (e) {
       // Log error but don't crash
       assert(() {
@@ -70,50 +72,16 @@ class PhotoUploadHelper {
     }
   }
 
-  /// Show a bottom sheet to choose between camera and gallery.
-  static Future<String?> pickAndUploadWithChoice({
+  /// Take a photo with the camera and upload it.
+  /// Always uses camera — no gallery option (policy: all photos must be
+  /// taken on-site by the operario, not uploaded from storage).
+  static Future<Map<String, String>?> pickAndUploadWithChoice({
     required int taskId,
     required String label,
     String tag = '',
     required dynamic context, // BuildContext
   }) async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4FA4B5)),
-                title: const Text('Tomar foto'),
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_rounded, color: Color(0xFF4FA4B5)),
-                title: const Text('Elegir de galer\u00eda'),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (source == null) return null;
-
-    return pickAndUpload(
-      taskId: taskId,
-      label: label,
-      tag: tag,
-      source: source,
-    );
+    return pickAndUpload(taskId: taskId, label: label, tag: tag);
   }
 
   static String _getContentType(String path) {
