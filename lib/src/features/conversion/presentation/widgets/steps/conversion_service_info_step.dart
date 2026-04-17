@@ -55,7 +55,7 @@ class ConversionServiceInfoStep extends StatelessWidget {
                 // Tipo de servicio (read-only, set by backoffice)
                 const FlowSectionLabel(label: 'Tipo de servicio'),
                 const SizedBox(height: 12),
-                _serviceTypeBadge(serviceType),
+                _readOnlyField(serviceType),
 
                 const SizedBox(height: 24),
 
@@ -135,42 +135,7 @@ class ConversionServiceInfoStep extends StatelessWidget {
     );
   }
 
-  Widget _serviceTypeBadge(String serviceType) {
-    final isGNV = serviceType == 'GNV';
-    final isRevision = serviceType == 'Revisión Técnica';
 
-    return Column(
-      children: [
-        _typePill('Revisión Técnica', isActive: isRevision),
-        const SizedBox(height: 12),
-        _typePill('GNV', isActive: isGNV),
-      ],
-    );
-  }
-
-  Widget _typePill(String text, {required bool isActive}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF002B4B) : const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isActive ? const Color(0xFF002B4B) : const Color(0xFFE5E9EB),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w400,
-            color: isActive ? Colors.white : const Color(0xFF99AAB7),
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _openMaps(String url) async {
     final uri = Uri.parse(url);

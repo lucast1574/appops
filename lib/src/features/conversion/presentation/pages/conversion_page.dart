@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../shared/widgets/flow_progress_bar.dart';
@@ -57,7 +58,9 @@ class _ConversionPageState extends State<ConversionPage> {
     try {
       final int taskId = widget.task['id'] ?? 0;
       final status = widget.task['status'] ?? 'pending';
-      if (status == 'pending') {
+      // Only call startTask if task hasn't been started yet.
+      // Backend accepts: pending, rescheduled. Already in_progress = skip.
+      if (status == 'pending' || status == 'rescheduled') {
         await _taskService.startTask(taskId);
       }
       _nextStep();
@@ -97,23 +100,18 @@ class _ConversionPageState extends State<ConversionPage> {
               ),
               centerTitle: true,
               actions: [
-                // "Reprogramar" button (reschedule)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: TextButton(
-                    onPressed: () => _showRescheduleDialog(context),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    child: Text(
-                      'Reprogramar',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
+                IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/warning.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.red,
+                      BlendMode.srcIn,
                     ),
                   ),
+                  onPressed: () => _showRescheduleDialog(context),
+                  tooltip: 'Reprogramar',
                 ),
               ],
               bottom: PreferredSize(
