@@ -51,22 +51,20 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadTasks() async {
-    setState(() {
-      isLoading = true;
-      _error = null;
-    });
+    // Only show full-screen loader if we have no tasks and no error yet
+    if (_tasks.isEmpty && _error == null) {
+      setState(() => isLoading = true);
+    }
+
     try {
-      // Load ALL active tasks (not just today) so operario sees pending + in_progress
       final tasks = await _taskService.getMyTasks();
       if (mounted) {
         setState(() {
-          // Filter out completed/rejected — operario doesn't need those on dashboard
           _tasks = tasks
-              .where(
-                (t) => t['status'] != 'completed' && t['status'] != 'rejected',
-              )
+              .where((t) => t['status'] != 'completed' && t['status'] != 'rejected')
               .toList();
           isLoading = false;
+          _error = null;
         });
       }
     } catch (e) {
