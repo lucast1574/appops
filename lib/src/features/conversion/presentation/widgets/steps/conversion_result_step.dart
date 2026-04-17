@@ -154,6 +154,7 @@ class ConversionResultStep extends StatelessWidget {
           onBack: onBack,
           onContinue: onContinue,
           buttonText: 'Finalizar',
+          isContinueEnabled: certificateUploaded && checklistUploaded && creativeUploaded,
         ),
       ],
     );
