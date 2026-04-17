@@ -1,7 +1,7 @@
 import '../../../core/network/api_client.dart';
 
-/// Real task service — connects to the Django backend.
-/// Replaces MockTaskService. Every operario only sees their own tasks
+/// Task service — connects to the Django backend.
+/// Every operario only sees their own tasks
 /// (backend filters by assigned_to=request.user).
 class TaskService {
   final ApiClient _api = ApiClient();

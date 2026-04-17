@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../home/data/mock_task_service.dart';
+import '../../../home/data/task_service.dart';
 import '../../../task_summary/presentation/pages/task_summary_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -12,6 +12,8 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  // UI filter chips — labels shown to the user. They map to task type slugs
+  // (or status keywords) internally in `_filterTasks`.
   String selectedFilter = 'Todas';
   final List<String> filters = [
     'Todas',
@@ -22,8 +24,11 @@ class _HistoryPageState extends State<HistoryPage> {
     'Conversión',
     'Traslado',
   ];
-  List<Map<String, String>> mockTasks = [];
+
+  final TaskService _taskService = TaskService();
+  List<Map<String, dynamic>> _tasks = [];
   bool isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -32,38 +37,84 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _loadTasks() async {
-    final tasks = await MockTaskService.loadTasks();
-    if (mounted) {
-      setState(() {
-        mockTasks = tasks;
-        isLoading = false;
-      });
+    setState(() {
+      isLoading = true;
+      _error = null;
+    });
+    try {
+      // Operario's own tasks. Backend filters by `assigned_to=request.user`,
+      // so we get exactly the ones this operario should see.
+      final tasks = await _taskService.getMyTasks();
+      if (mounted) {
+        setState(() {
+          _tasks = tasks;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Error al cargar el historial';
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  /// Filter the raw task list according to the currently-selected chip.
+  /// Slug mapping keeps the chip label in Spanish while matching the
+  /// backend's internal slug ('verificacion', 'recupero', ...).
+  List<Map<String, dynamic>> _filterTasks() {
+    if (selectedFilter == 'Todas') {
+      return List.from(_tasks);
+    }
+    if (selectedFilter == 'En curso') {
+      return _tasks
+          .where((t) =>
+              t['status'] == 'in_progress' || t['status'] == 'rescheduled')
+          .toList();
+    }
+    const chipToSlug = {
+      'Verificación': 'verificacion',
+      'Recupero': 'recupero',
+      'Entrega': 'entrega',
+      'Conversión': 'conversion',
+      'Traslado': 'traslado',
+    };
+    final targetSlug = chipToSlug[selectedFilter];
+    if (targetSlug == null) return _tasks;
+    return _tasks
+        .where((t) => (t['type'] as Map?)?['slug'] == targetSlug)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            _buildTaskListHeader(),
-            const SizedBox(height: 16),
-            _buildFilters(),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: _buildDateSelector(),
-            ),
-            const SizedBox(height: 24),
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              _buildTaskList(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _loadTasks,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 24),
+              _buildTaskListHeader(),
+              const SizedBox(height: 16),
+              _buildFilters(),
+              const SizedBox(height: 24),
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                _buildErrorState()
+              else
+                _buildTaskList(),
+            ],
+          ),
         ),
       ),
     );
@@ -116,66 +167,49 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildDateSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          RichText(
-            text: TextSpan(
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                color: const Color(0xFF000000),
-              ),
-              children: [
-                TextSpan(
-                  text: 'Fecha: ',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(
-                  text: 'Hoy - 24 Septiembre 2026',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w400),
-                ),
-              ],
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Column(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _error ?? 'Error desconocido',
+              style: GoogleFonts.inter(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
             ),
-          ),
-          const Spacer(),
-          const Icon(
-            Icons.calendar_month_outlined,
-            color: Color(0xFF002B4B),
-            size: 24,
-          ),
-        ],
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _loadTasks,
+              child: Text(
+                'Reintentar',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF4FA4B5),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTaskList() {
-    late List<Map<String, String>> filteredTasks;
+    final filteredTasks = _filterTasks();
 
-    if (selectedFilter == 'Todas') {
-      filteredTasks = List.from(mockTasks);
-    } else if (selectedFilter == 'En curso') {
-      filteredTasks = mockTasks
-          .where((task) => task['status'] == 'En curso')
-          .toList();
-    } else {
-      filteredTasks = mockTasks
-          .where((task) => task['type']!.contains(selectedFilter))
-          .toList();
-    }
-
-    // Sort: Completed/Rejected tasks at the end
+    // Sort: completed/rejected sink to the bottom, active on top.
     filteredTasks.sort((a, b) {
-      final aIsDone = a['status'] == 'Completada' || a['status'] == 'Rechazada';
-      final bIsDone = b['status'] == 'Completada' || b['status'] == 'Rechazada';
-      if (aIsDone && !bIsDone) return 1;
-      if (!aIsDone && bIsDone) return -1;
-      return 0;
+      final aDone = a['status'] == 'completed' || a['status'] == 'rejected';
+      final bDone = b['status'] == 'completed' || b['status'] == 'rejected';
+      if (aDone && !bDone) return 1;
+      if (!aDone && bDone) return -1;
+      // Within the same bucket, newest scheduled date first.
+      final ad = (a['scheduled_date'] ?? '') as String;
+      final bd = (b['scheduled_date'] ?? '') as String;
+      return bd.compareTo(ad);
     });
 
     if (filteredTasks.isEmpty) {
@@ -201,14 +235,12 @@ class _HistoryPageState extends State<HistoryPage> {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       itemCount: filteredTasks.length,
-      itemBuilder: (context, index) {
-        return _buildTaskCard(filteredTasks[index]);
-      },
+      itemBuilder: (context, index) => _buildTaskCard(filteredTasks[index]),
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
+  Color _getStatusColor(String statusLabel) {
+    switch (statusLabel) {
       case 'Pendiente':
         return const Color(0xFFFBC108);
       case 'En curso':
@@ -224,19 +256,40 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  void _navigateToTask(String type) {
+  void _navigateToTask(Map<String, dynamic> task) {
+    // The summary page pulls full detail (photos, result_data, etc.)
+    // from the backend using the task id; we pass the lightweight list
+    // entry as an initial hint so it can render instantly while loading.
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TaskSummaryPage()),
+      MaterialPageRoute(
+        builder: (context) => TaskSummaryPage(task: task),
+      ),
     );
   }
 
-  Widget _buildTaskCard(Map<String, String> task) {
-    final String status = task['status'] ?? 'Pendiente';
-    final Color statusColor = _getStatusColor(status);
+  Widget _buildTaskCard(Map<String, dynamic> task) {
+    // ----- Extract backend fields with graceful fallbacks -------------
+    final type = task['type'] as Map<String, dynamic>?;
+    final String typeName = type?['name'] ?? 'Tarea';
+    final String typeSlug = type?['slug'] ?? '';
+    final String icon = TaskService.getIconForType(typeSlug);
+
+    final String statusKey = task['status'] ?? 'pending';
+    final String statusLabel = TaskService.getStatusLabel(statusKey);
+    final Color statusColor = _getStatusColor(statusLabel);
+
+    final String scheduledDate = task['scheduled_date'] ?? '';
+    final String startTime = TaskService.formatTime(task['start_time']);
+    final String endTime = TaskService.formatTime(task['end_time']);
+    final String timeRange = [startTime, endTime]
+        .where((s) => s.isNotEmpty)
+        .join(' - ');
+
+    final String address = (task['address'] ?? '') as String;
 
     return GestureDetector(
-      onTap: () => _navigateToTask(task['type']!),
+      onTap: () => _navigateToTask(task),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
@@ -261,7 +314,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     Row(
                       children: [
                         SvgPicture.asset(
-                          task['icon']!,
+                          icon,
                           width: 22,
                           height: 22,
                           colorFilter: const ColorFilter.mode(
@@ -272,7 +325,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            task['type']!,
+                            typeName,
                             style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -281,7 +334,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                         ),
                         Text(
-                          status,
+                          statusLabel,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -295,7 +348,9 @@ class _HistoryPageState extends State<HistoryPage> {
                       children: [
                         Flexible(
                           child: Text(
-                            task['date'] ?? 'Fecha no disponible',
+                            scheduledDate.isNotEmpty
+                                ? scheduledDate
+                                : 'Fecha no disponible',
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -306,24 +361,27 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                         ),
                         const Spacer(),
-                        Text(
-                          task['time'] ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF99AAB7),
+                        if (timeRange.isNotEmpty)
+                          Text(
+                            timeRange,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF99AAB7),
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      task['address']!,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        color: const Color(0xFF002B4B),
+                    if (address.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        address,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          color: const Color(0xFF002B4B),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),

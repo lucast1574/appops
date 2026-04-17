@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_summary_widgets.dart';
+import '../../../../home/data/task_service.dart';
 
+/// Step 4: "Resumen de tarea" — read-only summary before sending.
+/// All data comes from the real task + locally collected upload state.
 class ConversionSummaryStep extends StatelessWidget {
-  // Task info
-  final String? selectedServiceType;
-  final String? selectedLocation;
+  final Map<String, dynamic> task;
 
-  // Result
+  // Upload status (from parent state)
   final bool certificateUploaded;
-  final bool checklistPhotoUploaded;
-  final bool fitoChecklistUploaded;
-  final String? mapsLink;
+  final bool checklistUploaded;
+  final bool creativeUploaded;
 
-  // Edit callbacks
+  // Edit callbacks (go back to specific step)
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditServiceInfo;
   final VoidCallback onEditResult;
@@ -22,12 +22,10 @@ class ConversionSummaryStep extends StatelessWidget {
 
   const ConversionSummaryStep({
     super.key,
-    this.selectedServiceType,
-    this.selectedLocation,
+    required this.task,
     required this.certificateUploaded,
-    required this.checklistPhotoUploaded,
-    required this.fitoChecklistUploaded,
-    this.mapsLink,
+    required this.checklistUploaded,
+    required this.creativeUploaded,
     required this.onEditTaskInfo,
     required this.onEditServiceInfo,
     required this.onEditResult,
@@ -37,6 +35,16 @@ class ConversionSummaryStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Extract from task
+    final String scheduledDate = task['scheduled_date'] ?? '—';
+    final String placa = task['placa'] ?? '—';
+    final String startTime = TaskService.formatTime(task['start_time'] as String?) ;
+    final String endTime = TaskService.formatTime(task['end_time'] as String?);
+    final metadata = task['metadata'] as Map<String, dynamic>? ?? {};
+    final String serviceType = metadata['service_type'] ?? 'No especificado';
+    final String? mapsLink = task['google_maps_link'] as String?;
+    final String address = task['address'] ?? '';
+
     return Column(
       children: [
         Expanded(
@@ -57,58 +65,67 @@ class ConversionSummaryStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Información de la tarea
+                // ---- Información de la tarea ----
                 FlowSummarySection(
                   title: 'Información de la tarea',
                   onEdit: onEditTaskInfo,
-                  children: const [
+                  children: [
                     FlowSummaryItem(
                       label: 'Fecha',
-                      value: 'Miércoles, 18 de marzo de 2026',
+                      value: scheduledDate,
                     ),
                     FlowSummaryItem(
                       label: 'Placa',
-                      value: 'ABC 392',
+                      value: placa,
                     ),
                     FlowSummaryItem(
                       label: 'Hora inicio',
-                      value: '16:00',
+                      value: startTime.isNotEmpty ? startTime : '—',
                       secondLabel: 'Hora fin',
-                      secondValue: '18:00',
+                      secondValue: endTime.isNotEmpty ? endTime : '—',
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
 
-                // Información de servicio
+                // ---- Información de servicio ----
                 FlowSummarySection(
                   title: 'Información de servicio',
                   onEdit: onEditServiceInfo,
                   children: [
                     FlowSummaryItem(
                       label: 'Tipo de servicio',
-                      value: selectedServiceType ?? '---',
+                      value: serviceType,
                     ),
-                    FlowSummaryItem(
-                      label: 'Ubicación',
-                      value: selectedLocation ?? 'Gd. Av. Argentina',
+                    if (address.isNotEmpty)
+                      FlowSummaryItem(
+                        label: 'Ubicación de entrega',
+                        value: address,
+                      ),
+                    FlowSummaryStatus(
+                      label: 'Link Google Maps · Ubicación de entrega',
+                      isComplete: mapsLink != null && mapsLink.isNotEmpty,
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
 
-                // Resultado conversión
+                // ---- Resultado conversión ----
                 FlowSummarySection(
                   title: 'Resultado conversión',
                   onEdit: onEditResult,
                   children: [
                     FlowSummaryStatus(
-                      label: 'Certificado de conversión?',
+                      label: 'Certificado de conversión',
                       isComplete: certificateUploaded,
                     ),
                     FlowSummaryStatus(
-                      label: 'Link Google Maps · Ubicación de entrega',
-                      isComplete: mapsLink != null && mapsLink!.isNotEmpty,
+                      label: 'Foto del checklist',
+                      isComplete: checklistUploaded,
+                    ),
+                    FlowSummaryStatus(
+                      label: 'Foto creativa',
+                      isComplete: creativeUploaded,
                     ),
                   ],
                 ),
@@ -116,6 +133,8 @@ class ConversionSummaryStep extends StatelessWidget {
             ),
           ),
         ),
+
+        // ---- Footer ----
         Container(
           padding: const EdgeInsets.all(24.0),
           decoration: const BoxDecoration(
@@ -132,11 +151,16 @@ class ConversionSummaryStep extends StatelessWidget {
                     onPressed: onEditAll,
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFCCD4DB)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: Text(
                       'Editar',
-                      style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF002B4B),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -151,7 +175,9 @@ class ConversionSummaryStep extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF27A376),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(
