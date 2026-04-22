@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 
 /// Task service — connects to the Django backend.
@@ -126,6 +127,20 @@ class TaskService {
       },
     );
     return Map<String, dynamic>.from(response.data);
+  }
+
+  /// Helper to upload raw bytes to S3 using a presigned URL.
+  Future<void> uploadImageToS3(String url, List<int> bytes, {String contentType = 'image/png'}) async {
+    await _api.dio.put(
+      url,
+      data: Stream.fromIterable([bytes]),
+      options: Options(
+        headers: {
+          'Content-Type': contentType,
+          'Content-Length': bytes.length,
+        },
+      ),
+    );
   }
 
   // ---------------------------------------------------------------

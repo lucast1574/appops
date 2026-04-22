@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
+import '../../../../../shared/widgets/signature_pad.dart';
 
 class FamiliarFormStep extends StatelessWidget {
   final String? selectedRelationship;
-  final List<Offset?> signaturePoints;
+  final GlobalKey<SignaturePadState> signatureKey;
   final Function(String?) onRelationshipChanged;
-  final Function(Offset?) onSignaturePointAdded;
-  final VoidCallback onClearSignature;
+  final TextEditingController dniController;
+  final TextEditingController nameController;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
   const FamiliarFormStep({
     super.key,
     this.selectedRelationship,
-    required this.signaturePoints,
+    required this.signatureKey,
     required this.onRelationshipChanged,
-    required this.onSignaturePointAdded,
-    required this.onClearSignature,
+    required this.dniController,
+    required this.nameController,
     required this.onBack,
     required this.onContinue,
   });
@@ -32,9 +33,9 @@ class FamiliarFormStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFormTextField('DNI del familiar'),
+                _buildFormTextField('DNI del familiar', dniController),
                 const SizedBox(height: 16),
-                _buildFormTextField('Nombre completo'),
+                _buildFormTextField('Nombre completo', nameController),
                 const SizedBox(height: 16),
                 _buildLabel('Parentesco con el cliente'),
                 const SizedBox(height: 8),
@@ -67,7 +68,7 @@ class FamiliarFormStep extends StatelessWidget {
                   children: [
                     _buildLabel('Firma de familiar'),
                     TextButton(
-                      onPressed: onClearSignature,
+                      onPressed: () => signatureKey.currentState?.clear(),
                       style: TextButton.styleFrom(
                         backgroundColor: const Color(0xFFFFD9D9),
                         shape: RoundedRectangleBorder(
@@ -89,41 +90,7 @@ class FamiliarFormStep extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE5E9EB)),
-                  ),
-                  child: Stack(
-                    children: [
-                      if (signaturePoints.isEmpty)
-                        Center(
-                          child: Text(
-                            'Área de firma',
-                            style: GoogleFonts.inter(
-                              color: const Color(
-                                0xFF99AAB7,
-                              ).withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ),
-                      GestureDetector(
-                        onPanUpdate: (details) {
-                          RenderBox renderBox = context.findRenderObject() as RenderBox;
-                          onSignaturePointAdded(renderBox.globalToLocal(details.globalPosition));
-                        },
-                        onPanEnd: (details) => onSignaturePointAdded(null),
-                        child: CustomPaint(
-                          painter: SignaturePainter(points: signaturePoints),
-                          size: Size.infinite,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                SignaturePad(key: signatureKey),
               ],
             ),
           ),
@@ -147,13 +114,14 @@ class FamiliarFormStep extends StatelessWidget {
     );
   }
 
-  Widget _buildFormTextField(String hint) {
+  Widget _buildFormTextField(String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel(hint),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.inter(
@@ -180,25 +148,3 @@ class FamiliarFormStep extends StatelessWidget {
   }
 }
 
-class SignaturePainter extends CustomPainter {
-  final List<Offset?> points;
-
-  SignaturePainter({required this.points});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = const Color(0xFF002B4B)
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 3.0;
-
-    for (int i = 0; i < points.length - 1; i++) {
-      if (points[i] != null && points[i + 1] != null) {
-        canvas.drawLine(points[i]!, points[i + 1]!, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(SignaturePainter oldDelegate) => oldDelegate.points != points;
-}

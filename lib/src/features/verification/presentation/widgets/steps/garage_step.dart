@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
 import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
@@ -25,6 +26,7 @@ class GarageStep extends StatelessWidget {
   final String? streetAccessibility;
   final bool streetAccessibilityUploaded;
   final String? streetAccessibilityTag;
+  final TextEditingController mapsController;
   
   // Extra images state
   final int extraImagesCount;
@@ -53,6 +55,7 @@ class GarageStep extends StatelessWidget {
   final Function(String) onStreetAccessibilityChanged;
   final Function(bool) onAccessibilityUploadedChanged;
   final Function(String?) onAccessibilityTagChanged;
+  final TextEditingController? extraController; // Temporary to avoid errors if needed
   final VoidCallback onAddExtraImage;
   final Function(int, bool) onExtraImageUploadedChanged;
   final Function(int, String?) onExtraImageTagChanged;
@@ -81,6 +84,7 @@ class GarageStep extends StatelessWidget {
     this.streetAccessibility,
     required this.streetAccessibilityUploaded,
     this.streetAccessibilityTag,
+    required this.mapsController,
     required this.extraImagesCount,
     required this.isCocheraFuera,
     required this.extraImagesUploaded,
@@ -106,6 +110,7 @@ class GarageStep extends StatelessWidget {
     required this.onStreetAccessibilityChanged,
     required this.onAccessibilityUploadedChanged,
     required this.onAccessibilityTagChanged,
+    this.extraController,
     required this.onAddExtraImage,
     required this.onExtraImageUploadedChanged,
     required this.onExtraImageTagChanged,
@@ -139,7 +144,8 @@ class GarageStep extends StatelessWidget {
                             garageDirection != null &&
                             streetAccessibility != null &&
                             basePhotosUploaded &&
-                            extraPhotosUploaded;
+                            extraPhotosUploaded &&
+                            mapsController.text.trim().isNotEmpty;
 
     return Column(
       children: [
@@ -339,7 +345,38 @@ class GarageStep extends StatelessWidget {
                 const SizedBox(height: 32),
                 FlowGoogleMapsSection(
                   label: 'Link Google Maps - Ubicación de cochera',
-                  controller: TextEditingController(),
+                  controller: mapsController,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final url = mapsController.text.trim();
+                      if (url.isNotEmpty) {
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.location_on_outlined, size: 18),
+                    label: Text(
+                      'Abrir Google maps',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF002B4B),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFF002B4B)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

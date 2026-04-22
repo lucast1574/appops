@@ -4,6 +4,7 @@ import '../../../../../shared/widgets/flow_step_navigation.dart';
 
 class WhoReceivedStep extends StatelessWidget {
   final String? selectedRecipient;
+  final Map<String, dynamic> task;
   final Function(String) onRecipientSelected;
   final VoidCallback onBack;
   final VoidCallback onContinue;
@@ -11,6 +12,7 @@ class WhoReceivedStep extends StatelessWidget {
   const WhoReceivedStep({
     super.key,
     this.selectedRecipient,
+    required this.task,
     required this.onRecipientSelected,
     required this.onBack,
     required this.onContinue,
@@ -19,6 +21,8 @@ class WhoReceivedStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = ['Cliente', 'Familiar', 'Nadie'];
+    final clientName = task['client_name'] ?? 'Cliente';
+    final clientDni = task['client_dni'] ?? '---';
 
     return Column(
       children: [
@@ -34,7 +38,7 @@ class WhoReceivedStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Juan Ramos | DNI: 12999312232',
+                    '$clientName | DNI: $clientDni',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: const Color(0xFF667085),

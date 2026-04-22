@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 
@@ -53,12 +54,43 @@ class HousingStep extends StatelessWidget {
                   label: 'Link Google Maps - Ubicación de vivienda',
                   controller: mapsController,
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final url = mapsController.text.trim();
+                      if (url.isNotEmpty) {
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.location_on_outlined, size: 18),
+                    label: Text(
+                      'Abrir Google maps',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF002B4B),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFF002B4B)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
         FlowStepNavigation(
-          isContinueEnabled: housingType != null,
+          isContinueEnabled: housingType != null && mapsController.text.trim().isNotEmpty,
           onBack: onBack,
           onContinue: onContinue,
         ),

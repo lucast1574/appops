@@ -5,6 +5,9 @@ import '../../../../../shared/widgets/flow_summary_widgets.dart';
 class VerificationSummaryStep extends StatelessWidget {
   final String? selectedRecipient;
   final String? selectedRelationship;
+  final String? familiarName;
+  final String? familiarDni;
+  final bool isSignatureCaptured;
   final bool dniUploaded;
   final bool reciboUploaded;
   final bool breveteUploaded;
@@ -22,12 +25,16 @@ class VerificationSummaryStep extends StatelessWidget {
   final VoidCallback onEditHousing;
   final VoidCallback onEditGarage;
   final VoidCallback onEditAll;
+  final Map<String, dynamic> task;
   final VoidCallback onSend;
 
   const VerificationSummaryStep({
     super.key,
     this.selectedRecipient,
     this.selectedRelationship,
+    this.familiarName,
+    this.familiarDni,
+    this.isSignatureCaptured = false,
     required this.dniUploaded,
     required this.reciboUploaded,
     required this.breveteUploaded,
@@ -45,6 +52,7 @@ class VerificationSummaryStep extends StatelessWidget {
     required this.onEditHousing,
     required this.onEditGarage,
     required this.onEditAll,
+    required this.task,
     required this.onSend,
   });
 
@@ -72,12 +80,17 @@ class VerificationSummaryStep extends StatelessWidget {
                 FlowSummarySection(
                   title: 'Información de la tarea',
                   onEdit: onEditTaskInfo,
-                  children: const [
-                    FlowSummaryItem(label: 'Cliente', value: 'Juan Ortiz'),
-                    FlowSummaryItem(label: 'Hora inicio', value: '16:00', secondLabel: 'Hora fin', secondValue: '18:00'),
-                    FlowSummaryItem(label: 'Dirección', value: 'Avenida Pedro de Osma 789 Calle Centenario 156'),
-                    FlowSummaryItem(label: 'DNI cliente', value: '9999129912'),
-                    FlowSummaryItem(label: 'Observaciones', value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
+                  children: [
+                    FlowSummaryItem(label: 'Cliente', value: task['client_name'] ?? '---'),
+                    FlowSummaryItem(
+                      label: 'Hora inicio', 
+                      value: _formatTime(task['start_time']), 
+                      secondLabel: 'Hora fin', 
+                      secondValue: _formatTime(task['end_time'])
+                    ),
+                    FlowSummaryItem(label: 'Dirección', value: task['address'] ?? '---'),
+                    FlowSummaryItem(label: 'DNI cliente', value: task['client_dni'] ?? '---'),
+                    FlowSummaryItem(label: 'Observaciones', value: task['observations']?.toString().isNotEmpty == true ? task['observations'] : 'Sin observaciones'),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -87,10 +100,10 @@ class VerificationSummaryStep extends StatelessWidget {
                   children: [
                     FlowSummaryStatus(label: selectedRecipient ?? '---', isComplete: true),
                     if (selectedRecipient == 'Familiar') ...[
-                      const FlowSummaryItem(label: 'DNI del familiar', value: '9999129912'),
-                      const FlowSummaryItem(label: 'Nombre completo', value: 'Ana Ortiz'),
+                      FlowSummaryItem(label: 'DNI del familiar', value: familiarDni ?? '---'),
+                      FlowSummaryItem(label: 'Nombre completo', value: familiarName ?? '---'),
                       FlowSummaryItem(label: 'Parentesco con el cliente', value: selectedRelationship ?? '---'),
-                      const FlowSummaryStatus(label: 'Firma de familiar', isComplete: true),
+                      FlowSummaryStatus(label: 'Firma de familiar', isComplete: isSignatureCaptured),
                     ],
                   ],
                 ),
@@ -197,5 +210,12 @@ class VerificationSummaryStep extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return '---';
+    final parts = time.split(':');
+    if (parts.length >= 2) return '${parts[0]}:${parts[1]}';
+    return time;
   }
 }
