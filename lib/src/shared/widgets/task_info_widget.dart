@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Shared widget that displays task information from backend data.
 /// Used as the first step in all 8 task flows.
@@ -135,10 +136,46 @@ class TaskInfoWidget extends StatelessWidget {
 
                 // Address
                 if (address.isNotEmpty) ...[
-                  _buildHeader('Direcci\u00f3n'),
+                  _buildHeader('Dirección'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
-                    child: Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                        if (task['google_maps_link']?.toString().isNotEmpty == true) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final url = task['google_maps_link'];
+                                final uri = Uri.parse(url);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              },
+                              icon: const Icon(Icons.location_on_outlined, size: 18),
+                              label: Text(
+                                'Abrir en Google Maps',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF002B4B),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                side: const BorderSide(color: Color(0xFF002B4B)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],

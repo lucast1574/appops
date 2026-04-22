@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
-import '../../../../../core/network/photo_upload_helper.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 /// Step 3: Upload the checklist photo.
 class ConversionChecklistStep extends StatelessWidget {
@@ -50,29 +49,17 @@ class ConversionChecklistStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const FlowSectionLabel(label: 'Foto del checklist *'),
-                const SizedBox(height: 12),
-                uploaded
-                    ? FlowImagePreview(
-                        fileName: 'Checklist.png',
-                        imagePath: imagePath,
-                        tag: tag,
-                        onDeleteImage: () => onChanged(false, null),
-                        onDeleteTag: () => onTagChanged(null),
-                        onTagAdded: (val) => onTagChanged(val),
-                      )
-                    : FlowUploadButton(
-                        text: 'Tomar foto',
-                        iconAsset: 'assets/CameraPlus.svg',
-                        onTap: () async {
-                          final result = await PhotoUploadHelper.pickAndUploadWithChoice(
-                            taskId: taskId,
-                            label: 'checklist',
-                            context: context,
-                          );
-                          if (result != null) onChanged(true, result);
-                        },
-                      ),
+                FlowPhotoInput(
+                  label: 'Foto del checklist *',
+                  taskId: taskId,
+                  photoLabel: 'checklist',
+                  previewFileName: 'Checklist.png',
+                  isUploaded: uploaded,
+                  imagePath: imagePath,
+                  tag: tag,
+                  onChanged: onChanged,
+                  onTagChanged: onTagChanged,
+                ),
                 const SizedBox(height: 24),
                 _buildMapsSection(),
               ],

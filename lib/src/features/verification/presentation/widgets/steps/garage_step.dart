@@ -2,30 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 class GarageStep extends StatelessWidget {
+  final int taskId;
   final bool? isGarageAtHome;
   final bool garageFacadeUploaded;
   final String? garageFacadeTag;
+  final String? garageFacadePath;
   final bool? hasSecurity;
   final bool? hasCameras;
   final bool garageCamerasUploaded;
   final String? garageCamerasTag;
+  final String? garageCamerasPath;
   final String? accessType;
   final bool? isRoofing;
   final bool garageRoofingUploaded;
   final String? garageRoofingTag;
+  final String? garageRoofingPath;
   final bool? isBasement;
   final bool garageBasementUploaded;
   final String? garageBasementTag;
+  final String? garageBasementPath;
   final String? garageDirection;
   final bool garageDirectionUploaded;
   final String? garageDirectionTag;
+  final String? garageDirectionPath;
   final String? streetAccessibility;
   final bool streetAccessibilityUploaded;
   final String? streetAccessibilityTag;
+  final String? streetAccessibilityPath;
   final TextEditingController mapsController;
   
   // Extra images state
@@ -33,62 +40,70 @@ class GarageStep extends StatelessWidget {
   final bool isCocheraFuera;
   final List<bool> extraImagesUploaded;
   final List<String?> extraImagesTags;
+  final List<String?> extraImagesPaths;
 
   final Function(bool) onGarageAtHomeChanged;
   final Function(bool?) onCocheraFueraChanged;
-  final Function(bool) onFacadeUploadedChanged;
+  final Function(bool, dynamic) onFacadeUploadedChanged;
   final Function(String?) onFacadeTagChanged;
   final Function(bool) onSecurityChanged;
   final Function(bool) onCamerasChanged;
-  final Function(bool) onCamerasUploadedChanged;
+  final Function(bool, dynamic) onCamerasUploadedChanged;
   final Function(String?) onCamerasTagChanged;
   final Function(String) onAccessTypeChanged;
   final Function(bool) onRoofingChanged;
-  final Function(bool) onRoofingUploadedChanged;
+  final Function(bool, dynamic) onRoofingUploadedChanged;
   final Function(String?) onRoofingTagChanged;
   final Function(bool) onBasementChanged;
-  final Function(bool) onBasementUploadedChanged;
+  final Function(bool, dynamic) onBasementUploadedChanged;
   final Function(String?) onBasementTagChanged;
   final Function(String) onGarageDirectionChanged;
-  final Function(bool) onDirectionUploadedChanged;
+  final Function(bool, dynamic) onDirectionUploadedChanged;
   final Function(String?) onDirectionTagChanged;
   final Function(String) onStreetAccessibilityChanged;
-  final Function(bool) onAccessibilityUploadedChanged;
+  final Function(bool, dynamic) onAccessibilityUploadedChanged;
   final Function(String?) onAccessibilityTagChanged;
-  final TextEditingController? extraController; // Temporary to avoid errors if needed
   final VoidCallback onAddExtraImage;
-  final Function(int, bool) onExtraImageUploadedChanged;
+  final Function(int, bool, dynamic) onExtraImageUploadedChanged;
   final Function(int, String?) onExtraImageTagChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
   const GarageStep({
     super.key,
+    required this.taskId,
     this.isGarageAtHome,
     required this.garageFacadeUploaded,
     this.garageFacadeTag,
+    this.garageFacadePath,
     this.hasSecurity,
     this.hasCameras,
     required this.garageCamerasUploaded,
     this.garageCamerasTag,
+    this.garageCamerasPath,
     this.accessType,
     this.isRoofing,
     required this.garageRoofingUploaded,
     this.garageRoofingTag,
+    this.garageRoofingPath,
     this.isBasement,
     required this.garageBasementUploaded,
     this.garageBasementTag,
+    this.garageBasementPath,
     this.garageDirection,
     required this.garageDirectionUploaded,
     this.garageDirectionTag,
+    this.garageDirectionPath,
     this.streetAccessibility,
     required this.streetAccessibilityUploaded,
     this.streetAccessibilityTag,
+    this.streetAccessibilityPath,
     required this.mapsController,
     required this.extraImagesCount,
     required this.isCocheraFuera,
     required this.extraImagesUploaded,
     required this.extraImagesTags,
+    required this.extraImagesPaths,
     required this.onGarageAtHomeChanged,
     required this.onCocheraFueraChanged,
     required this.onFacadeUploadedChanged,
@@ -110,7 +125,6 @@ class GarageStep extends StatelessWidget {
     required this.onStreetAccessibilityChanged,
     required this.onAccessibilityUploadedChanged,
     required this.onAccessibilityTagChanged,
-    this.extraController,
     required this.onAddExtraImage,
     required this.onExtraImageUploadedChanged,
     required this.onExtraImageTagChanged,
@@ -120,10 +134,19 @@ class GarageStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Conditional photo logic:
+    // - if isRoofing is true, we need roofing photo.
+    // - if isBasement is true, we need basement photo.
+    // - if both are false, we need a general garage photo (we'll use roofing fields for this).
+    bool needRoofingPhoto = isRoofing == true;
+    bool needBasementPhoto = isBasement == true;
+    bool needGeneralPhoto = isRoofing == false && isBasement == false;
+
     bool basePhotosUploaded = garageFacadeUploaded && 
                              (hasCameras == false || garageCamerasUploaded) &&
-                             garageRoofingUploaded &&
-                             garageBasementUploaded &&
+                             (!needRoofingPhoto || garageRoofingUploaded) &&
+                             (!needBasementPhoto || garageBasementUploaded) &&
+                             (!needGeneralPhoto || garageRoofingUploaded) && // Reuse roofing for general
                              garageDirectionUploaded &&
                              streetAccessibilityUploaded;
                              
@@ -197,11 +220,15 @@ class GarageStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildUploadSection(
-                  'Foto de la vivienda / fachada',
+                FlowPhotoInput(
+                  label: 'Foto de la vivienda / fachada',
+                  taskId: taskId,
+                  photoLabel: 'fachada_vivienda',
+                  previewFileName: 'fachada.png',
                   isUploaded: garageFacadeUploaded,
-                  onUploadedChanged: onFacadeUploadedChanged,
+                  imagePath: garageFacadePath,
                   tag: garageFacadeTag,
+                  onChanged: onFacadeUploadedChanged,
                   onTagChanged: onFacadeTagChanged,
                 ),
                 const SizedBox(height: 24),
@@ -218,11 +245,15 @@ class GarageStep extends StatelessWidget {
                 ),
                 if (hasCameras == true) ...[
                   const SizedBox(height: 16),
-                  _buildUploadSection(
-                    'Foto de la cámara de vigilancia',
+                  FlowPhotoInput(
+                    label: 'Foto de la cámara de vigilancia',
+                    taskId: taskId,
+                    photoLabel: 'camara_vigilancia',
+                    previewFileName: 'camara.png',
                     isUploaded: garageCamerasUploaded,
-                    onUploadedChanged: onCamerasUploadedChanged,
+                    imagePath: garageCamerasPath,
                     tag: garageCamerasTag,
+                    onChanged: onCamerasUploadedChanged,
                     onTagChanged: onCamerasTagChanged,
                   ),
                 ],
@@ -240,14 +271,6 @@ class GarageStep extends StatelessWidget {
                   currentValue: isRoofing,
                   onChanged: onRoofingChanged,
                 ),
-                const SizedBox(height: 16),
-                _buildUploadSection(
-                  'Foto de la cochera',
-                  isUploaded: garageRoofingUploaded,
-                  onUploadedChanged: onRoofingUploadedChanged,
-                  tag: garageRoofingTag,
-                  onTagChanged: onRoofingTagChanged,
-                ),
                 const SizedBox(height: 24),
                 FlowYesNoQuestion(
                   question: 'Cochera se ubica en sótano',
@@ -255,14 +278,53 @@ class GarageStep extends StatelessWidget {
                   onChanged: onBasementChanged,
                 ),
                 const SizedBox(height: 16),
-                _buildUploadSection(
-                  'Foto de la cochera',
-                  isUploaded: garageBasementUploaded,
-                  onUploadedChanged: onBasementUploadedChanged,
-                  tag: garageBasementTag,
-                  onTagChanged: onBasementTagChanged,
-                ),
-                const SizedBox(height: 24),
+                
+                if (needRoofingPhoto) ...[
+                  FlowPhotoInput(
+                    label: 'Foto de la cochera techada',
+                    taskId: taskId,
+                    photoLabel: 'cochera_techada',
+                    previewFileName: 'techada.png',
+                    isUploaded: garageRoofingUploaded,
+                    imagePath: garageRoofingPath,
+                    tag: garageRoofingTag,
+                    onChanged: onRoofingUploadedChanged,
+                    onTagChanged: onRoofingTagChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                
+                if (needBasementPhoto) ...[
+                  FlowPhotoInput(
+                    label: 'Foto de la cochera sótano',
+                    taskId: taskId,
+                    photoLabel: 'cochera_sotano',
+                    previewFileName: 'sotano.png',
+                    isUploaded: garageBasementUploaded,
+                    imagePath: garageBasementPath,
+                    tag: garageBasementTag,
+                    onChanged: onBasementUploadedChanged,
+                    onTagChanged: onBasementTagChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (needGeneralPhoto) ...[
+                  FlowPhotoInput(
+                    label: 'Foto de la cochera',
+                    taskId: taskId,
+                    photoLabel: 'cochera_general',
+                    previewFileName: 'cochera.png',
+                    isUploaded: garageRoofingUploaded, // Use roofing field for general
+                    imagePath: garageRoofingPath,
+                    tag: garageRoofingTag,
+                    onChanged: onRoofingUploadedChanged,
+                    onTagChanged: onRoofingTagChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                const SizedBox(height: 8),
                 FlowDualOptionQuestion(
                   question: 'Hacia dónde da la cochera?',
                   opt1: 'Calle',
@@ -271,11 +333,15 @@ class GarageStep extends StatelessWidget {
                   onChanged: onGarageDirectionChanged,
                 ),
                 const SizedBox(height: 16),
-                _buildUploadSection(
-                  'Foto de calle / condominio',
+                FlowPhotoInput(
+                  label: 'Foto de calle / condominio',
+                  taskId: taskId,
+                  photoLabel: 'cochera_direccion',
+                  previewFileName: 'direccion.png',
                   isUploaded: garageDirectionUploaded,
-                  onUploadedChanged: onDirectionUploadedChanged,
+                  imagePath: garageDirectionPath,
                   tag: garageDirectionTag,
+                  onChanged: onDirectionUploadedChanged,
                   onTagChanged: onDirectionTagChanged,
                 ),
                 const SizedBox(height: 24),
@@ -287,11 +353,15 @@ class GarageStep extends StatelessWidget {
                   onChanged: onStreetAccessibilityChanged,
                 ),
                 const SizedBox(height: 16),
-                _buildUploadSection(
-                  'Foto accesibilidad de la calle',
+                FlowPhotoInput(
+                  label: 'Foto accesibilidad de la calle',
+                  taskId: taskId,
+                  photoLabel: 'accesibilidad_calle',
+                  previewFileName: 'accesibilidad.png',
                   isUploaded: streetAccessibilityUploaded,
-                  onUploadedChanged: onAccessibilityUploadedChanged,
+                  imagePath: streetAccessibilityPath,
                   tag: streetAccessibilityTag,
+                  onChanged: onAccessibilityUploadedChanged,
                   onTagChanged: onAccessibilityTagChanged,
                 ),
                 
@@ -316,11 +386,15 @@ class GarageStep extends StatelessWidget {
                   const SizedBox(height: 16),
                   
                   for (int i = 0; i < extraImagesCount; i++) ...[
-                    _buildUploadSection(
-                      'Foto fachada y calle ${i + 1}',
+                    FlowPhotoInput(
+                      label: 'Foto fachada y calle ${i + 1}',
+                      taskId: taskId,
+                      photoLabel: 'fachada_calle_extra_${i + 1}',
+                      previewFileName: 'extra_${i + 1}.png',
                       isUploaded: extraImagesUploaded[i],
-                      onUploadedChanged: (val) => onExtraImageUploadedChanged(i, val),
+                      imagePath: extraImagesPaths[i],
                       tag: extraImagesTags[i],
+                      onChanged: (val, res) => onExtraImageUploadedChanged(i, val, res),
                       onTagChanged: (val) => onExtraImageTagChanged(i, val),
                     ),
                     const SizedBox(height: 16),
@@ -346,37 +420,15 @@ class GarageStep extends StatelessWidget {
                 FlowGoogleMapsSection(
                   label: 'Link Google Maps - Ubicación de cochera',
                   controller: mapsController,
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final url = mapsController.text.trim();
-                      if (url.isNotEmpty) {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        }
+                  onOpenMaps: () async {
+                    final url = mapsController.text.trim();
+                    if (url.isNotEmpty) {
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
                       }
-                    },
-                    icon: const Icon(Icons.location_on_outlined, size: 18),
-                    label: Text(
-                      'Abrir Google maps',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF002B4B),
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Color(0xFF002B4B)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                    }
+                  },
                 ),
               ],
             ),
@@ -387,38 +439,6 @@ class GarageStep extends StatelessWidget {
           onContinue: onContinue,
           isContinueEnabled: isContinueEnabled,
         ),
-      ],
-    );
-  }
-
-  Widget _buildUploadSection(
-    String title, {
-    required bool isUploaded, 
-    required Function(bool) onUploadedChanged,
-    String? tag,
-    required Function(String?) onTagChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FlowSectionLabel(label: title),
-        const SizedBox(height: 12),
-        isUploaded 
-            ? FlowImagePreview(
-                fileName: 'imagen_capturada.png',
-                tag: tag,
-                onDeleteImage: () {
-                  onUploadedChanged(false);
-                  onTagChanged(null);
-                },
-                onDeleteTag: () => onTagChanged(null),
-                onTagAdded: (val) => onTagChanged(val),
-              )
-            : FlowUploadButton(
-                text: 'Tomar foto',
-                iconAsset: 'assets/CameraPlus.svg',
-                onTap: () => onUploadedChanged(true),
-              ),
       ],
     );
   }

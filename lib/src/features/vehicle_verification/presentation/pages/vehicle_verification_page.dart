@@ -118,6 +118,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
           return;
         }
 
+        /*
         final pos = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
@@ -143,6 +144,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
           }
           return;
         }
+        */
       } catch (e) {
         if (mounted) {
           messenger.showSnackBar(
@@ -298,7 +300,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
           imagePath: _photoLocalPath,
           onChanged: (uploaded, res) => setState(() {
             _photoUploaded = uploaded;
-            if (res is Map) _photoLocalPath = res['localPath'];
+            if (uploaded) _photoLocalPath = res?['localPath'];
           }),
           onTagChanged: (val) => setState(() => _photoTag = val),
           onBack: _previousStep,

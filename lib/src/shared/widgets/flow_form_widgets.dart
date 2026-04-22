@@ -319,6 +319,7 @@ class FlowGoogleMapsSection extends StatelessWidget {
           const SizedBox(height: 12),
           TextField(
             controller: controller,
+            style: GoogleFonts.inter(fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Agregar link Google maps',
               hintStyle: GoogleFonts.inter(
@@ -344,20 +345,23 @@ class FlowGoogleMapsSection extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: OutlinedButton.icon(
               onPressed: onOpenMaps,
-              icon: const Icon(Icons.location_on_outlined, color: Color(0xFF002B4B)),
+              icon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF002B4B)),
               label: Text(
-                'Abrir Google maps',
+                'Abrir en Google Maps',
                 style: GoogleFonts.inter(
-                  color: const Color(0xFF002B4B),
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
+                  color: const Color(0xFF002B4B),
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF002B4B), width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: const BorderSide(color: Color(0xFF002B4B)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),

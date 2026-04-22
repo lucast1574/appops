@@ -53,37 +53,15 @@ class HousingStep extends StatelessWidget {
                 FlowGoogleMapsSection(
                   label: 'Link Google Maps - Ubicación de vivienda',
                   controller: mapsController,
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final url = mapsController.text.trim();
-                      if (url.isNotEmpty) {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        }
+                  onOpenMaps: () async {
+                    final url = mapsController.text.trim();
+                    if (url.isNotEmpty) {
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
                       }
-                    },
-                    icon: const Icon(Icons.location_on_outlined, size: 18),
-                    label: Text(
-                      'Abrir Google maps',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF002B4B),
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Color(0xFF002B4B)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                    }
+                  },
                 ),
               ],
             ),

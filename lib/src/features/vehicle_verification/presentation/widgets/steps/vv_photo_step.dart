@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
-import '../../../../../shared/widgets/flow_form_widgets.dart';
-import '../../../../../core/network/photo_upload_helper.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 /// Step 3: Take a photo of the vehicle.
 class VehicleVerificationPhotoStep extends StatelessWidget {
@@ -47,29 +45,17 @@ class VehicleVerificationPhotoStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const FlowSectionLabel(label: 'Foto del vehículo *'),
-                const SizedBox(height: 12),
-                uploaded
-                    ? FlowImagePreview(
-                        fileName: 'Vehiculo.png',
-                        imagePath: imagePath,
-                        tag: tag,
-                        onDeleteImage: () => onChanged(false, null),
-                        onDeleteTag: () => onTagChanged(null),
-                        onTagAdded: (val) => onTagChanged(val),
-                      )
-                    : FlowUploadButton(
-                        text: 'Tomar foto',
-                        iconAsset: 'assets/CameraPlus.svg',
-                        onTap: () async {
-                          final result = await PhotoUploadHelper.pickAndUploadWithChoice(
-                            taskId: taskId,
-                            label: 'foto_vehiculo',
-                            context: context,
-                          );
-                          if (result != null) onChanged(true, result);
-                        },
-                      ),
+                FlowPhotoInput(
+                  label: 'Foto del vehículo *',
+                  taskId: taskId,
+                  photoLabel: 'foto_vehiculo',
+                  previewFileName: 'Vehiculo.png',
+                  isUploaded: uploaded,
+                  imagePath: imagePath,
+                  tag: tag,
+                  onChanged: onChanged,
+                  onTagChanged: onTagChanged,
+                ),
               ],
             ),
           ),

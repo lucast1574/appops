@@ -1,33 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_form_widgets.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 class DocumentValidationStep extends StatelessWidget {
+  final int taskId;
   final bool dniUploaded;
   final String? dniTag;
+  final String? dniPath;
   final bool breveteUploaded;
   final String? breveteTag;
+  final String? brevetePath;
   final bool reciboUploaded;
   final String? reciboTag;
-  final Function(bool) onDniUploadedChanged;
+  final String? reciboPath;
+  final Function(bool, dynamic) onDniUploadedChanged;
   final Function(String?) onDniTagChanged;
-  final Function(bool) onBreveteUploadedChanged;
+  final Function(bool, dynamic) onBreveteUploadedChanged;
   final Function(String?) onBreveteTagChanged;
-  final Function(bool) onReciboUploadedChanged;
+  final Function(bool, dynamic) onReciboUploadedChanged;
   final Function(String?) onReciboTagChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
   const DocumentValidationStep({
     super.key,
+    required this.taskId,
     required this.dniUploaded,
     this.dniTag,
+    this.dniPath,
     required this.breveteUploaded,
     this.breveteTag,
+    this.brevetePath,
     required this.reciboUploaded,
     this.reciboTag,
+    this.reciboPath,
     required this.onDniUploadedChanged,
     required this.onDniTagChanged,
     required this.onBreveteUploadedChanged,
@@ -60,66 +67,45 @@ class DocumentValidationStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 _buildValidationSection(
-                  'DNI',
-                  isUploaded: dniUploaded,
-                  child: dniUploaded
-                      ? FlowImagePreview(
-                          fileName: 'Imagen-x122.png',
-                          tag: dniTag,
-                          onDeleteImage: () {
-                            onDniUploadedChanged(false);
-                            onDniTagChanged(null);
-                          },
-                          onDeleteTag: () => onDniTagChanged(null),
-                          onTagAdded: (val) => onDniTagChanged(val),
-                        )
-                      : FlowUploadButton(
-                          text: 'Tomar foto',
-                          iconAsset: 'assets/CameraPlus.svg',
-                          onTap: () => onDniUploadedChanged(true),
-                        ),
+                  child: FlowPhotoInput(
+                    label: 'DNI',
+                    taskId: taskId,
+                    photoLabel: 'dni_cliente',
+                    previewFileName: 'Imagen-x122.png',
+                    isUploaded: dniUploaded,
+                    imagePath: dniPath,
+                    tag: dniTag,
+                    onChanged: onDniUploadedChanged,
+                    onTagChanged: onDniTagChanged,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildValidationSection(
-                  'Brevete',
-                  isUploaded: breveteUploaded,
-                  child: breveteUploaded
-                      ? FlowImagePreview(
-                          fileName: 'Brevete-scan.png',
-                          tag: breveteTag,
-                          onDeleteImage: () {
-                            onBreveteUploadedChanged(false);
-                            onBreveteTagChanged(null);
-                          },
-                          onDeleteTag: () => onBreveteTagChanged(null),
-                          onTagAdded: (val) => onBreveteTagChanged(val),
-                        )
-                      : FlowUploadButton(
-                          text: 'Tomar foto',
-                          iconAsset: 'assets/CameraPlus.svg',
-                          onTap: () => onBreveteUploadedChanged(true),
-                        ),
+                  child: FlowPhotoInput(
+                    label: 'Brevete',
+                    taskId: taskId,
+                    photoLabel: 'brevete_cliente',
+                    previewFileName: 'Brevete-scan.png',
+                    isUploaded: breveteUploaded,
+                    imagePath: brevetePath,
+                    tag: breveteTag,
+                    onChanged: onBreveteUploadedChanged,
+                    onTagChanged: onBreveteTagChanged,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildValidationSection(
-                  'Recibo de servicios',
-                  isUploaded: reciboUploaded,
-                  child: reciboUploaded
-                      ? FlowImagePreview(
-                          fileName: 'Recibo-digital.png',
-                          tag: reciboTag,
-                          onDeleteImage: () {
-                            onReciboUploadedChanged(false);
-                            onReciboTagChanged(null);
-                          },
-                          onDeleteTag: () => onReciboTagChanged(null),
-                          onTagAdded: (val) => onReciboTagChanged(val),
-                        )
-                      : FlowUploadButton(
-                          text: 'Tomar foto',
-                          iconAsset: 'assets/CameraPlus.svg',
-                          onTap: () => onReciboUploadedChanged(true),
-                        ),
+                  child: FlowPhotoInput(
+                    label: 'Recibo de servicios',
+                    taskId: taskId,
+                    photoLabel: 'recibo_servicios',
+                    previewFileName: 'Recibo-digital.png',
+                    isUploaded: reciboUploaded,
+                    imagePath: reciboPath,
+                    tag: reciboTag,
+                    onChanged: onReciboUploadedChanged,
+                    onTagChanged: onReciboTagChanged,
+                  ),
                 ),
               ],
             ),
@@ -134,7 +120,7 @@ class DocumentValidationStep extends StatelessWidget {
     );
   }
 
-  Widget _buildValidationSection(String title, {required Widget child, bool isUploaded = false}) {
+  Widget _buildValidationSection({required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -149,21 +135,7 @@ class DocumentValidationStep extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF002B4B),
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
+      child: child,
     );
   }
 }

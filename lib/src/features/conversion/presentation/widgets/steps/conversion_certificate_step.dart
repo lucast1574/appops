@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
-import '../../../../../core/network/photo_upload_helper.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 /// Step 2: Upload the conversion certificate photo.
 class ConversionCertificateStep extends StatelessWidget {
@@ -50,29 +49,17 @@ class ConversionCertificateStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const FlowSectionLabel(label: 'Certificado de conversión *'),
-                const SizedBox(height: 12),
-                uploaded
-                    ? FlowImagePreview(
-                        fileName: 'Certificado.png',
-                        imagePath: imagePath,
-                        tag: tag,
-                        onDeleteImage: () => onChanged(false, null),
-                        onDeleteTag: () => onTagChanged(null),
-                        onTagAdded: (val) => onTagChanged(val),
-                      )
-                    : FlowUploadButton(
-                        text: 'Tomar foto',
-                        iconAsset: 'assets/CameraPlus.svg',
-                        onTap: () async {
-                          final result = await PhotoUploadHelper.pickAndUploadWithChoice(
-                            taskId: taskId,
-                            label: 'certificado_conversion',
-                            context: context,
-                          );
-                          if (result != null) onChanged(true, result);
-                        },
-                      ),
+                FlowPhotoInput(
+                  label: 'Certificado de conversión *',
+                  taskId: taskId,
+                  photoLabel: 'certificado_conversion',
+                  previewFileName: 'Certificado.png',
+                  isUploaded: uploaded,
+                  imagePath: imagePath,
+                  tag: tag,
+                  onChanged: onChanged,
+                  onTagChanged: onTagChanged,
+                ),
                 const SizedBox(height: 24),
                 _buildMapsSection(),
               ],
