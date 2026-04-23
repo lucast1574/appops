@@ -55,21 +55,13 @@ class NotarySummaryStep extends StatelessWidget {
                   title: 'Información de la tarea',
                   onEdit: onEditTaskInfo,
                   children: [
-                    const FlowSummaryItem(
-                      label: 'Fecha',
-                      value: 'Miércoles, 18 de marzo de 2026',
-                    ),
                     FlowSummaryItem(
-                      label: 'Ubicación de recojo de documentos',
+                      label: 'Ubicación de recibida de documentos',
                       value: selectedPickupNotary ?? '---',
                     ),
                     FlowSummaryItem(
                       label: 'Ubicación de entrega de documentos',
                       value: selectedDeliveryNotary ?? '---',
-                    ),
-                    FlowSummaryItem(
-                      label: 'Notaria (recojo)',
-                      value: selectedPickupNotary ?? 'Notaría Ramos',
                     ),
                   ],
                 ),
@@ -81,12 +73,6 @@ class NotarySummaryStep extends StatelessWidget {
                     FlowSummaryStatus(
                       label: 'Foto documentos recibidos',
                       isComplete: receivePhotoUploaded,
-                    ),
-                    FlowSummaryItem(
-                      label: 'Nombre de quien recibe',
-                      value: receiverName != null && receiverName!.isNotEmpty
-                          ? receiverName!
-                          : '---',
                     ),
                   ],
                 ),

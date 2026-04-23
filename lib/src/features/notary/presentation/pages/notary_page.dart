@@ -26,37 +26,66 @@ class _NotaryPageState extends State<NotaryPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
-
-  // Step 0 - Task info
-  String? _selectedPickupNotary;
-  String? _selectedDeliveryNotary;
+  late Map<String, dynamic> _task;
+  bool _loadingDetail = true;
 
   // Step 1 - Receive docs
   bool _receivePhotoUploaded = false;
   String? _receivePhotoTag;
-  final TextEditingController _receiverNameController = TextEditingController();
 
   // Step 2 - Deliver docs
   bool _deliverPhotoUploaded = false;
   String? _deliverPhotoTag;
   final TextEditingController _deliveryNameController = TextEditingController();
 
-  int _getProgressIndex() {
-    switch (_currentStep) {
-      case 0:
-        return 0;
-      case 1:
-        return 1;
-      case 2:
-        return 2;
-      case 3:
-        return 3;
-      default:
-        return 3;
+  @override
+  void initState() {
+    super.initState();
+    _task = widget.task;
+    _fetchFullDetail();
+  }
+
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(
+          taskId is int ? taskId : int.parse('$taskId'),
+        );
+        if (mounted) {
+          setState(() {
+            _task = full;
+            _loadingDetail = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDetail = false);
     }
   }
 
-  void _nextStep() {
+
+  int _getProgressIndex() {
+    switch (_currentStep) {
+      case 0: return 0;
+      case 1: return 1;
+      case 2: return 2;
+      case 3: return 3;
+      default: return 3;
+    }
+  }
+
+  void _nextStep() async {
+    if (_currentStep == 0) {
+      try {
+        await _taskService.startTask(_task['id'] ?? 0);
+      } catch (e) {
+        debugPrint('Error starting task: $e');
+      }
+    }
+
     setState(() {
       _currentStep++;
     });
@@ -74,7 +103,6 @@ class _NotaryPageState extends State<NotaryPage> {
 
   @override
   void dispose() {
-    _receiverNameController.dispose();
     _deliveryNameController.dispose();
     super.dispose();
   }
@@ -126,19 +154,26 @@ class _NotaryPageState extends State<NotaryPage> {
               ),
             )
           : null,
-      body: SafeArea(child: _buildCurrentStep()),
+      body: SafeArea(
+        child: _loadingDetail && _currentStep > 0
+            ? const Center(child: CircularProgressIndicator())
+            : _buildCurrentStep(),
+      ),
     );
   }
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
+        return TaskInfoWidget(
+          task: _task,
+          onContinue: _nextStep,
+        );
       case 1:
         return NotaryReceiveDocsStep(
           photoUploaded: _receivePhotoUploaded,
           photoTag: _receivePhotoTag,
-          receiverNameController: _receiverNameController,
+          receiverNameController: TextEditingController(), // Not used anymore in this step
           onPhotoUploadedChanged: (val) => setState(() => _receivePhotoUploaded = val),
           onPhotoTagChanged: (val) => setState(() => _receivePhotoTag = val),
           onBack: _previousStep,
@@ -155,11 +190,12 @@ class _NotaryPageState extends State<NotaryPage> {
           onContinue: _nextStep,
         );
       case 3:
+        final metadata = _task['metadata'] ?? {};
         return NotarySummaryStep(
-          selectedPickupNotary: _selectedPickupNotary,
-          selectedDeliveryNotary: _selectedDeliveryNotary,
+          selectedPickupNotary: metadata['pickup_notary'],
+          selectedDeliveryNotary: metadata['delivery_notary'],
           receivePhotoUploaded: _receivePhotoUploaded,
-          receiverName: _receiverNameController.text,
+          receiverName: '', // Not used anymore in Step 1
           deliverPhotoUploaded: _deliverPhotoUploaded,
           deliveryName: _deliveryNameController.text,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
@@ -171,24 +207,26 @@ class _NotaryPageState extends State<NotaryPage> {
       case 4:
         return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default:
-        return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
+        return TaskInfoWidget(task: _task, onContinue: _nextStep);
     }
   }
-
 
   Future<void> _submitTask() async {
     if (_submitting) return;
     setState(() => _submitting = true);
 
     try {
-      final int taskId = widget.task['id'] ?? 0;
+      final int taskId = _task['id'] ?? 0;
+      final metadata = _task['metadata'] ?? {};
+      
       await _taskService.submitTask(
         taskId,
         resultData: {
-          'pickup_notary': _selectedPickupNotary,
-          'delivery_notary': _selectedDeliveryNotary,
-          'receiver_name': _receiverNameController.text,
+          'pickup_notary': metadata['pickup_notary'],
+          'delivery_notary': metadata['delivery_notary'],
           'delivery_name': _deliveryNameController.text,
+          'receive_photo_uploaded': _receivePhotoUploaded,
+          'deliver_photo_uploaded': _deliverPhotoUploaded,
         },
         observations: '',
       );
@@ -226,3 +264,4 @@ class _NotaryPageState extends State<NotaryPage> {
     );
   }
 }
+

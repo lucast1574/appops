@@ -82,43 +82,6 @@ class NotaryReceiveDocsStep extends StatelessWidget {
                         iconAsset: 'assets/CameraPlus.svg',
                         onTap: () => onPhotoUploadedChanged(true),
                       ),
-                const SizedBox(height: 24),
-                Text(
-                  'Nombre de quien recibe',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF002B4B),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: receiverNameController,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    color: const Color(0xFF002B4B),
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Foto persona',
-                    hintStyle: GoogleFonts.inter(
-                      color: const Color(0xFF99AAB7).withValues(alpha: 0.5),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8F9FA),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE5E9EB)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE5E9EB)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF002B4B)),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
