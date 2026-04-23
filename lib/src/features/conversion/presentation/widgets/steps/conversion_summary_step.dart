@@ -41,8 +41,6 @@ class ConversionSummaryStep extends StatelessWidget {
     final String endTime = TaskService.formatTime(task['end_time'] as String?);
     final metadata = task['metadata'] as Map<String, dynamic>? ?? {};
     final String serviceType = metadata['service_type'] ?? 'No especificado';
-    final String? mapsLink = task['google_maps_link'] as String?;
-    final String address = task['address'] ?? '';
 
     return Column(
       children: [
@@ -95,15 +93,6 @@ class ConversionSummaryStep extends StatelessWidget {
                     FlowSummaryItem(
                       label: 'Tipo de servicio',
                       value: serviceType,
-                    ),
-                    if (address.isNotEmpty)
-                      FlowSummaryItem(
-                        label: 'Ubicación de entrega',
-                        value: address,
-                      ),
-                    FlowSummaryStatus(
-                      label: 'Link Google Maps · Ubicación de entrega',
-                      isComplete: mapsLink != null && mapsLink.isNotEmpty,
                     ),
                   ],
                 ),

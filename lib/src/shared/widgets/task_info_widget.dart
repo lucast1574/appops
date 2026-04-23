@@ -49,6 +49,11 @@ class TaskInfoWidget extends StatelessWidget {
     final String destination = metadata['destination'] ?? '';
     final String serviceType = metadata['service_type'] ?? '';
     final String conversionLocation = metadata['location'] ?? '';
+    final String typeSlug = type?['slug'] ?? '';
+    final bool isConversion = typeSlug == 'conversion';
+
+    // Primary Maps link (root or metadata)
+    final String primaryMapsLink = task['google_maps_link']?.toString() ?? metadata['google_maps_link']?.toString() ?? '';
 
     // Build vehicle string
     final vehicleParts = <String>[
@@ -139,7 +144,7 @@ class TaskInfoWidget extends StatelessWidget {
                   const SizedBox(height: 16),
 
                 // Address (only if not a notary task which shows it above)
-                if (address.isNotEmpty && pickupNotary.isEmpty) ...[
+                if (address.isNotEmpty && pickupNotary.isEmpty && !isConversion) ...[
                   _buildHeader('Dirección'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
@@ -147,9 +152,9 @@ class TaskInfoWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                        if (task['google_maps_link']?.toString().isNotEmpty == true) ...[
+                        if (!isConversion && primaryMapsLink.isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          _buildGoogleMapsButton(task['google_maps_link']),
+                          _buildGoogleMapsButton(primaryMapsLink),
                         ],
                       ],
                     ),
@@ -221,9 +226,9 @@ class TaskInfoWidget extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(address, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
                           ],
-                          if (task['google_maps_link']?.toString().isNotEmpty == true) ...[
+                          if (primaryMapsLink.isNotEmpty) ...[
                             const SizedBox(height: 12),
-                            _buildGoogleMapsButton(task['google_maps_link']),
+                            _buildGoogleMapsButton(primaryMapsLink),
                           ],
                         ],
                       ),

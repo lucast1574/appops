@@ -187,7 +187,6 @@ class _ConversionPageState extends State<ConversionPage> {
       case 2:
         return ConversionCertificateStep(
           taskId: _task['id'] ?? 0,
-          googleMapsLink: _task['google_maps_link'] as String?,
           uploaded: _certificateUploaded,
           tag: _certificateTag,
           imagePath: _certificateLocalPath,
@@ -202,7 +201,6 @@ class _ConversionPageState extends State<ConversionPage> {
       case 3:
         return ConversionChecklistStep(
           taskId: _task['id'] ?? 0,
-          googleMapsLink: _task['google_maps_link'] as String?,
           uploaded: _checklistUploaded,
           tag: _checklistTag,
           imagePath: _checklistLocalPath,
