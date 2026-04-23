@@ -6,11 +6,9 @@ import '../../../../../shared/widgets/flow_form_widgets.dart';
 class ManagementPaymentStep extends StatelessWidget {
   final String? fineType;
   final String? municipality;
-  final String? ticketMunicipality;
   final String? selectedMunicipality;
   final Function(String?) onFineTypeChanged;
   final Function(String?) onMunicipalityChanged;
-  final Function(String?) onTicketMunicipalityChanged;
   final Function(String?) onSelectedMunicipalityChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
@@ -19,11 +17,9 @@ class ManagementPaymentStep extends StatelessWidget {
     super.key,
     this.fineType,
     this.municipality,
-    this.ticketMunicipality,
     this.selectedMunicipality,
     required this.onFineTypeChanged,
     required this.onMunicipalityChanged,
-    required this.onTicketMunicipalityChanged,
     required this.onSelectedMunicipalityChanged,
     required this.onBack,
     required this.onContinue,
@@ -53,36 +49,20 @@ class ManagementPaymentStep extends StatelessWidget {
                 _buildDropdown(
                   value: fineType,
                   hint: 'Seleccionar tipo de multa',
-                  items: const ['SAT', 'Municipal', 'PNP', 'Otro'],
+                  items: const ['SAT', 'Multa municipalidad', 'Papeleta', 'Otro'],
                   onChanged: onFineTypeChanged,
                 ),
-                const SizedBox(height: 16),
-                const FlowSectionLabel(label: 'Multa municipalidad'),
-                const SizedBox(height: 8),
-                _buildDropdown(
-                  value: municipality,
-                  hint: 'Multa municipalidad',
-                  items: const ['Lima Metropolitana', 'San Isidro', 'Miraflores', 'Surco', 'San Borja'],
-                  onChanged: onMunicipalityChanged,
-                ),
-                const SizedBox(height: 16),
-                const FlowSectionLabel(label: 'Boleto municipalidad'),
-                const SizedBox(height: 8),
-                _buildDropdown(
-                  value: ticketMunicipality,
-                  hint: 'Boleto municipalidad',
-                  items: const ['Antioquia', 'Cañete', 'Huarochirí', 'Barranca'],
-                  onChanged: onTicketMunicipalityChanged,
-                ),
-                const SizedBox(height: 16),
-                const FlowSectionLabel(label: 'Seleccionar municipio'),
-                const SizedBox(height: 8),
-                _buildDropdown(
-                  value: selectedMunicipality,
-                  hint: 'Seleccionar municipio',
-                  items: const ['Antioquia', 'Cañete', 'Huarochirí', 'Barranca'],
-                  onChanged: onSelectedMunicipalityChanged,
-                ),
+                if (fineType == 'Multa municipalidad') ...[
+                  const SizedBox(height: 16),
+                  const FlowSectionLabel(label: 'Definir municipalidad'),
+                  const SizedBox(height: 8),
+                  _buildDropdown(
+                    value: selectedMunicipality,
+                    hint: 'Seleccionar municipio',
+                    items: const ['Antioquia', 'Cañete', 'Huarochirí', 'Barranca'],
+                    onChanged: onSelectedMunicipalityChanged,
+                  ),
+                ],
               ],
             ),
           ),

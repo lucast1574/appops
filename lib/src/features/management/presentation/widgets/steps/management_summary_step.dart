@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_summary_widgets.dart';
 
 class ManagementSummaryStep extends StatelessWidget {
+  final Map<String, dynamic> task;
   final String managementType;
 
   // Bloqueo/Desbloqueo
@@ -13,16 +14,10 @@ class ManagementSummaryStep extends StatelessWidget {
   final String? municipality;
   final String? selectedMunicipality;
 
-  // Apoyo oficina/taller
+  // Apoyo oficina/taller/policial
   final String? startTime;
   final String? endTime;
   final String? motivo;
-
-  // Trámite policial
-  final String? comisaria;
-  final String? expediente;
-  final String? policeMotivo;
-  final bool constanciaUploaded;
 
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditDetail;
@@ -31,6 +26,7 @@ class ManagementSummaryStep extends StatelessWidget {
 
   const ManagementSummaryStep({
     super.key,
+    required this.task,
     required this.managementType,
     this.verificationResult,
     this.fineType,
@@ -39,10 +35,6 @@ class ManagementSummaryStep extends StatelessWidget {
     this.startTime,
     this.endTime,
     this.motivo,
-    this.comisaria,
-    this.expediente,
-    this.policeMotivo,
-    this.constanciaUploaded = false,
     required this.onEditTaskInfo,
     required this.onEditDetail,
     required this.onEditAll,
@@ -51,6 +43,10 @@ class ManagementSummaryStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String scheduledDate = task['scheduled_date'] ?? '—';
+    final String placa = task['placa'] ?? '—';
+    final String address = task['address'] ?? '—';
+
     return Column(
       children: [
         Expanded(
@@ -74,13 +70,13 @@ class ManagementSummaryStep extends StatelessWidget {
                   title: 'Información de la tarea',
                   onEdit: onEditTaskInfo,
                   children: [
-                    const FlowSummaryItem(label: 'Fecha', value: 'Miércoles, 18 de marzo de 2026'),
+                    FlowSummaryItem(label: 'Fecha', value: scheduledDate),
                     FlowSummaryItem(label: 'Tipo de gestión', value: managementType),
                     if (managementType == 'Prueba de Bloqueo / Desbloqueo')
-                      const FlowSummaryItem(label: 'Placa', value: 'EDZ-478'),
-                    const FlowSummaryItem(
+                      FlowSummaryItem(label: 'Placa', value: placa),
+                    FlowSummaryItem(
                       label: 'Ubicación de gestión',
-                      value: 'Avenida Pedro de Osma 789 Calle Centenario 156',
+                      value: address,
                     ),
                   ],
                 ),
@@ -158,21 +154,11 @@ class ManagementSummaryStep extends StatelessWidget {
           onEdit: onEditDetail,
           children: [
             FlowSummaryItem(label: 'Tipo de multa', value: fineType ?? '---'),
-            FlowSummaryItem(label: 'Multa municipalidad', value: municipality ?? '---'),
-            FlowSummaryItem(label: 'Municipio', value: selectedMunicipality ?? '---'),
+            if (fineType == 'Multa municipalidad')
+              FlowSummaryItem(label: 'Definir municipalidad', value: selectedMunicipality ?? '---'),
           ],
         );
       case 'Trámite policial':
-        return FlowSummarySection(
-          title: 'Detalle gestión',
-          onEdit: onEditDetail,
-          children: [
-            FlowSummaryItem(label: 'Comisaría', value: comisaria ?? '---'),
-            FlowSummaryItem(label: 'Número de expediente', value: expediente ?? '---'),
-            FlowSummaryItem(label: 'Motivo', value: policeMotivo ?? '---'),
-            FlowSummaryStatus(label: 'Constancia / Documento', isComplete: constanciaUploaded),
-          ],
-        );
       case 'Apoyo oficina':
       case 'Apoyo taller':
         return FlowSummarySection(

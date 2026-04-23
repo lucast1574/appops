@@ -11,7 +11,6 @@ import '../widgets/steps/management_before_starting_step.dart';
 import '../widgets/steps/management_result_step.dart';
 import '../widgets/steps/management_payment_step.dart';
 import '../widgets/steps/management_detail_step.dart';
-import '../widgets/steps/management_police_step.dart';
 import '../widgets/steps/management_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 
@@ -27,11 +26,49 @@ class _ManagementPageState extends State<ManagementPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  late String _managementType;
+  bool _loadingDetail = true;
 
-  // The management type — in production comes from task data
-  // Options: 'Prueba de Bloqueo / Desbloqueo', 'Pago servicio',
-  //          'Trámite policial', 'Apoyo oficina', 'Apoyo taller'
-  final String _managementType = 'Prueba de Bloqueo / Desbloqueo';
+  @override
+  void initState() {
+    super.initState();
+    _fetchFullDetail();
+  }
+
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
+        if (mounted) {
+          setState(() {
+            final metadata = full['metadata'] as Map<String, dynamic>? ?? {};
+            _managementType = metadata['management_type'] ?? 'Prueba de Bloqueo / Desbloqueo';
+            
+            // Pre-fill from metadata if available
+            _fineType = metadata['fine_type'];
+            _selectedMunicipality = metadata['selected_municipality'];
+            
+            // Pre-fill times from task base if available
+            _startTimeController.text = TaskService.formatTime(full['start_time'] as String?);
+            _endTimeController.text = TaskService.formatTime(full['end_time'] as String?);
+            
+            _loadingDetail = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          final metadata = widget.task['metadata'] as Map<String, dynamic>? ?? {};
+          _managementType = metadata['management_type'] ?? 'Prueba de Bloqueo / Desbloqueo';
+          _loadingDetail = false;
+        });
+      }
+    }
+  }
 
   // === Bloqueo/Desbloqueo state ===
   String? _verificationResult;
@@ -40,29 +77,12 @@ class _ManagementPageState extends State<ManagementPage> {
   // === Pago servicio state ===
   String? _fineType;
   String? _municipality;
-  String? _ticketMunicipality;
   String? _selectedMunicipality;
-  // Pago servicio has a 2nd detail screen when certain options are picked
-  // Step 2 = first payment screen, Step 2b (encoded as _pagoSubStep) = extended
 
-  // === Trámite policial state ===
-  final TextEditingController _comisariaController = TextEditingController();
-  final TextEditingController _expedienteController = TextEditingController();
-  final TextEditingController _policeMotiveController = TextEditingController();
-  bool _constanciaUploaded = false;
-  String? _constanciaTag;
-
-  // === Apoyo oficina/taller state ===
+  // === General Detail (Apoyo oficina/taller, Trámite policial) state ===
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
   final TextEditingController _motivoController = TextEditingController();
-
-  // Steps layout:
-  // 0 = Task info
-  // 1 = Before starting (interstitial)
-  // 2 = Type-specific step
-  // 3 = Summary
-  // 4 = Success
 
   int _getProgressIndex() {
     switch (_currentStep) {
@@ -84,7 +104,6 @@ class _ManagementPageState extends State<ManagementPage> {
     if (_currentStep == 0) {
       Navigator.pop(context);
     } else if (_currentStep == 2) {
-      // Skip interstitial going back
       setState(() => _currentStep = 0);
     } else {
       setState(() => _currentStep--);
@@ -97,14 +116,15 @@ class _ManagementPageState extends State<ManagementPage> {
     _startTimeController.dispose();
     _endTimeController.dispose();
     _motivoController.dispose();
-    _comisariaController.dispose();
-    _expedienteController.dispose();
-    _policeMotiveController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingDetail) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     bool showAppBar = _currentStep != 1 && _currentStep != 4;
 
     return Scaffold(
@@ -164,6 +184,7 @@ class _ManagementPageState extends State<ManagementPage> {
         return _buildTypeSpecificStep();
       case 3:
         return ManagementSummaryStep(
+          task: widget.task,
           managementType: _managementType,
           verificationResult: _verificationResult,
           fineType: _fineType,
@@ -172,10 +193,6 @@ class _ManagementPageState extends State<ManagementPage> {
           startTime: _startTimeController.text,
           endTime: _endTimeController.text,
           motivo: _motivoController.text,
-          comisaria: _comisariaController.text,
-          expediente: _expedienteController.text,
-          policeMotivo: _policeMotiveController.text,
-          constanciaUploaded: _constanciaUploaded,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditDetail: () => setState(() => _currentStep = 2),
           onEditAll: () => setState(() => _currentStep = 0),
@@ -202,27 +219,14 @@ class _ManagementPageState extends State<ManagementPage> {
         return ManagementPaymentStep(
           fineType: _fineType,
           municipality: _municipality,
-          ticketMunicipality: _ticketMunicipality,
           selectedMunicipality: _selectedMunicipality,
           onFineTypeChanged: (val) => setState(() => _fineType = val),
           onMunicipalityChanged: (val) => setState(() => _municipality = val),
-          onTicketMunicipalityChanged: (val) => setState(() => _ticketMunicipality = val),
           onSelectedMunicipalityChanged: (val) => setState(() => _selectedMunicipality = val),
           onBack: _previousStep,
           onContinue: _nextStep,
         );
       case 'Trámite policial':
-        return ManagementPoliceStep(
-          comisariaController: _comisariaController,
-          expedienteController: _expedienteController,
-          motivoController: _policeMotiveController,
-          constanciaUploaded: _constanciaUploaded,
-          constanciaTag: _constanciaTag,
-          onConstanciaUploadedChanged: (val) => setState(() => _constanciaUploaded = val),
-          onConstanciaTagChanged: (val) => setState(() => _constanciaTag = val),
-          onBack: _previousStep,
-          onContinue: _nextStep,
-        );
       case 'Apoyo oficina':
       case 'Apoyo taller':
         return ManagementDetailStep(
@@ -243,7 +247,6 @@ class _ManagementPageState extends State<ManagementPage> {
     }
   }
 
-
   Future<void> _submitTask() async {
     if (_submitting) return;
     setState(() => _submitting = true);
@@ -260,10 +263,8 @@ class _ManagementPageState extends State<ManagementPage> {
           'start_time': _startTimeController.text,
           'end_time': _endTimeController.text,
           'motivo': _motivoController.text,
-          'comisaria': _comisariaController.text,
-          'expediente': _expedienteController.text,
         },
-        observations: '',
+        observations: _observationsController.text,
       );
       if (mounted) setState(() => _currentStep = 4);
     } catch (e) {
