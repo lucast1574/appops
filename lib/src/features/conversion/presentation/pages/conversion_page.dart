@@ -146,7 +146,7 @@ class _ConversionPageState extends State<ConversionPage> {
             )
           : null,
       body: SafeArea(
-        child: _loadingDetail && _currentStep > 0
+        child: _loadingDetail
           ? const Center(child: CircularProgressIndicator())
           : _buildCurrentStep(),
       ),

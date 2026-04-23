@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
-import '../../../../../shared/widgets/flow_form_widgets.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 class NotaryReceiveDocsStep extends StatelessWidget {
+  final int taskId;
   final bool photoUploaded;
   final String? photoTag;
-  final TextEditingController receiverNameController;
-  final Function(bool) onPhotoUploadedChanged;
+  final String? photoPath;
+  final Function(bool, dynamic) onPhotoUploadedChanged;
   final Function(String?) onPhotoTagChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
   const NotaryReceiveDocsStep({
     super.key,
+    required this.taskId,
     required this.photoUploaded,
     this.photoTag,
-    required this.receiverNameController,
+    this.photoPath,
     required this.onPhotoUploadedChanged,
     required this.onPhotoTagChanged,
     required this.onBack,
@@ -44,44 +45,17 @@ class NotaryReceiveDocsStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Text(
-                      'Foto documentos recibidos:',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF002B4B),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (!photoUploaded)
-                      Text(
-                        'Sin imagen',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: const Color(0xFF99AAB7),
-                        ),
-                      ),
-                  ],
+                FlowPhotoInput(
+                  label: 'Foto documentos recibidos:',
+                  taskId: taskId,
+                  photoLabel: 'notaria_recibe',
+                  previewFileName: 'documentos.png',
+                  isUploaded: photoUploaded,
+                  imagePath: photoPath,
+                  tag: photoTag,
+                  onChanged: onPhotoUploadedChanged,
+                  onTagChanged: onPhotoTagChanged,
                 ),
-                const SizedBox(height: 12),
-                photoUploaded
-                    ? FlowImagePreview(
-                        fileName: 'documentos.png',
-                        tag: photoTag,
-                        onDeleteImage: () {
-                          onPhotoUploadedChanged(false);
-                          onPhotoTagChanged(null);
-                        },
-                        onDeleteTag: () => onPhotoTagChanged(null),
-                        onTagAdded: (val) => onPhotoTagChanged(val),
-                      )
-                    : FlowUploadButton(
-                        text: 'Tomar foto',
-                        iconAsset: 'assets/CameraPlus.svg',
-                        onTap: () => onPhotoUploadedChanged(true),
-                      ),
               ],
             ),
           ),
@@ -89,6 +63,7 @@ class NotaryReceiveDocsStep extends StatelessWidget {
         FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
+          isContinueEnabled: photoUploaded,
         ),
       ],
     );

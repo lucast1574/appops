@@ -290,7 +290,7 @@ class _VerificationPageState extends State<VerificationPage> {
             )
           : null,
       body: SafeArea(
-        child: _loadingDetail && _currentStep > 0
+        child: _loadingDetail
             ? const Center(child: CircularProgressIndicator())
             : _buildCurrentStep(),
       ),

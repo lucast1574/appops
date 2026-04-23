@@ -245,7 +245,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
             )
           : null,
       body: SafeArea(
-        child: _loadingDetail && _currentStep > 0
+        child: _loadingDetail
             ? const Center(child: CircularProgressIndicator())
             : _buildCurrentStep(),
       ),

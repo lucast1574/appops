@@ -32,10 +32,12 @@ class _NotaryPageState extends State<NotaryPage> {
   // Step 1 - Receive docs
   bool _receivePhotoUploaded = false;
   String? _receivePhotoTag;
+  String? _receivePhotoPath;
 
   // Step 2 - Deliver docs
   bool _deliverPhotoUploaded = false;
   String? _deliverPhotoTag;
+  String? _deliverPhotoPath;
   final TextEditingController _deliveryNameController = TextEditingController();
 
   @override
@@ -147,7 +149,7 @@ class _NotaryPageState extends State<NotaryPage> {
             )
           : null,
       body: SafeArea(
-        child: _loadingDetail && _currentStep > 0
+        child: _loadingDetail
             ? const Center(child: CircularProgressIndicator())
             : _buildCurrentStep(),
       ),
@@ -163,20 +165,29 @@ class _NotaryPageState extends State<NotaryPage> {
         );
       case 1:
         return NotaryReceiveDocsStep(
+          taskId: _task['id'] ?? 0,
           photoUploaded: _receivePhotoUploaded,
           photoTag: _receivePhotoTag,
-          receiverNameController: TextEditingController(), // Not used anymore in this step
-          onPhotoUploadedChanged: (val) => setState(() => _receivePhotoUploaded = val),
+          photoPath: _receivePhotoPath,
+          onPhotoUploadedChanged: (val, res) => setState(() {
+            _receivePhotoUploaded = val;
+            if (val) _receivePhotoPath = res?['localPath'];
+          }),
           onPhotoTagChanged: (val) => setState(() => _receivePhotoTag = val),
           onBack: _previousStep,
           onContinue: _nextStep,
         );
       case 2:
         return NotaryDeliverDocsStep(
+          taskId: _task['id'] ?? 0,
           photoUploaded: _deliverPhotoUploaded,
           photoTag: _deliverPhotoTag,
+          photoPath: _deliverPhotoPath,
           deliveryNameController: _deliveryNameController,
-          onPhotoUploadedChanged: (val) => setState(() => _deliverPhotoUploaded = val),
+          onPhotoUploadedChanged: (val, res) => setState(() {
+            _deliverPhotoUploaded = val;
+            if (val) _deliverPhotoPath = res?['localPath'];
+          }),
           onPhotoTagChanged: (val) => setState(() => _deliverPhotoTag = val),
           onBack: _previousStep,
           onContinue: _nextStep,
