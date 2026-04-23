@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+// import 'package:geolocator/geolocator.dart';
 
 import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
@@ -95,7 +96,6 @@ class _ManagementPageState extends State<ManagementPage> {
 
   // === Pago servicio state ===
   String? _fineType;
-  String? _municipality;
   String? _selectedMunicipality;
 
   // === General Detail (Apoyo oficina/taller, Trámite policial) state ===
@@ -207,7 +207,6 @@ class _ManagementPageState extends State<ManagementPage> {
           managementType: _managementType,
           verificationResult: _verificationResult,
           fineType: _fineType,
-          municipality: _municipality,
           selectedMunicipality: _selectedMunicipality,
           startTime: _startTimeController.text,
           endTime: _endTimeController.text,
@@ -271,17 +270,34 @@ class _ManagementPageState extends State<ManagementPage> {
 
     try {
       final int taskId = widget.task['id'] ?? 0;
+      
+      // Future: Get operario location (similar to Verification)
+      // Position? currentPosition;
+      /*
+      try {
+        currentPosition = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        );
+      } catch (e) {
+        debugPrint('Error getting location: $e');
+      }
+      */
+
+      final resultData = {
+        'management_type': _managementType,
+        'verification_result': _verificationResult,
+        'fine_type': _fineType,
+        'selected_municipality': _selectedMunicipality,
+        'start_time': _startTimeController.text,
+        'end_time': _endTimeController.text,
+        'motivo': _motivoController.text,
+        // 'latitude': currentPosition?.latitude,
+        // 'longitude': currentPosition?.longitude,
+      };
+
       await _taskService.submitTask(
         taskId,
-        resultData: {
-          'management_type': _managementType,
-          'verification_result': _verificationResult,
-          'fine_type': _fineType,
-          'municipality': _municipality,
-          'start_time': _startTimeController.text,
-          'end_time': _endTimeController.text,
-          'motivo': _motivoController.text,
-        },
+        resultData: resultData,
         observations: _observationsController.text,
       );
       if (mounted) setState(() => _currentStep = 4);
