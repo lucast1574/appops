@@ -13,6 +13,8 @@ import '../widgets/steps/management_payment_step.dart';
 import '../widgets/steps/management_detail_step.dart';
 import '../widgets/steps/management_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../auth/data/auth_service.dart';
+import '../../../home/data/catalog_service.dart';
 
 class ManagementPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -25,9 +27,13 @@ class ManagementPage extends StatefulWidget {
 class _ManagementPageState extends State<ManagementPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
+  final AuthService _authService = AuthService();
+  final CatalogService _catalogService = CatalogService();
   bool _submitting = false;
   late String _managementType;
   bool _loadingDetail = true;
+
+  List<String> _districts = [];
 
   @override
   void initState() {
@@ -40,6 +46,19 @@ class _ManagementPageState extends State<ManagementPage> {
       final taskId = widget.task['id'];
       if (taskId != null) {
         final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
+        
+        // Fetch districts for operario's city
+        final user = await _authService.getCurrentUser();
+        final cityId = user?['city']?['id'];
+        if (cityId != null) {
+          final dists = await _catalogService.getDistricts(cityId);
+          if (mounted) {
+            setState(() {
+              _districts = dists.map((d) => d['name'] as String).toList()..sort();
+            });
+          }
+        }
+
         if (mounted) {
           setState(() {
             final metadata = full['metadata'] as Map<String, dynamic>? ?? {};
@@ -218,10 +237,9 @@ class _ManagementPageState extends State<ManagementPage> {
       case 'Pago servicio':
         return ManagementPaymentStep(
           fineType: _fineType,
-          municipality: _municipality,
           selectedMunicipality: _selectedMunicipality,
+          districts: _districts,
           onFineTypeChanged: (val) => setState(() => _fineType = val),
-          onMunicipalityChanged: (val) => setState(() => _municipality = val),
           onSelectedMunicipalityChanged: (val) => setState(() => _selectedMunicipality = val),
           onBack: _previousStep,
           onContinue: _nextStep,

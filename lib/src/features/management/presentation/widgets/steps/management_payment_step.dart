@@ -5,10 +5,9 @@ import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class ManagementPaymentStep extends StatelessWidget {
   final String? fineType;
-  final String? municipality;
   final String? selectedMunicipality;
+  final List<String> districts;
   final Function(String?) onFineTypeChanged;
-  final Function(String?) onMunicipalityChanged;
   final Function(String?) onSelectedMunicipalityChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
@@ -16,10 +15,9 @@ class ManagementPaymentStep extends StatelessWidget {
   const ManagementPaymentStep({
     super.key,
     this.fineType,
-    this.municipality,
     this.selectedMunicipality,
+    this.districts = const [],
     required this.onFineTypeChanged,
-    required this.onMunicipalityChanged,
     required this.onSelectedMunicipalityChanged,
     required this.onBack,
     required this.onContinue,
@@ -49,17 +47,17 @@ class ManagementPaymentStep extends StatelessWidget {
                 _buildDropdown(
                   value: fineType,
                   hint: 'Seleccionar tipo de multa',
-                  items: const ['SAT', 'Multa municipalidad', 'Papeleta', 'Otro'],
+                  items: const ['Multa ATU', 'Multa Municipal', 'SAT', 'MTC', 'SUNARP'],
                   onChanged: onFineTypeChanged,
                 ),
-                if (fineType == 'Multa municipalidad') ...[
+                if (fineType == 'Multa Municipal') ...[
                   const SizedBox(height: 16),
                   const FlowSectionLabel(label: 'Definir municipalidad'),
                   const SizedBox(height: 8),
                   _buildDropdown(
-                    value: selectedMunicipality,
+                    value: districts.contains(selectedMunicipality) ? selectedMunicipality : null,
                     hint: 'Seleccionar municipio',
-                    items: const ['Antioquia', 'Cañete', 'Huarochirí', 'Barranca'],
+                    items: districts,
                     onChanged: onSelectedMunicipalityChanged,
                   ),
                 ],
