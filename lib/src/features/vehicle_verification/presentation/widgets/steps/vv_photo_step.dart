@@ -5,6 +5,9 @@ import '../../../../../shared/widgets/flow_photo_input.dart';
 
 /// Step 3: Take a photo of the vehicle.
 class VehicleVerificationPhotoStep extends StatelessWidget {
+  final String title;
+  final String label;
+  final String photoLabel;
   final int taskId;
   final bool uploaded;
   final String? tag;
@@ -16,6 +19,9 @@ class VehicleVerificationPhotoStep extends StatelessWidget {
 
   const VehicleVerificationPhotoStep({
     super.key,
+    required this.title,
+    required this.label,
+    required this.photoLabel,
     required this.taskId,
     required this.uploaded,
     this.tag,
@@ -37,7 +43,7 @@ class VehicleVerificationPhotoStep extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Foto del vehículo',
+                  title,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -46,9 +52,9 @@ class VehicleVerificationPhotoStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FlowPhotoInput(
-                  label: 'Foto del vehículo *',
+                  label: label,
                   taskId: taskId,
-                  photoLabel: 'foto_vehiculo',
+                  photoLabel: photoLabel,
                   previewFileName: 'Vehiculo.png',
                   isUploaded: uploaded,
                   imagePath: imagePath,

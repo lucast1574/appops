@@ -98,6 +98,9 @@ class FamiliarFormStep extends StatelessWidget {
         FlowStepNavigation(
           onBack: onBack,
           onContinue: onContinue,
+          isContinueEnabled: nameController.text.trim().isNotEmpty &&
+              dniController.text.trim().isNotEmpty &&
+              selectedRelationship != null,
         ),
       ],
     );

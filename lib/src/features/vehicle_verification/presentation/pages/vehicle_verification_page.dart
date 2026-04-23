@@ -321,6 +321,9 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
         );
       case 3:
         return VehicleVerificationPhotoStep(
+          title: 'Foto del vehículo',
+          label: 'Foto del vehículo *',
+          photoLabel: 'foto_vehiculo',
           taskId: _task['id'] ?? 0,
           uploaded: _photoUploaded,
           tag: _photoTag,
