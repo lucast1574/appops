@@ -151,7 +151,25 @@ class _NotaryPageState extends State<NotaryPage> {
       body: SafeArea(
         child: _loadingDetail
             ? const Center(child: CircularProgressIndicator())
-            : _buildCurrentStep(),
+            : _submitting
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(color: Color(0xFF27A376)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Enviando información...',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF002B4B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _buildCurrentStep(),
       ),
     );
   }
@@ -189,6 +207,7 @@ class _NotaryPageState extends State<NotaryPage> {
             if (val) _deliverPhotoPath = res?['localPath'];
           }),
           onPhotoTagChanged: (val) => setState(() => _deliverPhotoTag = val),
+          onNameChanged: (_) => setState(() {}),
           onBack: _previousStep,
           onContinue: _nextStep,
         );

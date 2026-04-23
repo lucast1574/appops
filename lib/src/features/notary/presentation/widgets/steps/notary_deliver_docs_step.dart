@@ -11,6 +11,7 @@ class NotaryDeliverDocsStep extends StatelessWidget {
   final TextEditingController deliveryNameController;
   final Function(bool, dynamic) onPhotoUploadedChanged;
   final Function(String?) onPhotoTagChanged;
+  final Function(String) onNameChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
@@ -23,6 +24,7 @@ class NotaryDeliverDocsStep extends StatelessWidget {
     required this.deliveryNameController,
     required this.onPhotoUploadedChanged,
     required this.onPhotoTagChanged,
+    required this.onNameChanged,
     required this.onBack,
     required this.onContinue,
   });
@@ -76,10 +78,7 @@ class NotaryDeliverDocsStep extends StatelessWidget {
                     fontSize: 15,
                     color: const Color(0xFF002B4B),
                   ),
-                  onChanged: (_) {
-                    // This is a stateless widget, but the parent might rebuild on other changes.
-                    // For immediate button state, parent should handle onChanged.
-                  },
+                  onChanged: onNameChanged,
                   decoration: InputDecoration(
                     hintText: 'Juan Ramos',
                     hintStyle: GoogleFonts.inter(
