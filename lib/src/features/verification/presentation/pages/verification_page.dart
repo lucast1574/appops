@@ -34,6 +34,7 @@ class _VerificationPageState extends State<VerificationPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  bool _startingTask = false;
   late Map<String, dynamic> _task;
   bool _loadingDetail = true;
 
@@ -172,16 +173,26 @@ class _VerificationPageState extends State<VerificationPage> {
 
   void _nextStep() async {
     if (_currentStep == 0) {
-      final isNear = await _checkLocation();
-      if (!isNear) return;
-
-      // Start task in backend
+      if (_startingTask) return;
+      setState(() => _startingTask = true);
+      
       try {
-        await _taskService.startTask(_task['id'] ?? 0);
-      } catch (e) {
-        if (!e.toString().contains('400')) { // Ignore already started
-           debugPrint('Error starting task: $e');
+        final isNear = await _checkLocation();
+        if (!isNear) {
+          setState(() => _startingTask = false);
+          return;
         }
+
+        // Start task in backend if not already started
+        if (_task['status'] != 'in_progress') {
+          await _taskService.startTask(_task['id'] ?? 0);
+        }
+      } catch (e) {
+        if (!e.toString().contains('400')) {
+          debugPrint('Error starting task: $e');
+        }
+      } finally {
+        if (mounted) setState(() => _startingTask = false);
       }
     }
 
@@ -292,6 +303,7 @@ class _VerificationPageState extends State<VerificationPage> {
         return TaskInfoWidget(
           task: _task,
           onContinue: _nextStep,
+          isSubmitting: _startingTask,
           extraFields: [
             // Warning banner about GPS proximity
             Container(

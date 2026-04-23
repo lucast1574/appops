@@ -87,33 +87,6 @@ class _ConversionPageState extends State<ConversionPage> {
     }
   }
 
-  Future<void> _startAndContinue() async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final int taskId = _task['id'] ?? 0;
-      // Try to start the task. If it's already in_progress the backend
-      // returns 400 — that's fine, we just move on to the next step.
-      await _taskService.startTask(taskId);
-      _nextStep();
-    } catch (e) {
-      // Check if the error is a 400 (task already started) — treat as success
-      final is400 = e.toString().contains('400');
-      if (is400) {
-        // Task was already in_progress/rescheduled, just advance
-        _nextStep();
-        return;
-      }
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Error al iniciar tarea: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool showAppBar = _currentStep != 5;
@@ -185,7 +158,7 @@ class _ConversionPageState extends State<ConversionPage> {
       case 0:
         return TaskInfoWidget(
           task: _task,
-          onContinue: _startAndContinue,
+          onContinue: _nextStep,
         );
       case 1:
         return ConversionServiceInfoStep(
@@ -239,7 +212,7 @@ class _ConversionPageState extends State<ConversionPage> {
       default:
         return TaskInfoWidget(
           task: _task,
-          onContinue: _startAndContinue,
+          onContinue: _nextStep,
         );
     }
   }

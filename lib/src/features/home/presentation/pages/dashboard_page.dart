@@ -324,10 +324,12 @@ class _DashboardPageState extends State<DashboardPage> {
     ).then((_) => _loadTasks()); // Reload tasks when coming back
   }
 
+  final Set<int> _startingTaskIds = {};
   Future<void> _onStartTask(Map<String, dynamic> task) async {
     final int taskId = task['id'] ?? 0;
-    if (taskId == 0) return;
+    if (taskId == 0 || _startingTaskIds.contains(taskId)) return;
 
+    setState(() => _startingTaskIds.add(taskId));
     try {
       await _taskService.startTask(taskId);
       _navigateToTask(task);
@@ -339,6 +341,10 @@ class _DashboardPageState extends State<DashboardPage> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _startingTaskIds.remove(taskId));
       }
     }
   }
@@ -510,22 +516,31 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 elevation: 0,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    buttonText,
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                  ),
-                  if (!isInProgress) ...[
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.keyboard_double_arrow_right_rounded,
-                      size: 20,
+              child: _startingTaskIds.contains(task['id'])
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          buttonText,
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        ),
+                        if (!isInProgress) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.keyboard_double_arrow_right_rounded,
+                            size: 20,
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ],
-              ),
             ),
           ),
         ],

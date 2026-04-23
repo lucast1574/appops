@@ -77,15 +77,7 @@ class _NotaryPageState extends State<NotaryPage> {
     }
   }
 
-  void _nextStep() async {
-    if (_currentStep == 0) {
-      try {
-        await _taskService.startTask(_task['id'] ?? 0);
-      } catch (e) {
-        debugPrint('Error starting task: $e');
-      }
-    }
-
+  void _nextStep() {
     setState(() {
       _currentStep++;
     });

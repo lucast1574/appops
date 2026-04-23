@@ -12,12 +12,14 @@ class TaskInfoWidget extends StatelessWidget {
   /// Extra widgets to show before the observations field (e.g. notary-specific fields).
   final List<Widget> extraFields;
 
+  final bool isSubmitting;
   const TaskInfoWidget({
     super.key,
     required this.task,
     required this.onContinue,
     this.buttonText = 'Comenzar tarea',
     this.extraFields = const [],
+    this.isSubmitting = false,
   });
 
   @override
@@ -318,17 +320,26 @@ class TaskInfoWidget extends StatelessWidget {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: onContinue,
+              onPressed: isSubmitting ? null : onContinue,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF27A376),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                 elevation: 0,
               ),
-              child: Text(
-                buttonText,
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      buttonText,
+                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
             ),
           ),
         ),

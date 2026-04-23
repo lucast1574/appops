@@ -31,6 +31,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  bool _startingTask = false;
   late Map<String, dynamic> _task;
   bool _loadingDetail = true;
 
@@ -90,6 +91,9 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
   /// Validate GPS proximity before starting the task.
   /// The operario must be within 50m of the task location.
   Future<void> _validateAndStart() async {
+    if (_startingTask) return;
+    setState(() => _startingTask = true);
+    
     final messenger = ScaffoldMessenger.of(context);
 
     // Check if task has coordinates
@@ -161,7 +165,9 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
     // GPS OK (or no coordinates to validate) — start the task
     try {
       final int taskId = _task['id'] ?? 0;
-      await _taskService.startTask(taskId);
+      if (_task['status'] != 'in_progress') {
+        await _taskService.startTask(taskId);
+      }
       _nextStep();
     } catch (e) {
       // 400 = already started, just advance
@@ -177,6 +183,8 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _startingTask = false);
     }
   }
 
@@ -250,6 +258,7 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
         return TaskInfoWidget(
           task: _task,
           onContinue: _validateAndStart,
+          isSubmitting: _startingTask,
           extraFields: [
             // Warning banner about GPS proximity
             Container(
