@@ -117,7 +117,20 @@ class _ManagementPageState extends State<ManagementPage> {
     }
   }
 
-  void _nextStep() => setState(() => _currentStep++);
+  void _nextStep() {
+    // Validation
+    if (_currentStep == 2) {
+      if (_managementType == 'Pago servicio') {
+        if (_fineType == null) return;
+        if (_fineType == 'Multa Municipal' && _selectedMunicipality == null) return;
+      }
+      if (_managementType == 'Prueba de Bloqueo / Desbloqueo' && _verificationResult == null) return;
+      if (['Trámite policial', 'Apoyo oficina', 'Apoyo taller'].contains(_managementType)) {
+        if (_startTimeController.text.isEmpty || _endTimeController.text.isEmpty || _motivoController.text.isEmpty) return;
+      }
+    }
+    setState(() => _currentStep++);
+  }
 
   void _previousStep() {
     if (_currentStep == 0) {
