@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
   // Production API
-  static const String _baseUrl = 'https://api.opps-app.leasyauto.com/api/v1';
+  static const String _baseUrl = 'https://leasy-ops-2n60u.nexode.app/api/v1';
 
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
