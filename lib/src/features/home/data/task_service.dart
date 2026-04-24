@@ -107,9 +107,9 @@ class TaskService {
       '/tasks/$taskId/reschedule/',
       data: {
         'reason': reason,
-        if (resultData != null) 'result_data': resultData,
-        if (checklistData != null) 'checklist_data': checklistData,
-      },
+        'result_data': resultData,
+        'checklist_data': checklistData,
+      }..removeWhere((_, value) => value == null),
     );
     return Map<String, dynamic>.from(response.data);
   }

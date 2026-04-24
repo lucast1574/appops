@@ -248,7 +248,7 @@ class _VerificationPageState extends State<VerificationPage> {
       };
 
       if (_selectedRecipient == 'Familiar') {
-        reason += "Recibió familiar ${_familiarNameController.text} (${_selectedRelationship}).";
+        reason += "Recibió familiar ${_familiarNameController.text} ($_selectedRelationship).";
         resultData['relationship'] = _selectedRelationship;
         resultData['familiar_dni'] = _familiarDniController.text;
         resultData['familiar_name'] = _familiarNameController.text;

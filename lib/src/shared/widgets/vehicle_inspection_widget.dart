@@ -196,7 +196,7 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
                   boxShadow: [
                     if (hasObservations)
                       BoxShadow(
-                        color: const Color(0xFF4FA4B5).withOpacity(0.1),
+                        color: const Color(0xFF4FA4B5).withValues(alpha: 0.1),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -305,7 +305,7 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
                     height: 28,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4FA4B5).withOpacity(0.1),
+                      color: const Color(0xFF4FA4B5).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: const Color(0xFF4FA4B5)),
                     ),
