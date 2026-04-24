@@ -25,6 +25,51 @@ class _DeliveryPageState extends State<DeliveryPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  bool _loadingDetail = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFullDetail();
+  }
+
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
+        if (mounted) {
+          setState(() {
+            _loadingDetail = false;
+            // RESTORE PROGRESS
+            if (full['current_step'] != null && full['current_step'] > 0) {
+              _currentStep = full['current_step'];
+            }
+            final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
+            if (draft.isNotEmpty) {
+              if (draft['client_name'] != null) _clientNameController.text = draft['client_name'];
+              if (draft['dni'] != null) _dniController.text = draft['dni'];
+              if (draft['deliver_vehicle'] != null) _deliverVehicle = draft['deliver_vehicle'];
+              if (draft['delivery_time'] != null) _deliveryTimeController.text = draft['delivery_time'];
+              if (draft['km'] != null) _kmController.text = draft['km'];
+              if (draft['unit_type'] != null) _unitType = draft['unit_type'];
+              if (draft['marca'] != null) _selectedMarca = draft['marca'];
+              if (draft['modelo'] != null) _selectedModelo = draft['modelo'];
+              if (draft['color'] != null) _selectedColor = draft['color'];
+              if (draft['checklist_values'] != null) {
+                final Map<String, dynamic> cv = draft['checklist_values'];
+                cv.forEach((k, v) => _checklistValues[k] = v as bool);
+              }
+            }
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDetail = false);
+    }
+  }
 
   // Step 1 — delivery info
   final TextEditingController _clientNameController = TextEditingController();
@@ -57,7 +102,38 @@ class _DeliveryPageState extends State<DeliveryPage> {
     }
   }
 
-  void _nextStep() => setState(() => _currentStep++);
+  void _nextStep() {
+    setState(() => _currentStep++);
+    _saveProgress();
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId == null) return;
+
+      final draftData = {
+        'client_name': _clientNameController.text,
+        'dni': _dniController.text,
+        'deliver_vehicle': _deliverVehicle,
+        'delivery_time': _deliveryTimeController.text,
+        'km': _kmController.text,
+        'unit_type': _unitType,
+        'marca': _selectedMarca,
+        'modelo': _selectedModelo,
+        'color': _selectedColor,
+        'checklist_values': _checklistValues,
+      };
+
+      await _taskService.updateProgress(
+        taskId is int ? taskId : int.parse('$taskId'),
+        currentStep: _currentStep,
+        draftData: draftData,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
+  }
   void _previousStep() {
     if (_currentStep == 0) {
       Navigator.pop(context);
@@ -71,6 +147,28 @@ class _DeliveryPageState extends State<DeliveryPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_submitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+              const SizedBox(height: 16),
+              Text(
+                'Enviando información...',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     bool showAppBar = _currentStep != 5;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -83,30 +181,13 @@ class _DeliveryPageState extends State<DeliveryPage> {
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 5, activeIndex: _getProgressIndex(), allComplete: _currentStep == 4)),
       ) : null,
       body: SafeArea(
-        child: _submitting
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: Color(0xFF27A376)),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Enviando información...',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF002B4B),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : _buildCurrentStep(),
+        child: _buildCurrentStep(),
       ),
     );
   }
 
   Widget _buildCurrentStep() {
+    if (_loadingDetail) return const Center(child: CircularProgressIndicator());
     switch (_currentStep) {
       case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return DeliveryInfoStep(

@@ -123,6 +123,29 @@ class _VerificationPageState extends State<VerificationPage> {
             if (_mapsController.text.isEmpty) {
               _mapsController.text = _task['google_maps_link'] ?? '';
             }
+
+            // RESTORE PROGRESS
+            if (full['current_step'] != null && full['current_step'] > 0) {
+              _currentStep = full['current_step'];
+            }
+            final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
+            if (draft.isNotEmpty) {
+              if (draft['selected_recipient'] != null) _selectedRecipient = draft['selected_recipient'];
+              if (draft['selected_relationship'] != null) _selectedRelationship = draft['selected_relationship'];
+              if (draft['familiar_name'] != null) _familiarNameController.text = draft['familiar_name'];
+              if (draft['familiar_dni'] != null) _familiarDniController.text = draft['familiar_dni'];
+              if (draft['housing_type'] != null) _housingType = draft['housing_type'];
+              if (draft['is_garage_at_home'] != null) _isGarageAtHome = draft['is_garage_at_home'];
+              if (draft['has_security'] != null) _hasSecurity = draft['has_security'];
+              if (draft['has_cameras'] != null) _hasCameras = draft['has_cameras'];
+              if (draft['access_type'] != null) _accessType = draft['access_type'];
+              if (draft['is_roofing'] != null) _isRoofing = draft['is_roofing'];
+              if (draft['is_basement'] != null) _isBasement = draft['is_basement'];
+              if (draft['garage_direction'] != null) _garageDirection = draft['garage_direction'];
+              if (draft['street_accessibility'] != null) _streetAccessibility = draft['street_accessibility'];
+              if (draft['verification_result'] != null) _verificationResult = draft['verification_result'];
+              if (draft['observations'] != null) _observationsController.text = draft['observations'];
+            }
           });
         }
       } else {
@@ -207,6 +230,40 @@ class _VerificationPageState extends State<VerificationPage> {
         _currentStep++;
       }
     });
+    _saveProgress();
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      final taskId = _task['id'];
+      if (taskId == null) return;
+
+      final draftData = {
+        'selected_recipient': _selectedRecipient,
+        'selected_relationship': _selectedRelationship,
+        'familiar_name': _familiarNameController.text,
+        'familiar_dni': _familiarDniController.text,
+        'housing_type': _housingType,
+        'is_garage_at_home': _isGarageAtHome,
+        'has_security': _hasSecurity,
+        'has_cameras': _hasCameras,
+        'access_type': _accessType,
+        'is_roofing': _isRoofing,
+        'is_basement': _isBasement,
+        'garage_direction': _garageDirection,
+        'street_accessibility': _streetAccessibility,
+        'verification_result': _verificationResult,
+        'observations': _observationsController.text,
+      };
+
+      await _taskService.updateProgress(
+        taskId is int ? taskId : int.parse('$taskId'),
+        currentStep: _currentStep,
+        draftData: draftData,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
   }
 
   void _previousStep() {
@@ -245,6 +302,28 @@ class _VerificationPageState extends State<VerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_submitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+              const SizedBox(height: 16),
+              Text(
+                'Enviando información...',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     bool showAppBar = _currentStep < 10;
 
     return Scaffold(
@@ -292,25 +371,7 @@ class _VerificationPageState extends State<VerificationPage> {
       body: SafeArea(
         child: _loadingDetail
             ? const Center(child: CircularProgressIndicator())
-            : _submitting
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const CircularProgressIndicator(color: Color(0xFF27A376)),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Enviando información...',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF002B4B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : _buildCurrentStep(),
+            : _buildCurrentStep(),
       ),
     );
   }

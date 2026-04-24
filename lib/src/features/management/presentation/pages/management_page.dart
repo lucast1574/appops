@@ -74,6 +74,21 @@ class _ManagementPageState extends State<ManagementPage> {
             _endTimeController.text = TaskService.formatTime(full['end_time'] as String?);
             
             _loadingDetail = false;
+
+            // RESTORE PROGRESS
+            if (full['current_step'] != null && full['current_step'] > 0) {
+              _currentStep = full['current_step'];
+            }
+            final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
+            if (draft.isNotEmpty) {
+              if (draft['verification_result'] != null) _verificationResult = draft['verification_result'];
+              if (draft['fine_type'] != null) _fineType = draft['fine_type'];
+              if (draft['selected_municipality'] != null) _selectedMunicipality = draft['selected_municipality'];
+              if (draft['start_time'] != null) _startTimeController.text = draft['start_time'];
+              if (draft['end_time'] != null) _endTimeController.text = draft['end_time'];
+              if (draft['motivo'] != null) _motivoController.text = draft['motivo'];
+              if (draft['observations'] != null) _observationsController.text = draft['observations'];
+            }
           });
         }
       } else {
@@ -130,6 +145,32 @@ class _ManagementPageState extends State<ManagementPage> {
       }
     }
     setState(() => _currentStep++);
+    _saveProgress();
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId == null) return;
+
+      final draftData = {
+        'verification_result': _verificationResult,
+        'fine_type': _fineType,
+        'selected_municipality': _selectedMunicipality,
+        'start_time': _startTimeController.text,
+        'end_time': _endTimeController.text,
+        'motivo': _motivoController.text,
+        'observations': _observationsController.text,
+      };
+
+      await _taskService.updateProgress(
+        taskId is int ? taskId : int.parse('$taskId'),
+        currentStep: _currentStep,
+        draftData: draftData,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
   }
 
   void _previousStep() {
@@ -153,8 +194,26 @@ class _ManagementPageState extends State<ManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingDetail) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_submitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+              const SizedBox(height: 16),
+              Text(
+                'Enviando información...',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     bool showAppBar = _currentStep != 1 && _currentStep != 4;
@@ -204,23 +263,8 @@ class _ManagementPageState extends State<ManagementPage> {
   }
 
   Widget _buildCurrentStep() {
-    if (_submitting) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Color(0xFF4FA4B5)),
-            SizedBox(height: 16),
-            Text(
-              'Enviando información...',
-              style: TextStyle(
-                color: Color(0xFF002B4B),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+    if (_loadingDetail) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     switch (_currentStep) {

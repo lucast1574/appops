@@ -60,6 +60,24 @@ class TaskService {
     return Map<String, dynamic>.from(response.data);
   }
 
+  /// Save intermediate progress (step and draft data).
+  Future<Map<String, dynamic>> updateProgress(
+    int taskId, {
+    int? currentStep,
+    Map<String, dynamic> draftData = const {},
+  }) async {
+    final data = <String, dynamic>{
+      'draft_data': draftData,
+    };
+    if (currentStep != null) data['current_step'] = currentStep;
+
+    final response = await _api.dio.post(
+      '/tasks/$taskId/progress/',
+      data: data,
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
   /// Submit completed task with result data.
   Future<Map<String, dynamic>> submitTask(
     int taskId, {

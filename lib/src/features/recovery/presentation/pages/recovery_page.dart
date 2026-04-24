@@ -26,6 +26,49 @@ class _RecoveryPageState extends State<RecoveryPage> {
   int _currentStep = 0;
   final TaskService _taskService = TaskService();
   bool _submitting = false;
+  bool _loadingDetail = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFullDetail();
+  }
+
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
+        if (mounted) {
+          setState(() {
+            _loadingDetail = false;
+            // RESTORE PROGRESS
+            if (full['current_step'] != null && full['current_step'] > 0) {
+              _currentStep = full['current_step'];
+            }
+            final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
+            if (draft.isNotEmpty) {
+              if (draft['selected_person'] != null) _selectedPerson = draft['selected_person'];
+              if (draft['fuel_level'] != null) _selectedFuelLevel = draft['fuel_level'];
+              if (draft['has_visible_damage'] != null) _hasVisibleDamage = draft['has_visible_damage'];
+              if (draft['damage_description'] != null) _damageDescController.text = draft['damage_description'];
+              if (draft['tiene_llave_original'] != null) _llaveOriginal = draft['tiene_llave_original'];
+              if (draft['tiene_llave_repuesto'] != null) _llaveRepuesto = draft['tiene_llave_repuesto'];
+              if (draft['tiene_gata'] != null) _gata = draft['tiene_gata'];
+              if (draft['tiene_llanta_repuesto'] != null) _llantaRepuesto = draft['tiene_llanta_repuesto'];
+              if (draft['tiene_extintor'] != null) _extintor = draft['tiene_extintor'];
+              if (draft['tiene_triangulo'] != null) _triangulo = draft['tiene_triangulo'];
+              if (draft['tiene_manual_conductor'] != null) _manualConductor = draft['tiene_manual_conductor'];
+            }
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDetail = false);
+    }
+  }
 
   // Step 2 — who delivered
   String? _selectedPerson;
@@ -60,7 +103,39 @@ class _RecoveryPageState extends State<RecoveryPage> {
     }
   }
 
-  void _nextStep() => setState(() => _currentStep++);
+  void _nextStep() {
+    setState(() => _currentStep++);
+    _saveProgress();
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId == null) return;
+
+      final draftData = {
+        'selected_person': _selectedPerson,
+        'fuel_level': _selectedFuelLevel,
+        'has_visible_damage': _hasVisibleDamage,
+        'damage_description': _damageDescController.text,
+        'tiene_llave_original': _llaveOriginal,
+        'tiene_llave_repuesto': _llaveRepuesto,
+        'tiene_gata': _gata,
+        'tiene_llanta_repuesto': _llantaRepuesto,
+        'tiene_extintor': _extintor,
+        'tiene_triangulo': _triangulo,
+        'tiene_manual_conductor': _manualConductor,
+      };
+
+      await _taskService.updateProgress(
+        taskId is int ? taskId : int.parse('$taskId'),
+        currentStep: _currentStep,
+        draftData: draftData,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
+  }
   void _previousStep() {
     if (_currentStep == 0) {
       Navigator.pop(context);
@@ -76,42 +151,63 @@ class _RecoveryPageState extends State<RecoveryPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_submitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+              const SizedBox(height: 16),
+              Text(
+                'Enviando información...',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     bool showAppBar = _currentStep != 1 && _currentStep != 6;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: showAppBar ? AppBar(
-        backgroundColor: Colors.white, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF002B4B)), onPressed: _previousStep),
-        title: Text('Recupero', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 5, activeIndex: _getProgressIndex(), allComplete: _currentStep == 5)),
-      ) : null,
-      body: SafeArea(
-        child: _submitting
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: Color(0xFF27A376)),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Enviando información...',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF002B4B),
-                      ),
-                    ),
-                  ],
+      appBar: showAppBar
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF002B4B)), onPressed: _previousStep),
+              title: Text('Recupero', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)),
+                  onPressed: () {},
+                )
+              ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(10),
+                child: FlowProgressBar(
+                  totalSteps: 5,
+                  activeIndex: _getProgressIndex(),
+                  allComplete: _currentStep == 5,
                 ),
-              )
-            : _buildCurrentStep(),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        child: _buildCurrentStep(),
       ),
     );
   }
 
   Widget _buildCurrentStep() {
+    if (_loadingDetail) return const Center(child: CircularProgressIndicator());
     switch (_currentStep) {
       case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return ManagementBeforeStartingStep(onContinue: _nextStep, onBack: _previousStep);
