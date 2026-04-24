@@ -5,3 +5,4 @@ export 'flow_confirmation_sheet.dart';
 export 'flow_success_step.dart';
 export 'flow_summary_widgets.dart';
 export 'flow_form_widgets.dart';
+export 'vehicle_inspection_widget.dart';
