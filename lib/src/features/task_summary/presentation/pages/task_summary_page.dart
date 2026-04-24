@@ -285,33 +285,68 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
     ];
   }
 
+  static const Map<String, String> _translations = {
+    'start_time': 'Hora inicio',
+    'end_time': 'Hora fin',
+    'verification_result': 'Resultado de verificación',
+    'management_type': 'Tipo de gestión',
+    'fine_type': 'Tipo de multa',
+    'selected_municipality': 'Municipalidad',
+    'motivo': 'Motivo',
+    'is_visible': '¿Vehículo visible?',
+    'observations': 'Observaciones',
+    'photo_uploaded': 'Foto subida',
+  };
+
   /// Walk a `Map<String, dynamic>` and emit one widget per entry.
-  /// - bool values become a status dot (green/red).
-  /// - null / empty strings are skipped.
-  /// - nested Maps recurse with a slight indentation marker in the label.
-  /// - Lists render as comma-separated values.
-  /// - everything else becomes a label/value text pair.
   List<Widget> _renderMap(Map<dynamic, dynamic> map, {String prefix = ''}) {
     final widgets = <Widget>[];
-    map.forEach((rawKey, value) {
-      final key = '$prefix${_humanize(rawKey.toString())}';
-      if (value == null) return;
+
+    // Sort keys: start_time should always come before end_time
+    final keys = map.keys.toList();
+    keys.sort((a, b) {
+      final ka = a.toString();
+      final kb = b.toString();
+      
+      int getPriority(String k) {
+        if (k == 'start_time') return 1;
+        if (k == 'end_time') return 2;
+        return 99;
+      }
+      
+      final pa = getPriority(ka);
+      final pb = getPriority(kb);
+      if (pa != pb) return pa.compareTo(pb);
+      
+      // Fallback to alphabetical for other keys
+      return ka.compareTo(kb);
+    });
+
+    for (final rawKey in keys) {
+      final value = map[rawKey];
+      if (value == null) continue;
+
+      final kStr = rawKey.toString();
+      final translatedLabel = _translations[kStr] ?? _humanize(kStr);
+      final key = '$prefix$translatedLabel';
+
       if (value is bool) {
         widgets.add(_buildStatusField(key, value));
         widgets.add(const SizedBox(height: 16));
       } else if (value is Map) {
         widgets.addAll(_renderMap(value, prefix: '$key \u2014 '));
       } else if (value is List) {
-        if (value.isEmpty) return;
+        if (value.isEmpty) continue;
         widgets.add(_buildInfoField(key, value.join(', ')));
         widgets.add(const SizedBox(height: 16));
       } else {
         final s = value.toString();
-        if (s.isEmpty) return;
+        if (s.isEmpty) continue;
         widgets.add(_buildInfoField(key, s));
         widgets.add(const SizedBox(height: 16));
       }
-    });
+    }
+
     if (widgets.isNotEmpty && widgets.last is SizedBox) {
       widgets.removeLast();
     }
