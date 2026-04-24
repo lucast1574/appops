@@ -89,7 +89,7 @@ class VerificationSummaryStep extends StatelessWidget {
                       secondValue: _formatTime(task['end_time'])
                     ),
                     FlowSummaryItem(label: 'Dirección', value: task['address'] ?? '---'),
-                    FlowSummaryItem(label: 'DNI cliente', value: task['client_dni'] ?? '---'),
+                    FlowSummaryItem(label: 'DNI/INE cliente', value: task['client_dni'] ?? '---'),
                     FlowSummaryItem(label: 'Observaciones', value: task['observations']?.toString().isNotEmpty == true ? task['observations'] : 'Sin observaciones'),
                   ],
                 ),
@@ -100,7 +100,7 @@ class VerificationSummaryStep extends StatelessWidget {
                   children: [
                     FlowSummaryStatus(label: selectedRecipient ?? '---', isComplete: true),
                     if (selectedRecipient == 'Familiar') ...[
-                      FlowSummaryItem(label: 'DNI del familiar', value: familiarDni ?? '---'),
+                      FlowSummaryItem(label: 'DNI/INE del familiar', value: familiarDni ?? '---'),
                       FlowSummaryItem(label: 'Nombre completo', value: familiarName ?? '---'),
                       FlowSummaryItem(label: 'Parentesco con el cliente', value: selectedRelationship ?? '---'),
                       FlowSummaryStatus(label: 'Firma de familiar', isComplete: isSignatureCaptured),
@@ -112,7 +112,7 @@ class VerificationSummaryStep extends StatelessWidget {
                   title: 'Validación de documentos',
                   onEdit: onEditDocuments,
                   children: [
-                    FlowSummaryStatus(label: 'DNI', isComplete: dniUploaded),
+                    FlowSummaryStatus(label: 'DNI/INE', isComplete: dniUploaded),
                     FlowSummaryStatus(label: 'Recibo de servicios', isComplete: reciboUploaded),
                     FlowSummaryStatus(label: 'Brevete', isComplete: breveteUploaded),
                   ],

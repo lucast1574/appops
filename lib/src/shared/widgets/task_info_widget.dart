@@ -174,7 +174,7 @@ class TaskInfoWidget extends StatelessWidget {
 
                 // Client DNI
                 if (clientDni.isNotEmpty) ...[
-                  _buildHeader('DNI cliente'),
+                  _buildHeader('DNI/INE cliente'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
                     child: Text(clientDni, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),

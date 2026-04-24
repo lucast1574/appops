@@ -38,7 +38,7 @@ class WhoReceivedStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    '$clientName | DNI: $clientDni',
+                    '$clientName | DNI/INE: $clientDni',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: const Color(0xFF667085),

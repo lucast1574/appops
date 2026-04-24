@@ -33,7 +33,7 @@ class FamiliarFormStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFormTextField('DNI del familiar', dniController),
+                _buildFormTextField('DNI/INE del familiar', dniController),
                 const SizedBox(height: 16),
                 _buildFormTextField('Nombre completo', nameController),
                 const SizedBox(height: 16),

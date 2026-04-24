@@ -115,7 +115,7 @@ class TaskInfoStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildHeader('DNI cliente'),
+                _buildHeader('DNI/INE cliente'),
                 const SizedBox(height: 8),
                 _buildValueContainer(
                   child: Text(

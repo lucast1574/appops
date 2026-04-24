@@ -204,6 +204,25 @@ class _ManagementPageState extends State<ManagementPage> {
   }
 
   Widget _buildCurrentStep() {
+    if (_submitting) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+            SizedBox(height: 16),
+            Text(
+              'Enviando información...',
+              style: TextStyle(
+                color: Color(0xFF002B4B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     switch (_currentStep) {
       case 0:
         return TaskInfoWidget(task: widget.task, onContinue: _nextStep);

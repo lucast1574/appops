@@ -82,7 +82,27 @@ class _DeliveryPageState extends State<DeliveryPage> {
         actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 5, activeIndex: _getProgressIndex(), allComplete: _currentStep == 4)),
       ) : null,
-      body: SafeArea(child: _buildCurrentStep()),
+      body: SafeArea(
+        child: _submitting
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: Color(0xFF27A376)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Enviando información...',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF002B4B),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : _buildCurrentStep(),
+      ),
     );
   }
 

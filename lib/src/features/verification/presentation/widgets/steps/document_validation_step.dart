@@ -68,7 +68,7 @@ class DocumentValidationStep extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildValidationSection(
                   child: FlowPhotoInput(
-                    label: 'DNI',
+                    label: 'DNI/INE',
                     taskId: taskId,
                     photoLabel: 'dni_cliente',
                     previewFileName: 'Imagen-x122.png',
