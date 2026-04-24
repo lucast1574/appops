@@ -100,10 +100,16 @@ class TaskService {
   Future<Map<String, dynamic>> rescheduleTask(
     int taskId, {
     String reason = '',
+    Map<String, dynamic>? resultData,
+    Map<String, dynamic>? checklistData,
   }) async {
     final response = await _api.dio.post(
       '/tasks/$taskId/reschedule/',
-      data: {'reason': reason},
+      data: {
+        'reason': reason,
+        if (resultData != null) 'result_data': resultData,
+        if (checklistData != null) 'checklist_data': checklistData,
+      },
     );
     return Map<String, dynamic>.from(response.data);
   }

@@ -225,12 +225,73 @@ class _VerificationPageState extends State<VerificationPage> {
       } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
         _currentStep = 4;
       } else if (_currentStep == 2 && _selectedRecipient == 'Nadie') {
-        _currentStep = 5;
+        _currentStep = 5; // Automatic Reschedule screen
+      } else if (_currentStep == 4) {
+        _currentStep = 5; // From Familiar form to Reschedule screen
       } else {
         _currentStep++;
       }
     });
     _saveProgress();
+  }
+
+  Future<void> _submitAutomaticReschedule() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = _task['id'] ?? 0;
+      String reason = "Reprogramación automática: ";
+      Map<String, dynamic> resultData = {
+        'who_received': _selectedRecipient,
+        'verification_result': 'Reprogramación automática',
+      };
+
+      if (_selectedRecipient == 'Familiar') {
+        reason += "Recibió familiar ${_familiarNameController.text} (${_selectedRelationship}).";
+        resultData['relationship'] = _selectedRelationship;
+        resultData['familiar_dni'] = _familiarDniController.text;
+        resultData['familiar_name'] = _familiarNameController.text;
+
+        // Upload signature
+        final signatureBytes = await _signatureKey.currentState?.exportPng();
+        if (signatureBytes != null) {
+          final uploadInfo = await _taskService.requestUploadUrl(
+            taskId,
+            label: 'firma_familiar',
+            contentType: 'image/png',
+          );
+          await _taskService.uploadImageToS3(uploadInfo['upload_url'], signatureBytes);
+          final s3Key = uploadInfo['s3_key'];
+          resultData['signature_s3_key'] = s3Key;
+          
+          await _taskService.confirmUpload(
+            taskId,
+            s3Key: s3Key,
+            label: 'firma_familiar',
+            tag: 'Firma de familiar: ${_familiarNameController.text}',
+          );
+        }
+      } else {
+        reason += "No se encontró a nadie en el domicilio.";
+      }
+
+      await _taskService.rescheduleTask(
+        taskId, 
+        reason: reason,
+        resultData: resultData,
+      );
+      
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   Future<void> _saveProgress() async {
@@ -466,12 +527,12 @@ class _VerificationPageState extends State<VerificationPage> {
           onRelationshipChanged: (val) =>
               setState(() => _selectedRelationship = val),
           onBack: _previousStep,
-          onContinue: () => setState(() => _currentStep = 6), // Back to housing
+          onContinue: _nextStep, // Now goes to Reschedule screen (Step 5)
         );
       case 5:
         return RescheduleResultStep(
           onBack: _previousStep,
-          onContinue: () => Navigator.pop(context),
+          onContinue: _submitAutomaticReschedule, // Finish and trigger auto-reschedule
         );
       case 6:
         return HousingStep(

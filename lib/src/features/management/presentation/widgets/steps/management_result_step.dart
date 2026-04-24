@@ -77,7 +77,7 @@ class ManagementResultStep extends StatelessWidget {
                   maxLines: 4,
                   style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
                   decoration: InputDecoration(
-                    hintText: 'Lorem ipsum dolor sit amet consectetur...',
+                    hintText: 'Ingrese detalles adicionales sobre el resultado de la gestión...',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FA),
