@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
-import '../../../../../shared/widgets/flow_form_widgets.dart';
+import '../../../../../shared/widgets/flow_photo_input.dart';
 
 class TransferDeliveryInfoStep extends StatelessWidget {
+  final int taskId;
   final String placa;
   final String originLocation;
   final String destinationLocation;
   final bool deliveryPhotoUploaded;
   final String? deliveryPhotoTag;
+  final String? deliveryPhotoPath;
   final bool kmEndPhotoUploaded;
   final String? kmEndPhotoTag;
+  final String? kmEndPhotoPath;
   final TextEditingController deliveryNameController;
-  final Function(bool) onDeliveryPhotoUploadedChanged;
+  final Function(bool, dynamic) onDeliveryPhotoUploadedChanged;
   final Function(String?) onDeliveryPhotoTagChanged;
-  final Function(bool) onKmEndPhotoUploadedChanged;
+  final Function(bool, dynamic) onKmEndPhotoUploadedChanged;
   final Function(String?) onKmEndPhotoTagChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
   const TransferDeliveryInfoStep({
     super.key,
+    required this.taskId,
     required this.placa, required this.originLocation, required this.destinationLocation,
-    required this.deliveryPhotoUploaded, this.deliveryPhotoTag,
-    required this.kmEndPhotoUploaded, this.kmEndPhotoTag,
+    required this.deliveryPhotoUploaded, this.deliveryPhotoTag, this.deliveryPhotoPath,
+    required this.kmEndPhotoUploaded, this.kmEndPhotoTag, this.kmEndPhotoPath,
     required this.deliveryNameController,
     required this.onDeliveryPhotoUploadedChanged, required this.onDeliveryPhotoTagChanged,
     required this.onKmEndPhotoUploadedChanged, required this.onKmEndPhotoTagChanged,
@@ -50,9 +53,9 @@ class TransferDeliveryInfoStep extends StatelessWidget {
                 const SizedBox(height: 16),
                 _readOnlyField('Ubicación final de traslado', destinationLocation),
                 const SizedBox(height: 24),
-                _uploadSection('Foto vehículo punto de entrega*', deliveryPhotoUploaded, 'entrega.png', deliveryPhotoTag, onDeliveryPhotoUploadedChanged, onDeliveryPhotoTagChanged),
+                _uploadSection('Foto vehículo punto de entrega*', taskId, 'delivery_photo', 'entrega.png', deliveryPhotoUploaded, deliveryPhotoPath, deliveryPhotoTag, onDeliveryPhotoUploadedChanged, onDeliveryPhotoTagChanged),
                 const SizedBox(height: 24),
-                _uploadSection('Kilometraje vehículo (final)*', kmEndPhotoUploaded, 'km.png', kmEndPhotoTag, onKmEndPhotoUploadedChanged, onKmEndPhotoTagChanged),
+                _uploadSection('Kilometraje vehículo (final)*', taskId, 'km_end_photo', 'km.png', kmEndPhotoUploaded, kmEndPhotoPath, kmEndPhotoTag, onKmEndPhotoUploadedChanged, onKmEndPhotoTagChanged),
                 const SizedBox(height: 24),
                 Text('Nombre a quien entrega', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333))),
                 const SizedBox(height: 8),
@@ -82,16 +85,25 @@ class TransferDeliveryInfoStep extends StatelessWidget {
     Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
   ]);
 
-  Widget _uploadSection(String label, bool uploaded, String fileName, String? tag, Function(bool) onUploadChanged, Function(String?) onTagChanged) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Row(children: [
-      FlowSectionLabel(label: label),
-      const Spacer(),
-      if (!uploaded) Text('Sin imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF99AAB7))),
-      if (uploaded) Text('Ver imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4FA4B5), decoration: TextDecoration.underline)),
-    ]),
-    const SizedBox(height: 12),
-    uploaded
-        ? FlowImagePreview(fileName: fileName, tag: tag, onDeleteImage: () { onUploadChanged(false); onTagChanged(null); }, onDeleteTag: () => onTagChanged(null), onTagAdded: (val) => onTagChanged(val))
-        : FlowUploadButton(text: 'Tomar foto', iconAsset: 'assets/CameraPlus.svg', onTap: () => onUploadChanged(true)),
-  ]);
+  Widget _uploadSection(
+    String label, 
+    int taskId,
+    String photoLabel,
+    String previewFileName,
+    bool uploaded, 
+    String? imagePath,
+    String? tag, 
+    Function(bool, dynamic) onUploadChanged, 
+    Function(String?) onTagChanged
+  ) => FlowPhotoInput(
+    label: label,
+    taskId: taskId,
+    photoLabel: photoLabel,
+    previewFileName: previewFileName,
+    isUploaded: uploaded,
+    imagePath: imagePath,
+    tag: tag,
+    onChanged: onUploadChanged,
+    onTagChanged: onTagChanged,
+  );
 }

@@ -11,18 +11,18 @@ class TransferSummaryStep extends StatelessWidget {
   final bool deliveryPhotoUploaded;
   final bool kmEndPhotoUploaded;
   final String? deliveryName;
-  final String? selectedMarca;
-  final String? selectedModelo;
-  final String? selectedColor;
-  final String? unitType;
-  final String? km;
-  final String? selectedConversion;
-  final String? selectedFuelLevel;
-  final bool? bloqueoDesbloqueo;
+  
+  final int inventoryCount;
+  final int observationsCount;
+  final bool hasOperarioSignature;
+  final bool hasClientSignature;
+
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditTransferInfo;
   final VoidCallback onEditDeliveryInfo;
-  final VoidCallback onEditChecklist;
+  final VoidCallback onEditInventory;
+  final VoidCallback onEditInspection;
+  final VoidCallback onEditSignatures;
   final VoidCallback onEditAll;
   final VoidCallback onSend;
 
@@ -31,10 +31,14 @@ class TransferSummaryStep extends StatelessWidget {
     this.placa, this.originLocation, this.destinationLocation,
     required this.exitPhotoUploaded, required this.kmStartPhotoUploaded,
     required this.deliveryPhotoUploaded, required this.kmEndPhotoUploaded,
-    this.deliveryName, this.selectedMarca, this.selectedModelo, this.selectedColor,
-    this.unitType, this.km, this.selectedConversion, this.selectedFuelLevel, this.bloqueoDesbloqueo,
+    this.deliveryName,
+    required this.inventoryCount,
+    required this.observationsCount,
+    required this.hasOperarioSignature,
+    required this.hasClientSignature,
     required this.onEditTaskInfo, required this.onEditTransferInfo,
-    required this.onEditDeliveryInfo, required this.onEditChecklist,
+    required this.onEditDeliveryInfo, required this.onEditInventory,
+    required this.onEditInspection, required this.onEditSignatures,
     required this.onEditAll, required this.onSend,
   });
 
@@ -68,15 +72,14 @@ class TransferSummaryStep extends StatelessWidget {
                   FlowSummaryItem(label: 'Nombre a quien entrega', value: deliveryName ?? '---'),
                 ]),
                 const SizedBox(height: 24),
-                FlowSummarySection(title: 'Listado de entrega', onEdit: onEditChecklist, children: [
-                  FlowSummaryItem(label: 'Marca', value: selectedMarca ?? '---'),
-                  FlowSummaryItem(label: 'Modelo', value: selectedModelo ?? '---'),
-                  FlowSummaryItem(label: 'Color', value: selectedColor ?? '---'),
-                  FlowSummaryItem(label: 'Tipo de unidad', value: unitType ?? '---'),
-                  FlowSummaryItem(label: 'Kilometraje', value: km ?? '---'),
-                  FlowSummaryItem(label: 'Conversión', value: selectedConversion ?? '---'),
-                  FlowSummaryItem(label: 'Nivel de combustible', value: selectedFuelLevel ?? '---'),
-                  FlowSummaryItem(label: 'Pruebas de bloqueo / desbloqueo', value: bloqueoDesbloqueo == true ? 'Si' : bloqueoDesbloqueo == false ? 'No' : '---'),
+                FlowSummarySection(title: 'Inventario e Inspección', onEdit: onEditInventory, children: [
+                  FlowSummaryItem(label: 'Items revisados', value: '$inventoryCount items'),
+                  FlowSummaryItem(label: 'Daños registrados', value: '$observationsCount daños'),
+                ]),
+                const SizedBox(height: 24),
+                FlowSummarySection(title: 'Firmas', onEdit: onEditSignatures, children: [
+                  FlowSummaryStatus(label: 'Firma Operario', isComplete: hasOperarioSignature),
+                  FlowSummaryStatus(label: 'Firma Cliente', isComplete: hasClientSignature),
                 ]),
               ],
             ),

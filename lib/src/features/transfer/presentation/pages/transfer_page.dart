@@ -9,9 +9,13 @@ import '../../../../shared/widgets/flow_success_step.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/transfer_info_step.dart';
 import '../widgets/steps/transfer_delivery_info_step.dart';
-import '../widgets/steps/transfer_checklist_step.dart';
+import '../widgets/steps/transfer_inventory_step.dart';
+import '../widgets/steps/transfer_inspection_step.dart';
+import '../widgets/steps/transfer_signatures_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
+
+import '../../../../shared/widgets/vehicle_inspection_widget.dart';
 
 class TransferPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -41,7 +45,6 @@ class _TransferPageState extends State<TransferPage> {
         if (mounted) {
           setState(() {
             _loadingDetail = false;
-            // RESTORE PROGRESS
             if (full['current_step'] != null && full['current_step'] > 0) {
               _currentStep = full['current_step'];
             }
@@ -50,15 +53,24 @@ class _TransferPageState extends State<TransferPage> {
               if (draft['placa'] != null) _selectedPlaca = draft['placa'];
               if (draft['destination'] != null) _selectedDestination = draft['destination'];
               if (draft['delivery_name'] != null) _deliveryNameController.text = draft['delivery_name'];
-              if (draft['km'] != null) _kmController.text = draft['km'];
-              if (draft['unit_type'] != null) _unitType = draft['unit_type'];
-              if (draft['marca'] != null) _selectedMarca = draft['marca'];
-              if (draft['modelo'] != null) _selectedModelo = draft['modelo'];
-              if (draft['color'] != null) _selectedColor = draft['color'];
-              if (draft['checklist_values'] != null) {
-                final Map<String, dynamic> cv = draft['checklist_values'];
-                cv.forEach((k, v) => _checklistValues[k] = v as bool);
+              
+              if (draft['inventory'] != null) {
+                final Map<String, dynamic> inv = draft['inventory'];
+                inv.forEach((k, v) => _inventoryValues[k] = Map<String, dynamic>.from(v));
               }
+              if (draft['observations'] != null) {
+                final List obsList = draft['observations'];
+                _vehicleObservations = obsList.map((o) => VehicleObservation(
+                  id: o['id'],
+                  part: o['part'],
+                  type: o['type'] ?? '',
+                  description: o['description'] ?? '',
+                  photos: List<String?>.from(o['photos'] ?? [null, null, null]),
+                  position: o['position_x'] != null ? Offset(o['position_x'], o['position_y']) : null,
+                )).toList();
+              }
+              _signatureOperarioPath = draft['sig_operario'];
+              _signatureClientPath = draft['sig_client'];
             }
           });
         }
@@ -70,34 +82,31 @@ class _TransferPageState extends State<TransferPage> {
     }
   }
 
-  // Step 0
+  // State Variables
   String? _selectedPlaca;
   String? _selectedDestination;
 
-  // Step 1 — transfer info
-  bool _exitPhotoUploaded = false; String? _exitPhotoTag;
-  bool _kmStartPhotoUploaded = false; String? _kmStartPhotoTag;
+  // Photos
+  bool _exitPhotoUploaded = false; String? _exitPhotoTag; String? _exitPhotoPath;
+  bool _kmStartPhotoUploaded = false; String? _kmStartPhotoTag; String? _kmStartPhotoPath;
+  bool _deliveryPhotoUploaded = false; String? _deliveryPhotoTag; String? _deliveryPhotoPath;
+  bool _kmEndPhotoUploaded = false; String? _kmEndPhotoTag; String? _kmEndPhotoPath;
 
-  // Step 2 — delivery info
-  bool _deliveryPhotoUploaded = false; String? _deliveryPhotoTag;
-  bool _kmEndPhotoUploaded = false; String? _kmEndPhotoTag;
+  // General Car Info
   final TextEditingController _deliveryNameController = TextEditingController();
 
-  // Step 3 — checklist
-  String? _selectedMarca; String? _selectedModelo; String? _selectedColor;
-  String? _unitType; final TextEditingController _kmController = TextEditingController();
-  String? _selectedConversion; String? _selectedFuelLevel; bool? _bloqueoDesbloqueo;
-  final Map<String, bool> _checklistValues = {};
+  // Inventory
+  final Map<String, Map<String, dynamic>> _inventoryValues = {};
+
+  // Vehicle Inspection
+  List<VehicleObservation> _vehicleObservations = [];
+
+  // Signatures
+  String? _signatureOperarioPath;
+  String? _signatureClientPath;
 
   int _getProgressIndex() {
-    switch (_currentStep) {
-      case 0: return 0;
-      case 1: return 1;
-      case 2: return 2;
-      case 3: return 3;
-      case 4: return 4;
-      default: return 4;
-    }
+    return _currentStep;
   }
 
   void _nextStep() {
@@ -114,12 +123,18 @@ class _TransferPageState extends State<TransferPage> {
         'placa': _selectedPlaca,
         'destination': _selectedDestination,
         'delivery_name': _deliveryNameController.text,
-        'km': _kmController.text,
-        'unit_type': _unitType,
-        'marca': _selectedMarca,
-        'modelo': _selectedModelo,
-        'color': _selectedColor,
-        'checklist_values': _checklistValues,
+        'inventory': _inventoryValues,
+        'observations': _vehicleObservations.map((o) => {
+          'id': o.id,
+          'part': o.part,
+          'type': o.type,
+          'description': o.description,
+          'photos': o.photos,
+          'position_x': o.position?.dx,
+          'position_y': o.position?.dy,
+        }).toList(),
+        'sig_operario': _signatureOperarioPath,
+        'sig_client': _signatureClientPath,
       };
 
       await _taskService.updateProgress(
@@ -131,6 +146,7 @@ class _TransferPageState extends State<TransferPage> {
       debugPrint('Error saving progress: $e');
     }
   }
+
   void _previousStep() {
     if (_currentStep == 0) {
       Navigator.pop(context);
@@ -140,7 +156,10 @@ class _TransferPageState extends State<TransferPage> {
   }
 
   @override
-  void dispose() { _deliveryNameController.dispose(); _kmController.dispose(); super.dispose(); }
+  void dispose() { 
+    _deliveryNameController.dispose(); 
+    super.dispose(); 
+  }
 
   String get _placa => _selectedPlaca ?? 'ABC-392';
   String get _origin => 'Concesionario movistar';
@@ -170,7 +189,7 @@ class _TransferPageState extends State<TransferPage> {
       );
     }
 
-    bool showAppBar = _currentStep != 5;
+    bool showAppBar = _currentStep != 7;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: showAppBar ? AppBar(
@@ -179,7 +198,7 @@ class _TransferPageState extends State<TransferPage> {
         title: Text('Traslado', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 5, activeIndex: _getProgressIndex(), allComplete: _currentStep == 4)),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 7, activeIndex: _getProgressIndex(), allComplete: _currentStep == 6)),
       ) : null,
       body: SafeArea(
         child: _buildCurrentStep(),
@@ -192,57 +211,80 @@ class _TransferPageState extends State<TransferPage> {
     switch (_currentStep) {
       case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return TransferInfoStep(
+        taskId: widget.task['id'] ?? 0,
         placa: _placa, originLocation: _origin, destinationLocation: _destination,
-        exitPhotoUploaded: _exitPhotoUploaded, exitPhotoTag: _exitPhotoTag,
-        kmStartPhotoUploaded: _kmStartPhotoUploaded, kmStartPhotoTag: _kmStartPhotoTag,
-        onExitPhotoUploadedChanged: (v) => setState(() => _exitPhotoUploaded = v),
+        exitPhotoUploaded: _exitPhotoUploaded, exitPhotoTag: _exitPhotoTag, exitPhotoPath: _exitPhotoPath,
+        kmStartPhotoUploaded: _kmStartPhotoUploaded, kmStartPhotoTag: _kmStartPhotoTag, kmStartPhotoPath: _kmStartPhotoPath,
+        onExitPhotoUploadedChanged: (v, result) => setState(() { 
+          _exitPhotoUploaded = v; 
+          _exitPhotoPath = result is Map ? result['localPath'] : result as String?; 
+        }),
         onExitPhotoTagChanged: (v) => setState(() => _exitPhotoTag = v),
-        onKmStartPhotoUploadedChanged: (v) => setState(() => _kmStartPhotoUploaded = v),
+        onKmStartPhotoUploadedChanged: (v, result) => setState(() { 
+          _kmStartPhotoUploaded = v; 
+          _kmStartPhotoPath = result is Map ? result['localPath'] : result as String?; 
+        }),
         onKmStartPhotoTagChanged: (v) => setState(() => _kmStartPhotoTag = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
       case 2: return TransferDeliveryInfoStep(
+        taskId: widget.task['id'] ?? 0,
         placa: _placa, originLocation: _origin, destinationLocation: _destination,
-        deliveryPhotoUploaded: _deliveryPhotoUploaded, deliveryPhotoTag: _deliveryPhotoTag,
-        kmEndPhotoUploaded: _kmEndPhotoUploaded, kmEndPhotoTag: _kmEndPhotoTag,
+        deliveryPhotoUploaded: _deliveryPhotoUploaded, deliveryPhotoTag: _deliveryPhotoTag, deliveryPhotoPath: _deliveryPhotoPath,
+        kmEndPhotoUploaded: _kmEndPhotoUploaded, kmEndPhotoTag: _kmEndPhotoTag, kmEndPhotoPath: _kmEndPhotoPath,
         deliveryNameController: _deliveryNameController,
-        onDeliveryPhotoUploadedChanged: (v) => setState(() => _deliveryPhotoUploaded = v),
+        onDeliveryPhotoUploadedChanged: (v, result) => setState(() { 
+          _deliveryPhotoUploaded = v; 
+          _deliveryPhotoPath = result is Map ? result['localPath'] : result as String?; 
+        }),
         onDeliveryPhotoTagChanged: (v) => setState(() => _deliveryPhotoTag = v),
-        onKmEndPhotoUploadedChanged: (v) => setState(() => _kmEndPhotoUploaded = v),
+        onKmEndPhotoUploadedChanged: (v, result) => setState(() { 
+          _kmEndPhotoUploaded = v; 
+          _kmEndPhotoPath = result is Map ? result['localPath'] : result as String?; 
+        }),
         onKmEndPhotoTagChanged: (v) => setState(() => _kmEndPhotoTag = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
-      case 3: return TransferChecklistStep(
-        selectedMarca: _selectedMarca, selectedModelo: _selectedModelo, selectedColor: _selectedColor,
-        unitType: _unitType, kmController: _kmController,
-        selectedConversion: _selectedConversion, selectedFuelLevel: _selectedFuelLevel, bloqueoDesbloqueo: _bloqueoDesbloqueo,
-        checklistValues: _checklistValues,
-        onChecklistChanged: (key, val) => setState(() => _checklistValues[key] = val),
-        onMarcaChanged: (v) => setState(() => _selectedMarca = v),
-        onModeloChanged: (v) => setState(() => _selectedModelo = v),
-        onColorChanged: (v) => setState(() => _selectedColor = v),
-        onUnitTypeChanged: (v) => setState(() => _unitType = v),
-        onConversionChanged: (v) => setState(() => _selectedConversion = v),
-        onFuelLevelChanged: (v) => setState(() => _selectedFuelLevel = v),
-        onBloqueoDesbloqueoChanged: (v) => setState(() => _bloqueoDesbloqueo = v),
-        onBack: _previousStep, onContinue: _nextStep,
+      case 3: return TransferInventoryStep(
+        inventoryValues: _inventoryValues,
+        onInventoryChanged: (key, val) => setState(() => _inventoryValues[key] = Map<String, dynamic>.from(val)),
+        onBack: _previousStep,
+        onContinue: _nextStep,
       );
-      case 4: return TransferSummaryStep(
+      case 4: return TransferInspectionStep(
+        taskId: widget.task['id'] is int ? widget.task['id'] : int.tryParse('${widget.task['id']}') ?? 0,
+        observations: _vehicleObservations,
+        onObservationsChanged: (obs) => setState(() => _vehicleObservations = obs),
+        onBack: _previousStep,
+        onContinue: _nextStep,
+      );
+      case 5: return TransferSignaturesStep(
+        signatureOperarioPath: _signatureOperarioPath,
+        signatureClientPath: _signatureClientPath,
+        onOperarioSignatureChanged: (val) => setState(() => _signatureOperarioPath = val),
+        onClientSignatureChanged: (val) => setState(() => _signatureClientPath = val),
+        onBack: _previousStep,
+        onContinue: _nextStep,
+      );
+      case 6: return TransferSummaryStep(
         placa: _placa, originLocation: _origin, destinationLocation: _destination,
         exitPhotoUploaded: _exitPhotoUploaded, kmStartPhotoUploaded: _kmStartPhotoUploaded,
         deliveryPhotoUploaded: _deliveryPhotoUploaded, kmEndPhotoUploaded: _kmEndPhotoUploaded,
         deliveryName: _deliveryNameController.text,
-        selectedMarca: _selectedMarca, selectedModelo: _selectedModelo, selectedColor: _selectedColor,
-        unitType: _unitType, km: _kmController.text, selectedConversion: _selectedConversion,
-        selectedFuelLevel: _selectedFuelLevel, bloqueoDesbloqueo: _bloqueoDesbloqueo,
+        inventoryCount: _inventoryValues.values.where((v) => v['value'] != null).length,
+        observationsCount: _vehicleObservations.length,
+        hasOperarioSignature: _signatureOperarioPath != null,
+        hasClientSignature: _signatureClientPath != null,
         onEditTaskInfo: () => setState(() => _currentStep = 0),
         onEditTransferInfo: () => setState(() => _currentStep = 1),
         onEditDeliveryInfo: () => setState(() => _currentStep = 2),
-        onEditChecklist: () => setState(() => _currentStep = 3),
+        onEditInventory: () => setState(() => _currentStep = 3),
+        onEditInspection: () => setState(() => _currentStep = 4),
+        onEditSignatures: () => setState(() => _currentStep = 5),
         onEditAll: () => setState(() => _currentStep = 0),
         onSend: () => _showConfirmation(context),
       );
-      case 5: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
+      case 7: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
@@ -264,7 +306,7 @@ class _TransferPageState extends State<TransferPage> {
         },
         observations: '',
       );
-      if (mounted) setState(() => _currentStep = 5);
+      if (mounted) setState(() => _currentStep = 7);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
