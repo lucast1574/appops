@@ -58,10 +58,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
     try {
       final tasks = await _taskService.getMyTasks();
+      final today = DateTime.now();
+      final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
       if (mounted) {
         setState(() {
           _tasks = tasks
-              .where((t) => t['status'] != 'completed' && t['status'] != 'rejected')
+              .where((t) {
+                if (t['status'] == 'completed' || t['status'] == 'rejected') return false;
+                final date = t['scheduled_date'] ?? '';
+                if (date.isNotEmpty && date.compareTo(todayStr) > 0) return false;
+                return true;
+              })
               .toList();
           isLoading = false;
           _error = null;
