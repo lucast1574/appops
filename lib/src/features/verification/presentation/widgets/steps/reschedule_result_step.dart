@@ -6,11 +6,13 @@ import '../../../../../shared/widgets/flow_step_navigation.dart';
 class RescheduleResultStep extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onContinue;
+  final String? message;
 
   const RescheduleResultStep({
     super.key,
     required this.onBack,
     required this.onContinue,
+    this.message,
   });
 
   @override
@@ -43,7 +45,7 @@ class RescheduleResultStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Se ha reprogramado la visita al no encontrar nadie en el domicilio.',
+                  message ?? 'Se ha reprogramado la visita al no encontrar nadie en el domicilio.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 16,

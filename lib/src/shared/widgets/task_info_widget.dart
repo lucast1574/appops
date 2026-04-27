@@ -59,6 +59,7 @@ class TaskInfoWidget extends StatelessWidget {
     final String typeSlug = type?['slug'] ?? '';
     final bool isConversion = typeSlug == 'conversion';
     final bool isTraslado = typeSlug == 'traslado';
+    final bool isDelivery = typeSlug == 'delivery';
 
     // Primary Maps link (root or metadata)
     final String primaryMapsLink = task['google_maps_link']?.toString() ?? metadata['google_maps_link']?.toString() ?? '';
@@ -151,129 +152,229 @@ class TaskInfoWidget extends StatelessWidget {
                 if (startTime.isNotEmpty || endTime.isNotEmpty)
                   const SizedBox(height: 16),
 
-                // Address (only if not a specific task type that shows its own locations below)
-                if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado && !isConversion) ...[
+                // --- DELIVERY SPECIFIC FIELDS ---
+                if (isDelivery) ...[
+                  // Hora de entrega
+                  _buildHeader('Hora de entrega'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(metadata['scheduled_time'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Marca / Modelo
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Marca de carro'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(marca.isNotEmpty ? marca : '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Modelo'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(modelo.isNotEmpty ? modelo : '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Tipo de vehículo
+                  _buildHeader('Tipo de vehículo'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(metadata['unit_type'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Placa / Tipo
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Placa'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(placa.isNotEmpty ? placa : '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Tipo'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(metadata['plate_type'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Ubicación de entrega
                   FlowAddressDisplay(
-                    label: 'Dirección',
+                    label: 'Ubicación de entrega',
                     address: address,
                     mapsLink: primaryMapsLink,
                     onOpenMaps: () => _launchMaps(primaryMapsLink),
                   ),
                   const SizedBox(height: 16),
-                ],
 
-                // Transfer origin/destination
-                if (isTraslado || origin.isNotEmpty || destination.isNotEmpty) ...[
-                  if (isTraslado || origin.isNotEmpty) ...[
-                    FlowAddressDisplay(
-                      label: 'Ubicación de inicio traslado',
-                      address: originAddress.isNotEmpty ? originAddress : origin,
-                      mapsLink: originGoogleMapsLink,
-                      onOpenMaps: () => _launchMaps(originGoogleMapsLink),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (isTraslado || destination.isNotEmpty) ...[
-                    FlowAddressDisplay(
-                      label: 'Ubicación final de traslado',
-                      address: destinationAddress.isNotEmpty ? destinationAddress : destination,
-                      mapsLink: destinationGoogleMapsLink,
-                      onOpenMaps: () => _launchMaps(destinationGoogleMapsLink),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ],
+                  // Nombre concesionario
+                  _buildHeader('Nombre concesionario'),
+                  const SizedBox(height: 8),
+                  _buildValueContainer(
+                    child: Text(metadata['dealership_name'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  // --- DEFAULT FIELDS (Traslado, Conversion, etc.) ---
 
-                // Notary fields
-                if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
-                  if (pickupNotary.isNotEmpty) ...[
+                  // Address (only if not a specific task type that shows its own locations below)
+                  if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado && !isConversion) ...[
                     FlowAddressDisplay(
-                      label: 'Ubicación de recibida de documentos',
-                      address: '$pickupNotary\n$address',
+                      label: 'Dirección',
+                      address: address,
                       mapsLink: primaryMapsLink,
                       onOpenMaps: () => _launchMaps(primaryMapsLink),
                     ),
                     const SizedBox(height: 16),
                   ],
-                  if (deliveryNotary.isNotEmpty) ...[
-                    FlowAddressDisplay(
-                      label: 'Ubicación de entrega de documentos',
-                      address: '$deliveryNotary\n$deliveryAddress',
-                      mapsLink: deliveryGoogleMapsLink,
-                      onOpenMaps: () => _launchMaps(deliveryGoogleMapsLink),
+
+                  // Transfer origin/destination
+                  if (isTraslado || origin.isNotEmpty || destination.isNotEmpty) ...[
+                    if (isTraslado || origin.isNotEmpty) ...[
+                      FlowAddressDisplay(
+                        label: 'Ubicación de inicio traslado',
+                        address: originAddress.isNotEmpty ? originAddress : origin,
+                        mapsLink: originGoogleMapsLink,
+                        onOpenMaps: () => _launchMaps(originGoogleMapsLink),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (isTraslado || destination.isNotEmpty) ...[
+                      FlowAddressDisplay(
+                        label: 'Ubicación final de traslado',
+                        address: destinationAddress.isNotEmpty ? destinationAddress : destination,
+                        mapsLink: destinationGoogleMapsLink,
+                        onOpenMaps: () => _launchMaps(destinationGoogleMapsLink),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+
+                  // Notary fields
+                  if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
+                    if (pickupNotary.isNotEmpty) ...[
+                      FlowAddressDisplay(
+                        label: 'Ubicación de recibida de documentos',
+                        address: '$pickupNotary\n$address',
+                        mapsLink: primaryMapsLink,
+                        onOpenMaps: () => _launchMaps(primaryMapsLink),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (deliveryNotary.isNotEmpty) ...[
+                      FlowAddressDisplay(
+                        label: 'Ubicación de entrega de documentos',
+                        address: '$deliveryNotary\n$deliveryAddress',
+                        mapsLink: deliveryGoogleMapsLink,
+                        onOpenMaps: () => _launchMaps(deliveryGoogleMapsLink),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+
+                  // Client name
+                  if (clientName.isNotEmpty) ...[
+                    _buildHeader('Nombre del cliente'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(clientName, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
                     ),
                     const SizedBox(height: 16),
                   ],
-                ],
 
-                // Client name
-                if (clientName.isNotEmpty) ...[
-                  _buildHeader('Nombre del cliente'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(clientName, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  // Client DNI
+                  if (clientDni.isNotEmpty) ...[
+                    _buildHeader('DNI/INE cliente'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(clientDni, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                // Client DNI
-                if (clientDni.isNotEmpty) ...[
-                  _buildHeader('DNI/INE cliente'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(clientDni, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  // Placa
+                  if (placa.isNotEmpty) ...[
+                    _buildHeader('Placa'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(placa, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                // Placa
-                if (placa.isNotEmpty) ...[
-                  _buildHeader('Placa'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(placa, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  // Vehicle info
+                  if (vehicleInfo.isNotEmpty) ...[
+                    _buildHeader('Veh\u00edculo'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(vehicleInfo, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                // Vehicle info
-                if (vehicleInfo.isNotEmpty) ...[
-                  _buildHeader('Veh\u00edculo'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(vehicleInfo, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  // Management type
+                  if (managementType.isNotEmpty) ...[
+                    _buildHeader('Tipo de gesti\u00f3n'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(managementType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                // Management type
-                if (managementType.isNotEmpty) ...[
-                  _buildHeader('Tipo de gesti\u00f3n'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(managementType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-
-
-                // Conversion service type
-                if (serviceType.isNotEmpty) ...[
-                  _buildHeader('Tipo de servicio'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(serviceType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (conversionLocation.isNotEmpty) ...[
-                  _buildHeader('Taller / Ubicaci\u00f3n'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(conversionLocation, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
+                  // Conversion service type
+                  if (serviceType.isNotEmpty) ...[
+                    _buildHeader('Tipo de servicio'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(serviceType, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (conversionLocation.isNotEmpty) ...[
+                    _buildHeader('Taller / Ubicaci\u00f3n'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Text(conversionLocation, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ],
 
                 // Extra fields (e.g. notary-specific, management sub-type)

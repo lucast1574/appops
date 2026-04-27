@@ -65,6 +65,8 @@ class _DashboardPageState extends State<DashboardPage> {
         setState(() {
           _tasks = tasks
               .where((t) {
+                // We keep rescheduled tasks in the list so they can be seen in the "Reprogramada" tab,
+                // but we will filter them out of "Todas" and "En curso" in _filteredTasks.
                 if (t['status'] == 'completed' || t['status'] == 'rejected') return false;
                 final date = t['scheduled_date'] ?? '';
                 if (date.isNotEmpty && date.compareTo(todayStr) > 0) return false;
@@ -86,11 +88,14 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   List<Map<String, dynamic>> get _filteredTasks {
-    if (selectedFilter == 'Todas') return _tasks;
+    if (selectedFilter == 'Todas') {
+      // "Todas" should only show active/pending tasks, not rescheduled ones
+      return _tasks.where((t) => t['status'] != 'rescheduled').toList();
+    }
     if (selectedFilter == 'En curso') {
       return _tasks
           .where(
-            (t) => t['status'] == 'in_progress' || t['status'] == 'rescheduled',
+            (t) => t['status'] == 'in_progress',
           )
           .toList();
     }
@@ -359,8 +364,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildTaskCard(Map<String, dynamic> task) {
     final String status = task['status'] ?? 'pending';
-    final bool isInProgress =
-        status == 'in_progress' || status == 'rescheduled';
+    final bool isInProgress = status == 'in_progress';
+    final bool isRescheduled = status == 'rescheduled';
+    
     final Color buttonColor = isInProgress
         ? const Color(0xFFFBDF83)
         : const Color(0xFF4FA4B5);
@@ -376,9 +382,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final String clientName = task['client_name'] ?? '';
     final String placa = task['placa'] ?? '';
     final String scheduledDate = task['scheduled_date'] ?? '';
-
-    // Status badge for rescheduled
-    final bool isRescheduled = status == 'rescheduled';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -503,8 +506,9 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 16),
 
           // Action button
-          SizedBox(
-            width: double.infinity,
+          if (!isRescheduled)
+            SizedBox(
+              width: double.infinity,
             height: 48,
             child: ElevatedButton(
               onPressed: () {

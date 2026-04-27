@@ -533,6 +533,9 @@ class _VerificationPageState extends State<VerificationPage> {
         return RescheduleResultStep(
           onBack: _previousStep,
           onContinue: _submitAutomaticReschedule, // Finish and trigger auto-reschedule
+          message: _selectedRecipient == 'Familiar' 
+            ? 'Se ha reprogramado la visita al no encontrar al cliente.'
+            : 'Se ha reprogramado la visita al no encontrar nadie en el domicilio.',
         );
       case 6:
         return HousingStep(
