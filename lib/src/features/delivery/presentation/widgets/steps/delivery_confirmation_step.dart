@@ -48,18 +48,16 @@ class DeliveryConfirmationStep extends StatelessWidget {
               children: [
                 Text('Confirmación entrega', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 24),
-                FlowYesNoQuestion(question: '¿Le entrega vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged),
+                FlowYesNoQuestion(question: '¿Se entregó vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged),
                 const SizedBox(height: 24),
-                _uploadSection('Foto de entrega (al cliente)*', clientPhotoUploaded, 'Imagen-x122.png', clientPhotoTag, onClientPhotoUploadedChanged, onClientPhotoTagChanged),
+                _uploadSection('Foto de entrega (al cliente)', clientPhotoUploaded, 'Imagen-x122.png', clientPhotoTag, onClientPhotoUploadedChanged, onClientPhotoTagChanged),
                 const SizedBox(height: 24),
                 _uploadSection('Foto del checklist*', checklistPhotoUploaded, 'Checklist.png', checklistPhotoTag, onChecklistPhotoUploadedChanged, onChecklistPhotoTagChanged),
                 const SizedBox(height: 24),
                 _uploadSection('Acta de entrega*', actaUploaded, 'acta_de_entrega.png', actaTag, onActaUploadedChanged, onActaTagChanged),
                 const SizedBox(height: 24),
                 _label('Hora efectiva de entrega'), const SizedBox(height: 8),
-                _readOnly(Text(deliveryTimeController.text.isEmpty ? '---' : deliveryTimeController.text, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 24),
-                _uploadSection('Foto checklist*', checklist2Uploaded ?? false, 'checklist2.png', checklist2Tag, onChecklist2UploadedChanged, onChecklist2TagChanged),
+                _textField(deliveryTimeController, '16:00'),
               ],
             ),
           ),
@@ -70,12 +68,15 @@ class DeliveryConfirmationStep extends StatelessWidget {
   }
 
   Widget _label(String t) => Text(t, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333)));
-  Widget _readOnly(Widget child) => Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: child);
+  Widget _textField(TextEditingController c, String hint) => TextField(controller: c, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)), decoration: InputDecoration(hintText: hint, hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF002B4B)))));
 
   Widget _uploadSection(String label, bool uploaded, String fileName, String? tag, Function(bool) onUploadChanged, Function(String?) onTagChanged) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Row(children: [
       FlowSectionLabel(label: label), const Spacer(),
-      if (!uploaded) Text('Sin imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF99AAB7))),
+      if (uploaded)
+        Text('Ver imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4FA4B5), fontWeight: FontWeight.w600, decoration: TextDecoration.underline))
+      else
+        Text('Sin imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF99AAB7))),
     ]),
     const SizedBox(height: 12),
     uploaded

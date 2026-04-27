@@ -59,7 +59,7 @@ class TaskInfoWidget extends StatelessWidget {
     final String typeSlug = type?['slug'] ?? '';
     final bool isConversion = typeSlug == 'conversion';
     final bool isTraslado = typeSlug == 'traslado';
-    final bool isDelivery = typeSlug == 'delivery';
+    final bool isDelivery = typeSlug == 'entrega';
 
     // Primary Maps link (root or metadata)
     final String primaryMapsLink = task['google_maps_link']?.toString() ?? metadata['google_maps_link']?.toString() ?? '';
@@ -154,11 +154,35 @@ class TaskInfoWidget extends StatelessWidget {
 
                 // --- DELIVERY SPECIFIC FIELDS ---
                 if (isDelivery) ...[
-                  // Hora de entrega
-                  _buildHeader('Hora de entrega'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Text(metadata['scheduled_time'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                  // Row for Hora de entrega and Tipo de vehículo
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Hora de entrega'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(startTime.isNotEmpty ? startTime : '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader('Tipo de vehículo'),
+                            const SizedBox(height: 8),
+                            _buildValueContainer(
+                              child: Text(task['vehicle_type']?.toString() ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
@@ -194,43 +218,11 @@ class TaskInfoWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Tipo de vehículo
-                  _buildHeader('Tipo de vehículo'),
+                  // Placa
+                  _buildHeader('Placa'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
-                    child: Text(metadata['unit_type'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Placa / Tipo
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader('Placa'),
-                            const SizedBox(height: 8),
-                            _buildValueContainer(
-                              child: Text(placa.isNotEmpty ? placa : '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader('Tipo'),
-                            const SizedBox(height: 8),
-                            _buildValueContainer(
-                              child: Text(metadata['plate_type'] ?? '---', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    child: Text(placa.isNotEmpty ? placa : '---', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
                   ),
                   const SizedBox(height: 16),
 

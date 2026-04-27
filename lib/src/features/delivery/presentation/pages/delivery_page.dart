@@ -51,6 +51,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
             _selectedMarca = full['marca'] ?? widget.task['marca'] ?? '';
             _selectedModelo = full['modelo'] ?? widget.task['modelo'] ?? '';
             _selectedColor = full['color'] ?? widget.task['color'] ?? '';
+            _unitType = full['vehicle_type'] ?? widget.task['vehicle_type'] ?? '';
             _kmController.text = full['km']?.toString() ?? widget.task['km']?.toString() ?? '';
 
             // RESTORE PROGRESS (from draft)

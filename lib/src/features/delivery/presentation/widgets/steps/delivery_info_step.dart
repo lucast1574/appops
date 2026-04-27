@@ -45,12 +45,15 @@ class DeliveryInfoStep extends StatelessWidget {
                 _label('DNI del cliente'), const SizedBox(height: 8),
                 _textField(dniController, 'Ingresar DNI'),
                 const SizedBox(height: 24),
-                FlowYesNoQuestion(question: '¿Le entrega vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged),
+                FlowYesNoQuestion(question: '¿Se entregó vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged),
                 const SizedBox(height: 24),
                 Row(children: [
                   const FlowSectionLabel(label: 'DNI'),
                   const Spacer(),
-                  if (!dniPhotoUploaded) Text('Sin imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF99AAB7))),
+                  if (dniPhotoUploaded) 
+                    Text('Ver imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4FA4B5), fontWeight: FontWeight.w600, decoration: TextDecoration.underline))
+                  else 
+                    Text('Sin imagen', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF99AAB7))),
                 ]),
                 const SizedBox(height: 12),
                 dniPhotoUploaded
@@ -62,7 +65,7 @@ class DeliveryInfoStep extends StatelessWidget {
                           onTap: () => onDniPhotoUploadedChanged(true),
                           child: Container(height: 88, decoration: BoxDecoration(color: const Color(0xFFE3F0F3), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFB9DBE1).withValues(alpha: 0.5))),
                             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                              const Icon(Icons.upload_file, size: 32, color: Color(0xFF002B4B)),
+                              const Icon(Icons.file_upload_outlined, size: 32, color: Color(0xFF002B4B)),
                               const SizedBox(height: 8),
                               Text('Subir archivo', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
                             ]),

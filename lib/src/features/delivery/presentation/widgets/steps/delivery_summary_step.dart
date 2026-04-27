@@ -46,9 +46,9 @@ class DeliverySummaryStep extends StatelessWidget {
                 const SizedBox(height: 32),
                 FlowSummarySection(title: 'Información de la tarea', onEdit: onEditTaskInfo, children: [
                   FlowSummaryItem(label: 'Fecha', value: task['date'] ?? '---'),
-                  FlowSummaryItem(label: 'Hora de entrega', value: task['metadata']?['scheduled_time'] ?? '---'),
+                  FlowSummaryItem(label: 'Hora de entrega', value: task['start_time'] ?? '---'),
                   FlowSummaryItem(label: 'Marca', value: task['marca'] ?? '---', secondLabel: 'Modelo', secondValue: task['modelo'] ?? '---'),
-                  FlowSummaryItem(label: 'Tipo', value: task['metadata']?['unit_type'] ?? '---'),
+                  FlowSummaryItem(label: 'Tipo', value: task['vehicle_type'] ?? '---'),
                   FlowSummaryItem(label: 'Placa', value: task['placa'] ?? '---'),
                   FlowSummaryItem(label: 'Ubicación', value: task['address'] ?? '---'),
                 ]),
@@ -56,7 +56,7 @@ class DeliverySummaryStep extends StatelessWidget {
                 FlowSummarySection(title: 'Información de la entrega', onEdit: onEditDeliveryInfo, children: [
                   FlowSummaryItem(label: 'Nombre del cliente', value: clientName ?? '---'),
                   FlowSummaryItem(label: 'DNI del cliente', value: clientDni ?? '---'),
-                  FlowSummaryItem(label: '¿Le entrega vehículo?', value: deliverVehicle == true ? 'Si' : deliverVehicle == false ? 'No' : '---'),
+                  FlowSummaryItem(label: '¿Se entregó vehículo?', value: deliverVehicle == true ? 'Si' : deliverVehicle == false ? 'No' : '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Confirmación entrega', onEdit: onEditConfirmation, children: [
