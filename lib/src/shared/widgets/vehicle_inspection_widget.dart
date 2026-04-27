@@ -63,6 +63,7 @@ class VehicleInspectionWidget extends StatefulWidget {
 class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
   late List<VehicleObservation> _observations;
   VehicleObservation? _currentEditingObs;
+  VehicleObservation? _selectedNewObs;
   bool _isFinished = false;
 
   @override
@@ -74,7 +75,7 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
   void _startAddingObservation(String part, {Offset? position}) {
     setState(() {
       _isFinished = false;
-      _currentEditingObs = VehicleObservation(
+      _selectedNewObs = VehicleObservation(
         id: const Uuid().v4(),
         part: part,
         position: position,
@@ -120,7 +121,10 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
   @override
   Widget build(BuildContext context) {
     if (_currentEditingObs != null) {
-      return _buildDetailForm();
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
+        child: _buildDetailForm(),
+      );
     }
     return _buildOverviewMap();
   }
@@ -129,61 +133,59 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: Text(
-            'Estado de Unidad',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF002B4B),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            'Marca los daños en el diagrama',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: const Color(0xFF668093),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Text(
+                    'Observaciones',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF002B4B),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Color(0xFFE5E9EB), thickness: 1, height: 1),
+                const SizedBox(height: 24),
         
         // --- MAP AREA ---
         Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.white,
+          color: Colors.transparent,
           child: Column(
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    flex: 1,
+                    flex: 4,
                     child: _buildPartItem('Superior', 'assets/above.svg'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    flex: 2,
+                    flex: 5,
                     child: Column(
                       children: [
                         _buildPartItem('Lateral Izquierdo', 'assets/side left.svg'),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         _buildPartItem('Lateral Derecho', 'assets/side right.svg'),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: _buildPartItem('Frontal', 'assets/front.svg'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildPartItem('Posterior', 'assets/rear.svg'),
                   ),
@@ -225,33 +227,54 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
             );
           }),
         ],
-
-        const SizedBox(height: 32),
+      ],
+    ),
+  ),
+),
         
-        // --- BOTTOM ACTIONS ---
-        CheckboxListTile(
-          title: Text(
-            _observations.isEmpty 
-                ? 'El vehículo no presenta observaciones (daños o faltantes)'
-                : 'El vehículo no presenta más observaciones', 
-            style: GoogleFonts.inter(fontSize: 14)
+        // --- BOTTOM ACTIONS (PINNED) ---
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CheckboxListTile(
+                title: Text(
+                  _observations.isEmpty 
+                      ? 'El vehículo no presenta observaciones (daños o faltantes)'
+                      : 'El vehículo no presenta más observaciones', 
+                  style: GoogleFonts.inter(fontSize: 14)
+                ),
+                value: _isFinished,
+                activeColor: const Color(0xFF27A376),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (val) {
+                  setState(() {
+                    _isFinished = val ?? false;
+                    if (_isFinished) {
+                      _selectedNewObs = null; // Clear pending marker if they mark as finished
+                    }
+                  });
+                },
+              ),
+                
+              const SizedBox(height: 16),
+              FlowStepNavigation(
+                onBack: widget.onBack,
+                onContinue: _selectedNewObs != null
+                    ? () {
+                        setState(() {
+                          _currentEditingObs = _selectedNewObs;
+                          _selectedNewObs = null;
+                        });
+                      }
+                    : widget.onContinue,
+                isContinueEnabled: _selectedNewObs != null || _isFinished,
+              ),
+            ],
           ),
-          value: _isFinished,
-          activeColor: const Color(0xFF27A376),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-          onChanged: (val) {
-            setState(() {
-              _isFinished = val ?? false;
-            });
-          },
-        ),
-          
-        const SizedBox(height: 24),
-        FlowStepNavigation(
-          onBack: widget.onBack,
-          onContinue: widget.onContinue,
-          isContinueEnabled: _isFinished,
         ),
       ],
     );
@@ -259,57 +282,31 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
 
   Widget _buildPartItem(String label, String assetPath) {
     final observationsForPart = _observations.where((obs) => obs.part == label).toList();
+    final bool hasPending = _selectedNewObs != null && _selectedNewObs!.part == label;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return Builder(
+      builder: (context) {
         return GestureDetector(
           onTapDown: (details) {
-            final double relX = details.localPosition.dx / constraints.maxWidth;
-            final double relY = details.localPosition.dy / constraints.maxHeight;
+            final box = context.findRenderObject() as RenderBox;
+            final double relX = details.localPosition.dx / box.size.width;
+            final double relY = details.localPosition.dy / box.size.height;
             _startAddingObservation(label, position: Offset(relX, relY));
           },
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E9EB)),
-                ),
-                child: SvgPicture.asset(
-                  assetPath,
-                  height: 100,
-                  fit: BoxFit.contain,
-                  // Removed colorFilter to let the original SVG colors show correctly
-                ),
+          child: Container(
+            width: double.infinity,
+            color: Colors.transparent, // Ensures the entire area is tappable
+            child: CustomPaint(
+              foregroundPainter: _VehicleMarkerPainter(
+                observations: observationsForPart,
+                allObservations: _observations,
+                pendingObs: hasPending ? _selectedNewObs : null,
               ),
-              ...observationsForPart.map((obs) {
-                if (obs.position == null) return const SizedBox.shrink();
-                final index = _observations.indexOf(obs) + 1;
-                return Positioned(
-                  left: (obs.position!.dx * constraints.maxWidth) - 12,
-                  top: (obs.position!.dy * constraints.maxHeight) - 12,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4FA4B5),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
-                    ),
-                    child: Text(
-                      '$index',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                );
-              }),
-            ],
+              child: SvgPicture.asset(
+                assetPath,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         );
       },
@@ -452,5 +449,57 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
       ],
     );
   }
+}
+
+class _VehicleMarkerPainter extends CustomPainter {
+  final List<VehicleObservation> observations;
+  final List<VehicleObservation> allObservations;
+  final VehicleObservation? pendingObs;
+
+  _VehicleMarkerPainter({
+    required this.observations,
+    required this.allObservations,
+    this.pendingObs,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+
+    for (var obs in observations) {
+      if (obs.position == null) continue;
+      final center = Offset(obs.position!.dx * size.width, obs.position!.dy * size.height);
+      
+      // Draw confirmed marker
+      canvas.drawCircle(center, 12, Paint()..color = const Color(0xFF4FA4B5));
+      canvas.drawCircle(center, 12, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 2);
+
+      final index = allObservations.indexOf(obs) + 1;
+      textPainter.text = TextSpan(
+        text: '$index',
+        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+    }
+
+    if (pendingObs != null && pendingObs!.position != null) {
+      final center = Offset(pendingObs!.position!.dx * size.width, pendingObs!.position!.dy * size.height);
+      // Draw pending marker with official color and next sequence number
+      canvas.drawCircle(center, 12, Paint()..color = const Color(0xFF4FA4B5));
+      canvas.drawCircle(center, 12, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 2);
+
+      final index = allObservations.length + 1;
+      textPainter.text = TextSpan(
+        text: '$index',
+        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _VehicleMarkerPainter oldDelegate) => true;
 }
 
