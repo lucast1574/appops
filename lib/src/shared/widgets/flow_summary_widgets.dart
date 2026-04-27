@@ -132,14 +132,17 @@ class FlowSummaryStatus extends StatelessWidget {
               style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B)),
             ),
           ),
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: isComplete ? const Color(0xFF27A376) : const Color(0xFFE35959),
-              shape: BoxShape.circle,
+          if (isComplete)
+            const Icon(Icons.check, color: Color(0xFF27A376), size: 20)
+          else
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE35959),
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
         ],
       ),
     );

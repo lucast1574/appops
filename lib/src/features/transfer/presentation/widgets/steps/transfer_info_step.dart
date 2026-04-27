@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/flow_photo_input.dart';
+import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class TransferInfoStep extends StatelessWidget {
   final int taskId;
   final String placa;
   final String originLocation;
+  final String? originMapsLink;
   final String destinationLocation;
+  final String? destinationMapsLink;
   final bool exitPhotoUploaded;
   final String? exitPhotoTag;
   final String? exitPhotoPath;
@@ -25,8 +28,8 @@ class TransferInfoStep extends StatelessWidget {
     super.key,
     required this.taskId,
     required this.placa,
-    required this.originLocation,
-    required this.destinationLocation,
+    required this.originLocation, this.originMapsLink,
+    required this.destinationLocation, this.destinationMapsLink,
     required this.exitPhotoUploaded, this.exitPhotoTag, this.exitPhotoPath,
     required this.kmStartPhotoUploaded, this.kmStartPhotoTag, this.kmStartPhotoPath,
     required this.onExitPhotoUploadedChanged, required this.onExitPhotoTagChanged,
@@ -49,9 +52,9 @@ class TransferInfoStep extends StatelessWidget {
                 const SizedBox(height: 24),
                 _readOnlyField('Placa', placa),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación de inicio traslado', originLocation),
+                FlowAddressDisplay(label: 'Ubicación de inicio traslado', address: originLocation, mapsLink: originMapsLink),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación final de traslado', destinationLocation),
+                FlowAddressDisplay(label: 'Ubicación final de traslado', address: destinationLocation, mapsLink: destinationMapsLink),
                 const SizedBox(height: 24),
                 _uploadSection('Salida de vehículo*', taskId, 'exit_photo', 'salida.png', exitPhotoUploaded, exitPhotoPath, exitPhotoTag, onExitPhotoUploadedChanged, onExitPhotoTagChanged),
                 const SizedBox(height: 24),
@@ -72,7 +75,7 @@ class TransferInfoStep extends StatelessWidget {
   Widget _readOnlyField(String label, String value) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333))),
     const SizedBox(height: 8),
-    Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
+    Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8FBFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B).withValues(alpha: 0.8)))),
   ]);
 
   Widget _uploadSection(

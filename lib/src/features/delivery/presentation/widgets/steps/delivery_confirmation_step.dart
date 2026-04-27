@@ -57,7 +57,7 @@ class DeliveryConfirmationStep extends StatelessWidget {
                 _uploadSection('Acta de entrega*', actaUploaded, 'acta_de_entrega.png', actaTag, onActaUploadedChanged, onActaTagChanged),
                 const SizedBox(height: 24),
                 _label('Hora efectiva de entrega'), const SizedBox(height: 8),
-                _readOnly(Text(deliveryTimeController.text.isEmpty ? '16:00' : deliveryTimeController.text, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
+                _readOnly(Text(deliveryTimeController.text.isEmpty ? '---' : deliveryTimeController.text, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 24),
                 _uploadSection('Foto checklist*', checklist2Uploaded ?? false, 'checklist2.png', checklist2Tag, onChecklist2UploadedChanged, onChecklist2TagChanged),
               ],

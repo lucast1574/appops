@@ -37,20 +37,20 @@ class TransferSignaturesStep extends StatelessWidget {
                 Center(child: Text('Firmas de conformidad', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 32),
 
-                Text('Firma del Operario*', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF333333))),
-                const SizedBox(height: 12),
-                _SignatureInput(
-                  existingSignaturePath: signatureOperarioPath,
-                  onSignatureCaptured: onOperarioSignatureChanged,
-                ),
-
-                const SizedBox(height: 32),
-
                 Text('Firma del Cliente*', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF333333))),
                 const SizedBox(height: 12),
                 _SignatureInput(
                   existingSignaturePath: signatureClientPath,
                   onSignatureCaptured: onClientSignatureChanged,
+                ),
+
+                const SizedBox(height: 32),
+
+                Text('Firma del Operario*', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF333333))),
+                const SizedBox(height: 12),
+                _SignatureInput(
+                  existingSignaturePath: signatureOperarioPath,
+                  onSignatureCaptured: onOperarioSignatureChanged,
                 ),
 
                 const SizedBox(height: 32),
@@ -88,8 +88,7 @@ class _SignatureInputState extends State<_SignatureInput> {
   @override
   Widget build(BuildContext context) {
     if (widget.existingSignaturePath != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      return Stack(
         children: [
           Container(
             width: double.infinity,
@@ -106,11 +105,21 @@ class _SignatureInputState extends State<_SignatureInput> {
                   : Image.file(File(widget.existingSignaturePath!), fit: BoxFit.contain),
             ),
           ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () => widget.onSignatureCaptured(null),
-            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-            label: Text('Borrar firma', style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.w600)),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.9),
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: IconButton(
+                onPressed: () => widget.onSignatureCaptured(null),
+                icon: const Icon(Icons.delete_outline, color: Color(0xFFE35959), size: 20),
+                tooltip: 'Borrar firma',
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ),
         ],
       );

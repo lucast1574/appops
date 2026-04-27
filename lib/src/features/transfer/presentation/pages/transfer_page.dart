@@ -31,6 +31,7 @@ class _TransferPageState extends State<TransferPage> {
   final TaskService _taskService = TaskService();
   bool _submitting = false;
   bool _loadingDetail = true;
+  Map<String, dynamic>? _taskDetail;
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _TransferPageState extends State<TransferPage> {
         final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
         if (mounted) {
           setState(() {
+            _taskDetail = full;
             _loadingDetail = false;
             
             // Initialize from full detail data (Backoffice)
@@ -215,9 +217,17 @@ class _TransferPageState extends State<TransferPage> {
     super.dispose(); 
   }
 
-  String get _placa => _selectedPlaca ?? 'ABC-392';
-  String get _origin => 'Concesionario movistar';
-  String get _destination => _selectedDestination ?? 'Concesionario miraflores';
+  String get _placa => _selectedPlaca ?? widget.task['placa'] ?? '---';
+  String get _origin {
+    final t = _taskDetail ?? widget.task;
+    final metadata = t['metadata'] as Map<String, dynamic>? ?? {};
+    return metadata['origin_address'] ?? t['address'] ?? 'Origen no especificado';
+  }
+  String get _destination {
+    final t = _taskDetail ?? widget.task;
+    final metadata = t['metadata'] as Map<String, dynamic>? ?? {};
+    return _selectedDestination ?? metadata['dest_address'] ?? metadata['destination_address'] ?? 'Destino no especificado';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -262,11 +272,20 @@ class _TransferPageState extends State<TransferPage> {
 
   Widget _buildCurrentStep() {
     if (_loadingDetail) return const Center(child: CircularProgressIndicator());
+    final t = _taskDetail ?? widget.task;
+    final metadata = t['metadata'] as Map<String, dynamic>? ?? {};
+    final originMapsLink = metadata['origin_google_maps_link']?.toString() ?? metadata['google_maps_link']?.toString() ?? t['google_maps_link']?.toString();
+    final destMapsLink = metadata['dest_google_maps_link']?.toString();
+
     switch (_currentStep) {
       case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
       case 1: return TransferInfoStep(
         taskId: widget.task['id'] ?? 0,
-        placa: _placa, originLocation: _origin, destinationLocation: _destination,
+        placa: _placa, 
+        originLocation: _origin, 
+        originMapsLink: originMapsLink,
+        destinationLocation: _destination,
+        destinationMapsLink: destMapsLink,
         exitPhotoUploaded: _exitPhotoUploaded, exitPhotoTag: _exitPhotoTag, exitPhotoPath: _exitPhotoPath,
         kmStartPhotoUploaded: _kmStartPhotoUploaded, kmStartPhotoTag: _kmStartPhotoTag, kmStartPhotoPath: _kmStartPhotoPath,
         onExitPhotoUploadedChanged: (v, result) => setState(() { 
@@ -283,7 +302,11 @@ class _TransferPageState extends State<TransferPage> {
       );
       case 2: return TransferDeliveryInfoStep(
         taskId: widget.task['id'] ?? 0,
-        placa: _placa, originLocation: _origin, destinationLocation: _destination,
+        placa: _placa, 
+        originLocation: _origin, 
+        originMapsLink: originMapsLink,
+        destinationLocation: _destination,
+        destinationMapsLink: destMapsLink,
         deliveryPhotoUploaded: _deliveryPhotoUploaded, deliveryPhotoTag: _deliveryPhotoTag, deliveryPhotoPath: _deliveryPhotoPath,
         kmEndPhotoUploaded: _kmEndPhotoUploaded, kmEndPhotoTag: _kmEndPhotoTag, kmEndPhotoPath: _kmEndPhotoPath,
         deliveryNameController: _deliveryNameController,
@@ -427,24 +450,39 @@ class _TransferPageState extends State<TransferPage> {
         onBack: _previousStep,
         onContinue: _nextStep,
       );
-      case 9: return TransferSummaryStep(
-        placa: _placa, originLocation: _origin, destinationLocation: _destination,
-        exitPhotoUploaded: _exitPhotoUploaded, kmStartPhotoUploaded: _kmStartPhotoUploaded,
-        deliveryPhotoUploaded: _deliveryPhotoUploaded, kmEndPhotoUploaded: _kmEndPhotoUploaded,
-        deliveryName: _deliveryNameController.text,
-        inventoryCount: _inventoryValues.values.where((v) => v['value'] != null).length,
-        observationsCount: _vehicleObservations.length,
-        hasOperarioSignature: _signatureOperarioPath != null,
-        hasClientSignature: _signatureClientPath != null,
-        onEditTaskInfo: () => setState(() => _currentStep = 0),
-        onEditTransferInfo: () => setState(() => _currentStep = 1),
-        onEditDeliveryInfo: () => setState(() => _currentStep = 2),
-        onEditInventory: () => setState(() => _currentStep = 4),
-        onEditInspection: () => setState(() => _currentStep = 7),
-        onEditSignatures: () => setState(() => _currentStep = 8),
-        onEditAll: () => setState(() => _currentStep = 0),
-        onSend: () => _showConfirmation(context),
-      );
+      case 9:
+        final docsCount = _getSectionCount(['Prueba de bloqueo / desbloqueo efectiva', 'Pasaporte de garantía y mantenimiento', 'Placas de rodaje y tercera placa', 'Manual del conductor', 'Conversión GNV/GLP – Pasaporte de proveedor', 'Certificado de Revisión técnica complementaria vigente']);
+        final facilitiesCount = _getSectionCount(['Explicación de talleres', 'Explicación para agendar cita', 'Explicación de activación GNV/GLP']);
+        final inspectionCount = _getSectionCount(['Limpieza y estado exterior del vehículo', 'Limpieza y estado interior del vehículo', 'Presión de llantas y niveles de líquidos (aceite, anticongelante, gasolina, otros)']);
+        final invDetailCount = _getSectionCount(['Antena', 'Gata', 'Seguro de aros', 'Segunda llave de contacto', 'Encendedor', 'Cenicero', 'Tapas de ruedas', 'Tapas de remolque', 'Dado de seguro de ruedas', 'Llanta de repuesto', 'Equipo multimedia', 'Pisos: Hule / Alfombra', 'Kit de emergencia:']);
+        final generalCount = _getSectionCount(['Llave inteligente', 'Sistema antirrobo – alarma', 'Bloqueo y desbloqueo de puertas', 'Paneles de puertas y maletera – controles', 'Seguridad', 'Cinturones', 'Bolsas de aire', 'Seguro de niños', 'Ventanas y retrovisores', 'Aire acondicionado', 'Plumillas delanteras y traseras', 'Luz direccional delantera izquierda', 'Luz direccional delantera derecha', 'Luz trasera izquierda', 'Luz trasera derecha', 'Sensor de retroceso posterior', 'Reloj', 'Tapasoles', 'Indicadores del tablero de instrumentos', 'Indicadores del nivel de gasolina y aceite', 'Sistema de audio y auxiliares', 'Espejos exteriores', 'Faro delantero izquierdo', 'Faro delantero derecho', 'Luz de placa', 'Emblemas', 'Accionamiento capot', 'Accionamiento de tapa de depósito de combustible', 'Cámara de retroceso', 'Navegador y bluetooth', 'Porta documentos']);
+
+        return TransferSummaryStep(
+          placa: _placa, originLocation: _origin, destinationLocation: _destination,
+          exitPhotoUploaded: _exitPhotoUploaded, kmStartPhotoUploaded: _kmStartPhotoUploaded,
+          deliveryPhotoUploaded: _deliveryPhotoUploaded, kmEndPhotoUploaded: _kmEndPhotoUploaded,
+          deliveryName: _deliveryNameController.text,
+          sectionCounts: {
+            'docs': '$docsCount/6',
+            'facilities': '$facilitiesCount/3',
+            'inspection': '$inspectionCount/3',
+            'inventory': '$invDetailCount/20',
+            'general': '$generalCount/31',
+          },
+          isInventoryComplete: _isInventoryPart1Complete && _isInventoryPart2Complete && _isInventoryPart3Complete,
+          observationsCount: _vehicleObservations.length,
+          hasOperarioSignature: _signatureOperarioPath != null,
+          hasClientSignature: _signatureClientPath != null,
+          isSubmitting: _submitting,
+          onEditTaskInfo: () => setState(() => _currentStep = 0),
+          onEditTransferInfo: () => setState(() => _currentStep = 1),
+          onEditDeliveryInfo: () => setState(() => _currentStep = 2),
+          onEditInventory: () => setState(() => _currentStep = 4),
+          onEditInspection: () => setState(() => _currentStep = 7),
+          onEditSignatures: () => setState(() => _currentStep = 8),
+          onEditAll: () => setState(() => _currentStep = 0),
+          onSend: () => _showConfirmation(context),
+        );
       case 10: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
@@ -460,9 +498,9 @@ class _TransferPageState extends State<TransferPage> {
       await _taskService.submitTask(
         taskId,
         resultData: {
-          'placa': _selectedPlaca,
+          'placa': _placa,
           'origin': _origin,
-          'destination': _selectedDestination,
+          'destination': _destination,
           'delivery_name': _deliveryNameController.text,
           'client_name': _clientNameController.text,
           'date': _dateController.text,
@@ -474,11 +512,27 @@ class _TransferPageState extends State<TransferPage> {
           'conversion': _selectedConversion,
           'fuel': _selectedFuel,
           'lock_test': _lockTestValue,
+          'sig_operario': _signatureOperarioPath,
+          'sig_client': _signatureClientPath,
+          'exit_photo': _exitPhotoPath,
+          'km_start_photo': _kmStartPhotoPath,
+          'delivery_photo': _deliveryPhotoPath,
+          'km_end_photo': _kmEndPhotoPath,
         },
-        observations: '',
+        checklistData: _inventoryValues,
+        observations: _vehicleObservations.map((o) => {
+          'id': o.id,
+          'part': o.part,
+          'type': o.type,
+          'description': o.description,
+          'photos': o.photos,
+          'position_x': o.position?.dx,
+          'position_y': o.position?.dy,
+        }).toList(),
       );
-      if (mounted) setState(() => _currentStep = 9);
+      if (mounted) setState(() => _currentStep = 10);
     } catch (e) {
+      debugPrint('Error submitTask: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
@@ -567,5 +621,12 @@ class _TransferPageState extends State<TransferPage> {
     }
 
     return true;
+  }
+
+  int _getSectionCount(List<String> items) {
+    return items.where((item) {
+      final val = _inventoryValues[item];
+      return val != null && val['value'] != null;
+    }).length;
   }
 }

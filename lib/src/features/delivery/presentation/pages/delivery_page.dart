@@ -26,6 +26,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
   final TaskService _taskService = TaskService();
   bool _submitting = false;
   bool _loadingDetail = true;
+  Map<String, dynamic>? _taskDetail;
 
   @override
   void initState() {
@@ -40,8 +41,19 @@ class _DeliveryPageState extends State<DeliveryPage> {
         final full = await _taskService.getTaskDetail(taskId is int ? taskId : int.parse('$taskId'));
         if (mounted) {
           setState(() {
+            _taskDetail = full;
             _loadingDetail = false;
-            // RESTORE PROGRESS
+
+            // Initialize from full detail (Backoffice)
+            final metadata = full['metadata'] as Map<String, dynamic>? ?? {};
+            _clientNameController.text = full['client_name'] ?? metadata['client_name'] ?? widget.task['client_name'] ?? '';
+            _dniController.text = full['client_dni'] ?? metadata['client_dni'] ?? widget.task['client_dni'] ?? '';
+            _selectedMarca = full['marca'] ?? widget.task['marca'] ?? '';
+            _selectedModelo = full['modelo'] ?? widget.task['modelo'] ?? '';
+            _selectedColor = full['color'] ?? widget.task['color'] ?? '';
+            _kmController.text = full['km']?.toString() ?? widget.task['km']?.toString() ?? '';
+
+            // RESTORE PROGRESS (from draft)
             if (full['current_step'] != null && full['current_step'] > 0) {
               _currentStep = full['current_step'];
             }
@@ -81,7 +93,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
   bool _clientPhotoUploaded = false; String? _clientPhotoTag;
   bool _checklistPhotoUploaded = false; String? _checklistPhotoTag;
   bool _actaUploaded = false; String? _actaTag;
-  final TextEditingController _deliveryTimeController = TextEditingController(text: '16:00');
+  final TextEditingController _deliveryTimeController = TextEditingController();
   bool _checklist2Uploaded = false; String? _checklist2Tag;
 
   // Step 3 — inventory checklist (reused from Transfer)
@@ -188,8 +200,9 @@ class _DeliveryPageState extends State<DeliveryPage> {
 
   Widget _buildCurrentStep() {
     if (_loadingDetail) return const Center(child: CircularProgressIndicator());
+    final currentTask = _taskDetail ?? widget.task;
     switch (_currentStep) {
-      case 0: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
+      case 0: return TaskInfoWidget(task: currentTask, onContinue: _nextStep);
       case 1: return DeliveryInfoStep(
         clientNameController: _clientNameController, dniController: _dniController,
         deliverVehicle: _deliverVehicle, dniPhotoUploaded: _dniPhotoUploaded, dniPhotoTag: _dniPhotoTag,
@@ -213,6 +226,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onBack: _previousStep, onContinue: _nextStep,
       );
       case 3: return TransferChecklistStep(
+        placa: currentTask['placa'], date: currentTask['date'], clientName: _clientNameController.text,
         selectedMarca: _selectedMarca, selectedModelo: _selectedModelo, selectedColor: _selectedColor,
         unitType: _unitType, kmController: _kmController,
         selectedConversion: _selectedConversion, selectedFuelLevel: _selectedFuelLevel, bloqueoDesbloqueo: _bloqueoDesbloqueo,
@@ -228,7 +242,8 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onBack: _previousStep, onContinue: _nextStep,
       );
       case 4: return DeliverySummaryStep(
-        clientName: _clientNameController.text, deliverVehicle: _deliverVehicle,
+        task: currentTask,
+        clientName: _clientNameController.text, clientDni: _dniController.text, deliverVehicle: _deliverVehicle,
         clientPhotoUploaded: _clientPhotoUploaded, checklistPhotoUploaded: _checklistPhotoUploaded,
         actaUploaded: _actaUploaded, deliveryTime: _deliveryTimeController.text,
         checklistChecked: _checklistValues.values.where((v) => v).length,

@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import 'flow_photo_input.dart';
-import 'flow_step_navigation.dart';
+
 
 class VehicleObservation {
   final String id;
@@ -150,7 +150,6 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Divider(color: Color(0xFFE5E9EB), thickness: 1, height: 1),
                 const SizedBox(height: 24),
         
         // --- MAP AREA ---
@@ -261,17 +260,52 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
               ),
                 
               const SizedBox(height: 16),
-              FlowStepNavigation(
-                onBack: widget.onBack,
-                onContinue: _selectedNewObs != null
-                    ? () {
-                        setState(() {
-                          _currentEditingObs = _selectedNewObs;
-                          _selectedNewObs = null;
-                        });
-                      }
-                    : widget.onContinue,
-                isContinueEnabled: _selectedNewObs != null || _isFinished,
+              // Custom borderless navigation to match Figma
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _selectedNewObs != null
+                          ? () => setState(() => _selectedNewObs = null)
+                          : widget.onBack,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 56),
+                        side: const BorderSide(color: Color(0xFFCCD4DB)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('Atrás', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: (_selectedNewObs != null || _isFinished)
+                          ? (_selectedNewObs != null
+                              ? () {
+                                  setState(() {
+                                    _currentEditingObs = _selectedNewObs;
+                                    _selectedNewObs = null;
+                                  });
+                                }
+                              : widget.onContinue)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4FA4B5),
+                        disabledBackgroundColor: const Color(0xFFE5E9EB),
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Continuar', 
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold, 
+                          color: (_selectedNewObs != null || _isFinished) ? Colors.white : const Color(0xFF99AAB7)
+                        )
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -317,6 +351,10 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
     final obs = _currentEditingObs!;
     final index = _observations.indexWhere((o) => o.id == obs.id);
     final displayIndex = index >= 0 ? index + 1 : _observations.length + 1;
+    
+    // Validation logic
+    final bool allPhotosUploaded = obs.photos.length == 3 && !obs.photos.contains(null);
+    final bool canSave = obs.type.isNotEmpty && allPhotosUploaded;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -374,13 +412,16 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
         TextField(
           controller: TextEditingController(text: obs.description)..selection = TextSelection.fromPosition(TextPosition(offset: obs.description.length)),
           maxLines: 3,
-          style: GoogleFonts.inter(fontSize: 14),
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B)),
           decoration: InputDecoration(
             hintText: 'Describa el detalle...',
+            hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)),
             filled: true,
             fillColor: const Color(0xFFF8FBFC),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4FA4B5), width: 1)),
+            contentPadding: const EdgeInsets.all(16),
           ),
           onChanged: (val) {
             _currentEditingObs!.description = val;
@@ -388,7 +429,7 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
         ),
         
         const SizedBox(height: 24),
-        Text('Evidencia fotográfica (Máx. 3)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
+        Text('Evidencia fotográfica (3 fotos requeridas)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF002B4B))),
         const SizedBox(height: 12),
         ...List.generate(3, (i) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -399,10 +440,14 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
             previewFileName: 'Foto_Obs_${obs.part}_$i.jpg',
             isUploaded: obs.photos[i] != null,
             imagePath: obs.photos[i],
-            onChanged: (uploaded, path) {
+            onChanged: (uploaded, result) {
               setState(() {
                 final newPhotos = List<String?>.from(obs.photos);
-                newPhotos[i] = uploaded ? path as String : null;
+                if (uploaded && result != null) {
+                  newPhotos[i] = result is Map ? result['localPath'] : result as String;
+                } else {
+                  newPhotos[i] = null;
+                }
                 _currentEditingObs = obs.copyWith(photos: newPhotos);
               });
             },
@@ -410,15 +455,39 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
           ),
         )),
         
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: _saveObservation,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4FA4B5),
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          child: Text('Continuar', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _cancelObservation,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  side: const BorderSide(color: Color(0xFFE5E9EB)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text('Atrás', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: canSave ? _saveObservation : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4FA4B5),
+                  disabledBackgroundColor: const Color(0xFFE5E9EB),
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: Text('Continuar', style: GoogleFonts.inter(
+                  fontSize: 16, 
+                  fontWeight: FontWeight.bold, 
+                  color: canSave ? Colors.white : const Color(0xFF99AAB7)
+                )),
+              ),
+            ),
+          ],
         ),
       ],
     );

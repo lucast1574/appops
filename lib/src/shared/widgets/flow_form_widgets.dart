@@ -292,6 +292,79 @@ class FlowImagePreview extends StatelessWidget {
   }
 }
 
+class FlowAddressDisplay extends StatelessWidget {
+  final String label;
+  final String address;
+  final String? mapsLink;
+  final VoidCallback? onOpenMaps;
+
+  const FlowAddressDisplay({
+    super.key,
+    required this.label,
+    required this.address,
+    this.mapsLink,
+    this.onOpenMaps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FlowSectionLabel(label: label),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FBFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E9EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                address,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: const Color(0xFF002B4B).withValues(alpha: 0.8),
+                  height: 1.5,
+                ),
+              ),
+              if (mapsLink != null && mapsLink!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onOpenMaps,
+                    icon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF4FA4B5)),
+                    label: Text(
+                      'Abrir en Google Maps',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF002B4B),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFFE5E9EB)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      backgroundColor: Colors.white,
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class FlowGoogleMapsSection extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -309,8 +382,9 @@ class FlowGoogleMapsSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
+        color: const Color(0xFFF8FBFC),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E9EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,21 +421,22 @@ class FlowGoogleMapsSection extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: onOpenMaps,
-              icon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF002B4B)),
+              icon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF4FA4B5)),
               label: Text(
                 'Abrir en Google Maps',
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   color: const Color(0xFF002B4B),
                 ),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                side: const BorderSide(color: Color(0xFF002B4B)),
+                side: const BorderSide(color: Color(0xFFE5E9EB)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
+                backgroundColor: Colors.white,
               ),
             ),
           ),

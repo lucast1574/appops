@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/flow_photo_input.dart';
+import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class TransferDeliveryInfoStep extends StatefulWidget {
   final int taskId;
   final String placa;
   final String originLocation;
+  final String? originMapsLink;
   final String destinationLocation;
+  final String? destinationMapsLink;
   final bool deliveryPhotoUploaded;
   final String? deliveryPhotoTag;
   final String? deliveryPhotoPath;
@@ -25,7 +28,7 @@ class TransferDeliveryInfoStep extends StatefulWidget {
   const TransferDeliveryInfoStep({
     super.key,
     required this.taskId,
-    required this.placa, required this.originLocation, required this.destinationLocation,
+    required this.placa, required this.originLocation, this.originMapsLink, required this.destinationLocation, this.destinationMapsLink,
     required this.deliveryPhotoUploaded, this.deliveryPhotoTag, this.deliveryPhotoPath,
     required this.kmEndPhotoUploaded, this.kmEndPhotoTag, this.kmEndPhotoPath,
     required this.deliveryNameController,
@@ -72,9 +75,9 @@ class _TransferDeliveryInfoStepState extends State<TransferDeliveryInfoStep> {
                 const SizedBox(height: 24),
                 _readOnlyField('Placa', widget.placa),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación de inicio traslado', widget.originLocation),
+                FlowAddressDisplay(label: 'Ubicación de inicio traslado', address: widget.originLocation, mapsLink: widget.originMapsLink),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación final de traslado', widget.destinationLocation),
+                FlowAddressDisplay(label: 'Ubicación final de traslado', address: widget.destinationLocation, mapsLink: widget.destinationMapsLink),
                 const SizedBox(height: 24),
                 _uploadSection('Foto vehículo punto de entrega*', widget.taskId, 'delivery_photo', 'entrega.png', widget.deliveryPhotoUploaded, widget.deliveryPhotoPath, widget.deliveryPhotoTag, widget.onDeliveryPhotoUploadedChanged, widget.onDeliveryPhotoTagChanged),
                 const SizedBox(height: 24),
@@ -109,7 +112,7 @@ class _TransferDeliveryInfoStepState extends State<TransferDeliveryInfoStep> {
   Widget _readOnlyField(String label, String value) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333))),
     const SizedBox(height: 8),
-    Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
+    Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8FBFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B).withValues(alpha: 0.8)))),
   ]);
 
   Widget _uploadSection(

@@ -4,6 +4,10 @@ import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class TransferChecklistStep extends StatelessWidget {
+  final String? placa;
+  final String? date;
+  final String? clientName;
+  
   // Datos generales
   final String? selectedMarca;
   final String? selectedModelo;
@@ -31,6 +35,7 @@ class TransferChecklistStep extends StatelessWidget {
 
   const TransferChecklistStep({
     super.key,
+    this.placa, this.date, this.clientName,
     this.selectedMarca, this.selectedModelo, this.selectedColor,
     this.unitType, required this.kmController,
     this.selectedConversion, this.selectedFuelLevel, this.bloqueoDesbloqueo,
@@ -58,13 +63,13 @@ class TransferChecklistStep extends StatelessWidget {
                 _sectionSubtitle('Datos Generales'),
                 const SizedBox(height: 16),
 
-                _readOnlyField('Fecha', 'Miércoles, 18 de marzo de 2026'),
+                _readOnlyField('Fecha', date ?? '---'),
                 const SizedBox(height: 16),
-                _readOnlyField('Placa', 'EDZ-471'),
+                _readOnlyField('Placa', placa ?? '---'),
                 const SizedBox(height: 16),
                 _label('Nombre del cliente'),
                 const SizedBox(height: 8),
-                _inputPlaceholder('Ingresar nombre'),
+                _readOnlyField('Cliente', clientName ?? '---'),
                 const SizedBox(height: 16),
 
                 _label('Marca'),
@@ -291,7 +296,7 @@ class TransferChecklistStep extends StatelessWidget {
     _label(label), const SizedBox(height: 8),
     Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: Text(value, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
   ]);
-  Widget _inputPlaceholder(String hint) => TextField(style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)), decoration: InputDecoration(hintText: hint, hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)), filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB)))));
+
   Widget _dropdown({String? value, required String hint, required List<String> items, required Function(String?) onChanged}) => Container(
     width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))),

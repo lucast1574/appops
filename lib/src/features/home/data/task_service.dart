@@ -83,7 +83,7 @@ class TaskService {
     int taskId, {
     Map<String, dynamic> resultData = const {},
     Map<String, dynamic> checklistData = const {},
-    String observations = '',
+    dynamic observations,
   }) async {
     final response = await _api.dio.post(
       '/tasks/$taskId/submit/',

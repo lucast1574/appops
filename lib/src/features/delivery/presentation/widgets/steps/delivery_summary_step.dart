@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_summary_widgets.dart';
 
 class DeliverySummaryStep extends StatelessWidget {
+  final Map<String, dynamic> task;
   final String? clientName;
+  final String? clientDni;
   final bool? deliverVehicle;
   final bool clientPhotoUploaded;
   final bool checklistPhotoUploaded;
@@ -20,7 +22,8 @@ class DeliverySummaryStep extends StatelessWidget {
 
   const DeliverySummaryStep({
     super.key,
-    this.clientName, this.deliverVehicle,
+    required this.task,
+    this.clientName, this.clientDni, this.deliverVehicle,
     required this.clientPhotoUploaded, required this.checklistPhotoUploaded,
     required this.actaUploaded, this.deliveryTime,
     required this.checklistChecked, required this.checklistTotal,
@@ -41,24 +44,24 @@ class DeliverySummaryStep extends StatelessWidget {
               children: [
                 Center(child: Text('Resumen de tarea', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 32),
-                FlowSummarySection(title: 'Información de la tarea', onEdit: onEditTaskInfo, children: const [
-                  FlowSummaryItem(label: 'Fecha', value: 'Miércoles, 18 de marzo de 2026'),
-                  FlowSummaryItem(label: 'Hora de entrega', value: '14:00'),
-                  FlowSummaryItem(label: 'Marca', value: 'Chevrolet', secondLabel: 'Modelo', secondValue: 'Optra'),
-                  FlowSummaryItem(label: 'Tipo', value: 'Nuevo'),
-                  FlowSummaryItem(label: 'Placa', value: 'ABC-392'),
-                  FlowSummaryItem(label: 'Ubicación', value: 'Avenida Pedro de Osma 789 Calle Centenario'),
+                FlowSummarySection(title: 'Información de la tarea', onEdit: onEditTaskInfo, children: [
+                  FlowSummaryItem(label: 'Fecha', value: task['date'] ?? '---'),
+                  FlowSummaryItem(label: 'Hora de entrega', value: task['metadata']?['scheduled_time'] ?? '---'),
+                  FlowSummaryItem(label: 'Marca', value: task['marca'] ?? '---', secondLabel: 'Modelo', secondValue: task['modelo'] ?? '---'),
+                  FlowSummaryItem(label: 'Tipo', value: task['metadata']?['unit_type'] ?? '---'),
+                  FlowSummaryItem(label: 'Placa', value: task['placa'] ?? '---'),
+                  FlowSummaryItem(label: 'Ubicación', value: task['address'] ?? '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Información de la entrega', onEdit: onEditDeliveryInfo, children: [
-                  FlowSummaryItem(label: 'Nombre del cliente', value: clientName ?? 'Juan Cruz'),
-                  FlowSummaryItem(label: 'DNI del cliente', value: '1231231231'),
+                  FlowSummaryItem(label: 'Nombre del cliente', value: clientName ?? '---'),
+                  FlowSummaryItem(label: 'DNI del cliente', value: clientDni ?? '---'),
                   FlowSummaryItem(label: '¿Le entrega vehículo?', value: deliverVehicle == true ? 'Si' : deliverVehicle == false ? 'No' : '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Confirmación entrega', onEdit: onEditConfirmation, children: [
                   FlowSummaryStatus(label: 'Foto de entrega (al cliente)', isComplete: clientPhotoUploaded),
-                  FlowSummaryItem(label: 'Hora efectiva de entrega', value: deliveryTime ?? '16:00'),
+                  FlowSummaryItem(label: 'Hora efectiva de entrega', value: deliveryTime ?? '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Listado Inventario', onEdit: onEditChecklist, children: [

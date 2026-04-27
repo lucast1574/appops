@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'flow_form_widgets.dart';
 
 /// Shared widget that displays task information from backend data.
 /// Used as the first step in all 8 task flows.
@@ -152,19 +153,11 @@ class TaskInfoWidget extends StatelessWidget {
 
                 // Address (only if not a specific task type that shows its own locations below)
                 if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado && !isConversion) ...[
-                  _buildHeader('Dirección'),
-                  const SizedBox(height: 8),
-                  _buildValueContainer(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                        if (!isConversion && primaryMapsLink.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          _buildGoogleMapsButton(primaryMapsLink),
-                        ],
-                      ],
-                    ),
+                  FlowAddressDisplay(
+                    label: 'Dirección',
+                    address: address,
+                    mapsLink: primaryMapsLink,
+                    onOpenMaps: () => _launchMaps(primaryMapsLink),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -172,44 +165,20 @@ class TaskInfoWidget extends StatelessWidget {
                 // Transfer origin/destination
                 if (isTraslado || origin.isNotEmpty || destination.isNotEmpty) ...[
                   if (isTraslado || origin.isNotEmpty) ...[
-                    _buildHeader('Ubicación de inicio traslado'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(origin, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (originAddress.isNotEmpty && originAddress != origin) ...[
-                            const SizedBox(height: 4),
-                            Text(originAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (originGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(originGoogleMapsLink),
-                          ],
-                        ],
-                      ),
+                    FlowAddressDisplay(
+                      label: 'Ubicación de inicio traslado',
+                      address: originAddress.isNotEmpty ? originAddress : origin,
+                      mapsLink: originGoogleMapsLink,
+                      onOpenMaps: () => _launchMaps(originGoogleMapsLink),
                     ),
                     const SizedBox(height: 16),
                   ],
                   if (isTraslado || destination.isNotEmpty) ...[
-                    _buildHeader('Ubicación final de traslado'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(destination, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (destinationAddress.isNotEmpty && destinationAddress != destination) ...[
-                            const SizedBox(height: 4),
-                            Text(destinationAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (destinationGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(destinationGoogleMapsLink),
-                          ],
-                        ],
-                      ),
+                    FlowAddressDisplay(
+                      label: 'Ubicación final de traslado',
+                      address: destinationAddress.isNotEmpty ? destinationAddress : destination,
+                      mapsLink: destinationGoogleMapsLink,
+                      onOpenMaps: () => _launchMaps(destinationGoogleMapsLink),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -218,44 +187,20 @@ class TaskInfoWidget extends StatelessWidget {
                 // Notary fields
                 if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
                   if (pickupNotary.isNotEmpty) ...[
-                    _buildHeader('Ubicación de recibida de documentos'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(pickupNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (address.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(address, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (primaryMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(primaryMapsLink),
-                          ],
-                        ],
-                      ),
+                    FlowAddressDisplay(
+                      label: 'Ubicación de recibida de documentos',
+                      address: '$pickupNotary\n$address',
+                      mapsLink: primaryMapsLink,
+                      onOpenMaps: () => _launchMaps(primaryMapsLink),
                     ),
                     const SizedBox(height: 16),
                   ],
                   if (deliveryNotary.isNotEmpty) ...[
-                    _buildHeader('Ubicación de entrega de documentos'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(deliveryNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (deliveryAddress.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(deliveryAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (deliveryGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(deliveryGoogleMapsLink),
-                          ],
-                        ],
-                      ),
+                    FlowAddressDisplay(
+                      label: 'Ubicación de entrega de documentos',
+                      address: '$deliveryNotary\n$deliveryAddress',
+                      mapsLink: deliveryGoogleMapsLink,
+                      onOpenMaps: () => _launchMaps(deliveryGoogleMapsLink),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -411,34 +356,11 @@ class TaskInfoWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildGoogleMapsButton(String url) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () async {
-          final uri = Uri.parse(url);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-        },
-        icon: const Icon(Icons.location_on_outlined, size: 18),
-        label: Text(
-          'Abrir en Google Maps',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF002B4B),
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          side: const BorderSide(color: Color(0xFF002B4B)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
-    );
+  Future<void> _launchMaps(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   String _formatTime(String? time) {
