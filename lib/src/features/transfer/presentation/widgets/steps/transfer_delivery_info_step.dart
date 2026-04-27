@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/flow_photo_input.dart';
 
-class TransferDeliveryInfoStep extends StatelessWidget {
+class TransferDeliveryInfoStep extends StatefulWidget {
   final int taskId;
   final String placa;
   final String originLocation;
@@ -35,6 +35,29 @@ class TransferDeliveryInfoStep extends StatelessWidget {
   });
 
   @override
+  State<TransferDeliveryInfoStep> createState() => _TransferDeliveryInfoStepState();
+}
+
+class _TransferDeliveryInfoStepState extends State<TransferDeliveryInfoStep> {
+  @override
+  void initState() {
+    super.initState();
+    widget.deliveryNameController.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    widget.deliveryNameController.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  bool get _isValid => widget.deliveryPhotoUploaded && 
+                       widget.kmEndPhotoUploaded && 
+                       widget.deliveryNameController.text.trim().isNotEmpty;
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -47,20 +70,20 @@ class TransferDeliveryInfoStep extends StatelessWidget {
               children: [
                 Text('Información de entrega', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 24),
-                _readOnlyField('Placa', placa),
+                _readOnlyField('Placa', widget.placa),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación de inicio traslado', originLocation),
+                _readOnlyField('Ubicación de inicio traslado', widget.originLocation),
                 const SizedBox(height: 16),
-                _readOnlyField('Ubicación final de traslado', destinationLocation),
+                _readOnlyField('Ubicación final de traslado', widget.destinationLocation),
                 const SizedBox(height: 24),
-                _uploadSection('Foto vehículo punto de entrega*', taskId, 'delivery_photo', 'entrega.png', deliveryPhotoUploaded, deliveryPhotoPath, deliveryPhotoTag, onDeliveryPhotoUploadedChanged, onDeliveryPhotoTagChanged),
+                _uploadSection('Foto vehículo punto de entrega*', widget.taskId, 'delivery_photo', 'entrega.png', widget.deliveryPhotoUploaded, widget.deliveryPhotoPath, widget.deliveryPhotoTag, widget.onDeliveryPhotoUploadedChanged, widget.onDeliveryPhotoTagChanged),
                 const SizedBox(height: 24),
-                _uploadSection('Kilometraje vehículo (final)*', taskId, 'km_end_photo', 'km.png', kmEndPhotoUploaded, kmEndPhotoPath, kmEndPhotoTag, onKmEndPhotoUploadedChanged, onKmEndPhotoTagChanged),
+                _uploadSection('Kilometraje vehículo (final)*', widget.taskId, 'km_end_photo', 'km.png', widget.kmEndPhotoUploaded, widget.kmEndPhotoPath, widget.kmEndPhotoTag, widget.onKmEndPhotoUploadedChanged, widget.onKmEndPhotoTagChanged),
                 const SizedBox(height: 24),
                 Text('Nombre a quien entrega', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333))),
                 const SizedBox(height: 8),
                 TextField(
-                  controller: deliveryNameController,
+                  controller: widget.deliveryNameController,
                   style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
                   decoration: InputDecoration(
                     hintText: 'Juan Rodriguez', hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)),
@@ -75,19 +98,9 @@ class TransferDeliveryInfoStep extends StatelessWidget {
           ),
         ),
         FlowStepNavigation(
-          onBack: onBack, 
-          onContinue: () {
-            if (deliveryPhotoUploaded && kmEndPhotoUploaded && deliveryNameController.text.trim().isNotEmpty) {
-              onContinue();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Por favor, complete todos los campos y fotos obligatorias.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
+          onBack: widget.onBack, 
+          onContinue: widget.onContinue,
+          isContinueEnabled: _isValid,
         ),
       ],
     );

@@ -2,27 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 
-class TransferGeneralDataStep extends StatelessWidget {
+class TransferGeneralDataStep extends StatefulWidget {
   final TextEditingController nameController;
   final TextEditingController dateController;
   final TextEditingController placaController;
-  final String? selectedMarca;
-  final String? selectedModelo;
-  final String? selectedColor;
+  final TextEditingController marcaController;
+  final TextEditingController modeloController;
+  final TextEditingController colorController;
   final TextEditingController kmController;
   final String? selectedConversion;
   final String? selectedFuel;
   final bool? lockTestValue;
 
-  final List<String> marcas;
-  final List<String> modelos;
-  final List<String> colores;
   final List<String> conversiones;
   final List<String> fuelLevels;
 
-  final Function(String?) onMarcaChanged;
-  final Function(String?) onModeloChanged;
-  final Function(String?) onColorChanged;
   final Function(String?) onConversionChanged;
   final Function(String?) onFuelChanged;
   final Function(bool) onLockTestChanged;
@@ -35,27 +29,64 @@ class TransferGeneralDataStep extends StatelessWidget {
     required this.nameController,
     required this.dateController,
     required this.placaController,
-    required this.selectedMarca,
-    required this.selectedModelo,
-    required this.selectedColor,
+    required this.marcaController,
+    required this.modeloController,
+    required this.colorController,
     required this.kmController,
     required this.selectedConversion,
     required this.selectedFuel,
     required this.lockTestValue,
-    required this.marcas,
-    required this.modelos,
-    required this.colores,
     required this.conversiones,
     required this.fuelLevels,
-    required this.onMarcaChanged,
-    required this.onModeloChanged,
-    required this.onColorChanged,
     required this.onConversionChanged,
     required this.onFuelChanged,
     required this.onLockTestChanged,
     required this.onBack,
     required this.onContinue,
   });
+
+  @override
+  State<TransferGeneralDataStep> createState() => _TransferGeneralDataStepState();
+}
+
+class _TransferGeneralDataStepState extends State<TransferGeneralDataStep> {
+  @override
+  void initState() {
+    super.initState();
+    widget.nameController.addListener(_rebuild);
+    widget.dateController.addListener(_rebuild);
+    widget.placaController.addListener(_rebuild);
+    widget.marcaController.addListener(_rebuild);
+    widget.modeloController.addListener(_rebuild);
+    widget.colorController.addListener(_rebuild);
+    widget.kmController.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    widget.nameController.removeListener(_rebuild);
+    widget.dateController.removeListener(_rebuild);
+    widget.placaController.removeListener(_rebuild);
+    widget.marcaController.removeListener(_rebuild);
+    widget.modeloController.removeListener(_rebuild);
+    widget.colorController.removeListener(_rebuild);
+    widget.kmController.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  bool get _isFormValid => 
+      widget.nameController.text.isNotEmpty && 
+      widget.dateController.text.isNotEmpty && 
+      widget.placaController.text.isNotEmpty &&
+      widget.marcaController.text.isNotEmpty &&
+      widget.modeloController.text.isNotEmpty &&
+      widget.colorController.text.isNotEmpty &&
+      widget.kmController.text.isNotEmpty &&
+      widget.selectedConversion != null &&
+      widget.selectedFuel != null &&
+      widget.lockTestValue != null;
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +104,10 @@ class TransferGeneralDataStep extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 _inputLabel('Nombre del cliente'),
-                _textField(nameController, 'Ingresar nombre'),
+                _textField(widget.nameController, 'Ingresar nombre'),
 
                 _inputLabel('Fecha'),
-                _textField(dateController, 'Seleccionar fecha', readOnly: true, onTap: () async {
+                _textField(widget.dateController, 'Seleccionar fecha', readOnly: true, onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: DateTime.now(),
@@ -84,39 +115,39 @@ class TransferGeneralDataStep extends StatelessWidget {
                     lastDate: DateTime(2100),
                   );
                   if (picked != null) {
-                    dateController.text = "${picked.day}/${picked.month}/${picked.year}";
+                    widget.dateController.text = "${picked.day}/${picked.month}/${picked.year}";
                   }
                 }),
 
                 _inputLabel('Placa'),
-                _textField(placaController, 'Ingresar placa'),
+                _textField(widget.placaController, 'Ingresar placa', readOnly: true),
 
                 _inputLabel('Marca'),
-                _dropdown(selectedMarca, 'Seleccionar marca', marcas, onMarcaChanged),
+                _textField(widget.marcaController, 'Ingresar marca', readOnly: true),
 
                 _inputLabel('Modelo'),
-                _dropdown(selectedModelo, 'Seleccionar modelo', modelos, onModeloChanged),
+                _textField(widget.modeloController, 'Ingresar modelo', readOnly: true),
 
                 _inputLabel('Color'),
-                _dropdown(selectedColor, 'Seleccionar color', colores, onColorChanged),
+                _textField(widget.colorController, 'Ingresar color', readOnly: true),
 
                 _inputLabel('Kilometraje'),
-                _textField(kmController, 'Ingresar numero de kilometros', keyboardType: TextInputType.number),
+                _textField(widget.kmController, 'Ingresar numero de kilometros', keyboardType: TextInputType.number),
 
                 _inputLabel('Conversión'),
-                _dropdown(selectedConversion, 'Seleccionar tipo de conversión', conversiones, onConversionChanged),
+                _dropdown(widget.selectedConversion, 'Seleccionar tipo de conversión', widget.conversiones, widget.onConversionChanged),
 
                 _inputLabel('Nivel de combustible'),
-                _dropdown(selectedFuel, 'Seleccionar nivel de combustible', fuelLevels, onFuelChanged),
+                _dropdown(widget.selectedFuel, 'Seleccionar nivel de combustible', widget.fuelLevels, widget.onFuelChanged),
 
                 const SizedBox(height: 24),
                 Text('Prueba de bloqueo / desbloqueo efectiva', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _toggleButton('No', lockTestValue == false, () => onLockTestChanged(false))),
+                    Expanded(child: _toggleButton('No', widget.lockTestValue == false, () => widget.onLockTestChanged(false))),
                     const SizedBox(width: 12),
-                    Expanded(child: _toggleButton('Si', lockTestValue == true, () => onLockTestChanged(true))),
+                    Expanded(child: _toggleButton('Si', widget.lockTestValue == true, () => widget.onLockTestChanged(true))),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -125,25 +156,9 @@ class TransferGeneralDataStep extends StatelessWidget {
           ),
         ),
         FlowStepNavigation(
-          onBack: onBack, 
-          onContinue: () {
-            if (nameController.text.isNotEmpty && 
-                dateController.text.isNotEmpty && 
-                placaController.text.isNotEmpty &&
-                selectedMarca != null &&
-                selectedModelo != null &&
-                selectedColor != null &&
-                kmController.text.isNotEmpty &&
-                selectedConversion != null &&
-                selectedFuel != null &&
-                lockTestValue != null) {
-              onContinue();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Por favor, complete todos los campos obligatorios.'), backgroundColor: Colors.red),
-              );
-            }
-          }
+          onBack: widget.onBack, 
+          onContinue: widget.onContinue,
+          isContinueEnabled: _isFormValid,
         ),
       ],
     );

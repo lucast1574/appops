@@ -87,3 +87,8 @@ flutter:
     - assets/Trash.svg
     - assets/close.svg
     - assets/task_data.json
+    - assets/above.svg
+    - assets/front.svg
+    - assets/rear.svg
+    - "assets/side left.svg"
+    - "assets/side right.svg"

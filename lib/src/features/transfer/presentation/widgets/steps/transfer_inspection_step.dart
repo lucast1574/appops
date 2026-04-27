@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../shared/widgets/flow_step_navigation.dart';
 import '../../../../../shared/widgets/vehicle_inspection_widget.dart';
 
 class TransferInspectionStep extends StatelessWidget {
@@ -26,26 +24,15 @@ class TransferInspectionStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(child: Text('Estado de Unidad', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 8),
-                Center(child: Text('Marca los daños en el diagrama', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF668093)))),
-                const SizedBox(height: 24),
-
-                VehicleInspectionWidget(
-                  taskId: taskId,
-                  initialObservations: observations,
-                  onObservationsChanged: onObservationsChanged,
-                ),
-
-                const SizedBox(height: 32),
-              ],
+            child: VehicleInspectionWidget(
+              taskId: taskId,
+              initialObservations: observations,
+              onObservationsChanged: onObservationsChanged,
+              onContinue: onContinue,
+              onBack: onBack,
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
       ],
     );
   }

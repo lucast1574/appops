@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
 
-
 class TransferInventoryStep extends StatelessWidget {
+  final String title;
+  final Map<String, List<String>> sections;
   final Map<String, Map<String, dynamic>> inventoryValues;
   final Function(String, Map<String, dynamic>) onInventoryChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
+  final bool isContinueEnabled;
 
   const TransferInventoryStep({
     super.key,
+    required this.title,
+    required this.sections,
     required this.inventoryValues,
     required this.onInventoryChanged,
     required this.onBack,
     required this.onContinue,
+    required this.isContinueEnabled,
   });
 
   @override
@@ -27,42 +32,10 @@ class TransferInventoryStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: Text('Listado Inventario', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
+                Center(child: Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
                 const SizedBox(height: 24),
 
-                _section('Entrega y Explicación de Documentación', [
-                  'Pasaporte de garantía y mantenimiento',
-                  'Placas de rodaje y tercera placa',
-                  'Manual del conductor',
-                  'Conversión GNV/GLP',
-                  'Certificado de Revisión técnica',
-                ]),
-
-                _section('Inspección del Vehículo', [
-                  'Limpieza y estado exterior',
-                  'Limpieza y estado interior',
-                  'Presión de llantas y niveles',
-                ]),
-
-                _section('Detalle de Inventario', [
-                  'Antena',
-                  'Gata',
-                  'Seguro de aros',
-                  'Segunda llave',
-                  'Encendedor',
-                  'Cenicero',
-                  'Tapas de ruedas',
-                  'Llanta de repuesto',
-                  'Kit de emergencia',
-                ]),
-                
-                _section('Descripción General', [
-                  'Llave inteligente',
-                  'Sistema antirrobo',
-                  'Aire acondicionado',
-                  'Espejos exteriores',
-                  'Cámara de retroceso',
-                ]),
+                ...sections.entries.map((entry) => _section(entry.key, entry.value)),
 
                 const SizedBox(height: 32),
               ],
@@ -71,108 +44,118 @@ class TransferInventoryStep extends StatelessWidget {
         ),
         FlowStepNavigation(
           onBack: onBack, 
-          onContinue: () {
-            if (_isComplete) {
-              onContinue();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Por favor, marque todos los ítems del inventario antes de continuar.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
+          onContinue: onContinue,
+          isContinueEnabled: isContinueEnabled,
         ),
       ],
     );
-  }
-
-  bool get _isComplete {
-    final allItems = [
-      'Pasaporte de garantía y mantenimiento',
-      'Placas de rodaje y tercera placa',
-      'Manual del conductor',
-      'Conversión GNV/GLP',
-      'Certificado de Revisión técnica',
-      'Limpieza y estado exterior',
-      'Limpieza y estado interior',
-      'Presión de llantas y niveles',
-      'Antena',
-      'Gata',
-      'Seguro de aros',
-      'Segunda llave',
-      'Encendedor',
-      'Cenicero',
-      'Tapas de ruedas',
-      'Llanta de repuesto',
-      'Kit de emergencia',
-      'Llave inteligente',
-      'Sistema antirrobo',
-      'Aire acondicionado',
-      'Espejos exteriores',
-      'Cámara de retroceso',
-    ];
-    return allItems.every((item) => inventoryValues[item]?['value'] != null);
   }
 
   Widget _section(String title, List<String> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Text(title, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF668093))),
+        Table(
+          columnWidths: const {
+            0: FlexColumnWidth(4),
+            1: FlexColumnWidth(1),
+            2: FlexColumnWidth(1),
+          },
+          children: [
+            TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: Text(title, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+                ),
+                _headerCell('No'),
+                _headerCell('Si'),
+              ],
+            ),
+            ...items.map((item) => _inventoryRow(item)),
+          ],
         ),
-        ...items.map((item) => _inventoryItem(item)),
-        const Divider(height: 32),
+        const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _inventoryItem(String label) {
+  Widget _headerCell(String text) => Container(
+    height: 48,
+    alignment: Alignment.center,
+    child: Text(text, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+  );
+
+  TableRow _inventoryRow(String label) {
     final Map<String, dynamic> data = inventoryValues[label] ?? {'value': null, 'obs': ''};
     final bool? value = data['value'];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(label, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B)))),
-              const SizedBox(width: 12),
-              // NO Button
-              GestureDetector(
-                onTap: () => onInventoryChanged(label, {...data, 'value': false}),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: value == false ? const Color(0xFFFFEBEE) : Colors.white,
-                    border: Border.all(color: value == false ? const Color(0xFFE53935) : const Color(0xFFCCD4DB)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('No', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == false ? const Color(0xFFE53935) : const Color(0xFF668093))),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // YES Button
-              GestureDetector(
-                onTap: () => onInventoryChanged(label, {...data, 'value': true}),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: value == true ? const Color(0xFFE0F2F1) : Colors.white,
-                    border: Border.all(color: value == true ? const Color(0xFF00897B) : const Color(0xFFCCD4DB)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('Si', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == true ? const Color(0xFF00897B) : const Color(0xFF668093))),
-                ),
-              ),
-            ],
+    // Conditional disabling logic
+    bool isDisabled = false;
+    bool isChild = false;
+    if (label == 'Simple' || label == 'Con control') {
+      isDisabled = inventoryValues['Segunda llave de contacto']?['value'] != true;
+      isChild = true;
+    } else if ([
+      'Extintor', 'Triángulo o cono de seguridad', 'Botiquín', 'Linterna', 'Cintas reflectivas'
+    ].contains(label)) {
+      isDisabled = inventoryValues['Kit de emergencia:']?['value'] != true;
+      isChild = true;
+    } else if (['Cinturones', 'Bolsas de aire', 'Seguro de niños'].contains(label)) {
+      isDisabled = inventoryValues['Seguridad']?['value'] != true;
+      isChild = true;
+    }
+
+    return TableRow(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E9EB))),
+      ),
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+            top: 16.0, 
+            bottom: 16.0, 
+            left: isChild ? 24.0 : 0.0 // Indentation for children
           ),
-        ],
+          child: Text(
+            isChild ? '• $label' : label, 
+            style: GoogleFonts.inter(
+              fontSize: 14, 
+              color: isDisabled ? const Color(0xFFCCD4DB) : const Color(0xFF002B4B),
+              fontWeight: isChild ? FontWeight.normal : FontWeight.w500,
+            )
+          ),
+        ),
+        // NO Column
+        _valueCell(label, false, value == false, isDisabled),
+        // YES Column
+        _valueCell(label, true, value == true, isDisabled),
+      ],
+    );
+  }
+
+  Widget _valueCell(String label, bool cellValue, bool isActive, bool isDisabled) {
+    return GestureDetector(
+      onTap: isDisabled ? null : () {
+        final current = inventoryValues[label] ?? {'value': null, 'obs': ''};
+        onInventoryChanged(label, {...current, 'value': cellValue});
+      },
+      child: Container(
+        height: 56,
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDisabled 
+            ? const Color(0xFFF8F9FA)
+            : (isActive 
+                ? (cellValue ? const Color(0xFF27A376) : const Color(0xFFFF7171)) 
+                : Colors.white),
+          border: Border.all(
+            color: isDisabled 
+              ? const Color(0xFFE5E9EB)
+              : (isActive ? (cellValue ? const Color(0xFF27A376) : const Color(0xFFFF7171)) : const Color(0xFFCCD4DB))
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
       ),
     );
   }

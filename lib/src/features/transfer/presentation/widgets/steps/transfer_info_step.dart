@@ -62,18 +62,8 @@ class TransferInfoStep extends StatelessWidget {
         ),
         FlowStepNavigation(
           onBack: onBack, 
-          onContinue: () {
-            if (exitPhotoUploaded && kmStartPhotoUploaded) {
-              onContinue();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Por favor, suba ambas fotos obligatorias antes de continuar.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
+          onContinue: onContinue,
+          isContinueEnabled: exitPhotoUploaded && kmStartPhotoUploaded,
         ),
       ],
     );
