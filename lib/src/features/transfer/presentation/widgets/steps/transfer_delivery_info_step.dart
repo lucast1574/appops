@@ -63,8 +63,8 @@ class TransferDeliveryInfoStep extends StatelessWidget {
                   controller: deliveryNameController,
                   style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
                   decoration: InputDecoration(
-                    hintText: 'Juan Rodriguez', hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
-                    filled: true, fillColor: const Color(0xFFF8F9FA),
+                    hintText: 'Juan Rodriguez', hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)),
+                    filled: true, fillColor: Colors.white,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF002B4B))),
@@ -74,7 +74,21 @@ class TransferDeliveryInfoStep extends StatelessWidget {
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
+        FlowStepNavigation(
+          onBack: onBack, 
+          onContinue: () {
+            if (deliveryPhotoUploaded && kmEndPhotoUploaded && deliveryNameController.text.trim().isNotEmpty) {
+              onContinue();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Por favor, complete todos los campos y fotos obligatorias.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        ),
       ],
     );
   }

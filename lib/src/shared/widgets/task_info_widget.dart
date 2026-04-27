@@ -150,8 +150,8 @@ class TaskInfoWidget extends StatelessWidget {
                 if (startTime.isNotEmpty || endTime.isNotEmpty)
                   const SizedBox(height: 16),
 
-                // Address (only if not a notary task and not a transfer task which shows it above)
-                if (address.isNotEmpty && pickupNotary.isEmpty && origin.isEmpty && !isConversion) ...[
+                // Address (only if not a specific task type that shows its own locations below)
+                if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado && !isConversion) ...[
                   _buildHeader('Dirección'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
@@ -167,6 +167,98 @@ class TaskInfoWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                ],
+
+                // Transfer origin/destination
+                if (isTraslado || origin.isNotEmpty || destination.isNotEmpty) ...[
+                  if (isTraslado || origin.isNotEmpty) ...[
+                    _buildHeader('Ubicación de inicio traslado'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(origin, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                          if (originAddress.isNotEmpty && originAddress != origin) ...[
+                            const SizedBox(height: 4),
+                            Text(originAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
+                          ],
+                          if (originGoogleMapsLink.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _buildGoogleMapsButton(originGoogleMapsLink),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (isTraslado || destination.isNotEmpty) ...[
+                    _buildHeader('Ubicación final de traslado'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(destination, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                          if (destinationAddress.isNotEmpty && destinationAddress != destination) ...[
+                            const SizedBox(height: 4),
+                            Text(destinationAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
+                          ],
+                          if (destinationGoogleMapsLink.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _buildGoogleMapsButton(destinationGoogleMapsLink),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+
+                // Notary fields
+                if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
+                  if (pickupNotary.isNotEmpty) ...[
+                    _buildHeader('Ubicación de recibida de documentos'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(pickupNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                          if (address.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(address, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
+                          ],
+                          if (primaryMapsLink.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _buildGoogleMapsButton(primaryMapsLink),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (deliveryNotary.isNotEmpty) ...[
+                    _buildHeader('Ubicación de entrega de documentos'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(deliveryNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
+                          if (deliveryAddress.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(deliveryAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
+                          ],
+                          if (deliveryGoogleMapsLink.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _buildGoogleMapsButton(deliveryGoogleMapsLink),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ],
 
                 // Client name
@@ -219,97 +311,7 @@ class TaskInfoWidget extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // Notary fields
-                if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
-                  if (pickupNotary.isNotEmpty) ...[
-                    _buildHeader('Ubicación de recibida de documentos'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(pickupNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (address.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(address, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (primaryMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(primaryMapsLink),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (deliveryNotary.isNotEmpty) ...[
-                    _buildHeader('Ubicación de entrega de documentos'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(deliveryNotary, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (deliveryAddress.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(deliveryAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (deliveryGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(deliveryGoogleMapsLink),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ],
 
-                // Transfer origin/destination
-                if (isTraslado || origin.isNotEmpty || destination.isNotEmpty) ...[
-                  if (isTraslado || origin.isNotEmpty) ...[
-                    _buildHeader('Ubicación de inicio traslado'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(origin, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (originAddress.isNotEmpty && originAddress != origin) ...[
-                            const SizedBox(height: 4),
-                            Text(originAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (originGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(originGoogleMapsLink),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (isTraslado || destination.isNotEmpty) ...[
-                    _buildHeader('Ubicación final de traslado'),
-                    const SizedBox(height: 8),
-                    _buildValueContainer(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(destination, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                          if (destinationAddress.isNotEmpty && destinationAddress != destination) ...[
-                            const SizedBox(height: 4),
-                            Text(destinationAddress, style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF668093))),
-                          ],
-                          if (destinationGoogleMapsLink.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _buildGoogleMapsButton(destinationGoogleMapsLink),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ],
 
                 // Conversion service type
                 if (serviceType.isNotEmpty) ...[

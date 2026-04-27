@@ -12,6 +12,7 @@ import '../widgets/steps/transfer_delivery_info_step.dart';
 import '../widgets/steps/transfer_inventory_step.dart';
 import '../widgets/steps/transfer_inspection_step.dart';
 import '../widgets/steps/transfer_signatures_step.dart';
+import '../widgets/steps/transfer_general_data_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 
@@ -69,8 +70,18 @@ class _TransferPageState extends State<TransferPage> {
                   position: o['position_x'] != null ? Offset(o['position_x'], o['position_y']) : null,
                 )).toList();
               }
-              _signatureOperarioPath = draft['sig_operario'];
               _signatureClientPath = draft['sig_client'];
+
+              if (draft['client_name'] != null) _clientNameController.text = draft['client_name'];
+              if (draft['date'] != null) _dateController.text = draft['date'];
+              if (draft['placa_input'] != null) _placaInputController.text = draft['placa_input'];
+              if (draft['km_input'] != null) _kmInputController.text = draft['km_input'];
+              _selectedMarca = draft['marca'];
+              _selectedModelo = draft['modelo'];
+              _selectedColor = draft['color'];
+              _selectedConversion = draft['conversion'];
+              _selectedFuel = draft['fuel'];
+              _lockTestValue = draft['lock_test'];
             }
           });
         }
@@ -100,6 +111,25 @@ class _TransferPageState extends State<TransferPage> {
 
   // Vehicle Inspection
   List<VehicleObservation> _vehicleObservations = [];
+
+  // Signatures
+  // General Data
+  final TextEditingController _clientNameController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _placaInputController = TextEditingController();
+  final TextEditingController _kmInputController = TextEditingController();
+  String? _selectedMarca;
+  String? _selectedModelo;
+  String? _selectedColor;
+  String? _selectedConversion;
+  String? _selectedFuel;
+  bool? _lockTestValue;
+
+  final List<String> _marcas = ['Toyota', 'Hyundai', 'Kia', 'Nissan', 'Chevrolet'];
+  final List<String> _modelos = ['Hilux', 'Accent', 'Rio', 'Sentra', 'Onix', 'Ertiga', 'Swift'];
+  final List<String> _colores = ['Blanco', 'Negro', 'Gris', 'Rojo', 'Azul', 'Plata'];
+  final List<String> _conversiones = ['GNV', 'GLP', 'Gasolina', 'Dual'];
+  final List<String> _fuelLevels = ['E', '1/4', '1/2', '3/4', 'F'];
 
   // Signatures
   String? _signatureOperarioPath;
@@ -135,6 +165,16 @@ class _TransferPageState extends State<TransferPage> {
         }).toList(),
         'sig_operario': _signatureOperarioPath,
         'sig_client': _signatureClientPath,
+        'client_name': _clientNameController.text,
+        'date': _dateController.text,
+        'placa_input': _placaInputController.text,
+        'km_input': _kmInputController.text,
+        'marca': _selectedMarca,
+        'modelo': _selectedModelo,
+        'color': _selectedColor,
+        'conversion': _selectedConversion,
+        'fuel': _selectedFuel,
+        'lock_test': _lockTestValue,
       };
 
       await _taskService.updateProgress(
@@ -158,6 +198,10 @@ class _TransferPageState extends State<TransferPage> {
   @override
   void dispose() { 
     _deliveryNameController.dispose(); 
+    _clientNameController.dispose();
+    _dateController.dispose();
+    _placaInputController.dispose();
+    _kmInputController.dispose();
     super.dispose(); 
   }
 
@@ -198,7 +242,7 @@ class _TransferPageState extends State<TransferPage> {
         title: Text('Traslado', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 7, activeIndex: _getProgressIndex(), allComplete: _currentStep == 6)),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 8, activeIndex: _getProgressIndex(), allComplete: _currentStep == 7)),
       ) : null,
       body: SafeArea(
         child: _buildCurrentStep(),
@@ -245,20 +289,41 @@ class _TransferPageState extends State<TransferPage> {
         onKmEndPhotoTagChanged: (v) => setState(() => _kmEndPhotoTag = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
-      case 3: return TransferInventoryStep(
+      case 3: return TransferGeneralDataStep(
+        nameController: _clientNameController,
+        dateController: _dateController,
+        placaController: _placaInputController,
+        kmController: _kmInputController,
+        selectedMarca: _selectedMarca,
+        selectedModelo: _selectedModelo,
+        selectedColor: _selectedColor,
+        selectedConversion: _selectedConversion,
+        selectedFuel: _selectedFuel,
+        lockTestValue: _lockTestValue,
+        marcas: _marcas, modelos: _modelos, colores: _colores, conversiones: _conversiones, fuelLevels: _fuelLevels,
+        onMarcaChanged: (v) => setState(() => _selectedMarca = v),
+        onModeloChanged: (v) => setState(() => _selectedModelo = v),
+        onColorChanged: (v) => setState(() => _selectedColor = v),
+        onConversionChanged: (v) => setState(() => _selectedConversion = v),
+        onFuelChanged: (v) => setState(() => _selectedFuel = v),
+        onLockTestChanged: (v) => setState(() => _lockTestValue = v),
+        onBack: _previousStep,
+        onContinue: _nextStep,
+      );
+      case 4: return TransferInventoryStep(
         inventoryValues: _inventoryValues,
         onInventoryChanged: (key, val) => setState(() => _inventoryValues[key] = Map<String, dynamic>.from(val)),
         onBack: _previousStep,
         onContinue: _nextStep,
       );
-      case 4: return TransferInspectionStep(
+      case 5: return TransferInspectionStep(
         taskId: widget.task['id'] is int ? widget.task['id'] : int.tryParse('${widget.task['id']}') ?? 0,
         observations: _vehicleObservations,
         onObservationsChanged: (obs) => setState(() => _vehicleObservations = obs),
         onBack: _previousStep,
         onContinue: _nextStep,
       );
-      case 5: return TransferSignaturesStep(
+      case 6: return TransferSignaturesStep(
         signatureOperarioPath: _signatureOperarioPath,
         signatureClientPath: _signatureClientPath,
         onOperarioSignatureChanged: (val) => setState(() => _signatureOperarioPath = val),
@@ -266,7 +331,7 @@ class _TransferPageState extends State<TransferPage> {
         onBack: _previousStep,
         onContinue: _nextStep,
       );
-      case 6: return TransferSummaryStep(
+      case 7: return TransferSummaryStep(
         placa: _placa, originLocation: _origin, destinationLocation: _destination,
         exitPhotoUploaded: _exitPhotoUploaded, kmStartPhotoUploaded: _kmStartPhotoUploaded,
         deliveryPhotoUploaded: _deliveryPhotoUploaded, kmEndPhotoUploaded: _kmEndPhotoUploaded,
@@ -278,13 +343,13 @@ class _TransferPageState extends State<TransferPage> {
         onEditTaskInfo: () => setState(() => _currentStep = 0),
         onEditTransferInfo: () => setState(() => _currentStep = 1),
         onEditDeliveryInfo: () => setState(() => _currentStep = 2),
-        onEditInventory: () => setState(() => _currentStep = 3),
-        onEditInspection: () => setState(() => _currentStep = 4),
-        onEditSignatures: () => setState(() => _currentStep = 5),
+        onEditInventory: () => setState(() => _currentStep = 4),
+        onEditInspection: () => setState(() => _currentStep = 5),
+        onEditSignatures: () => setState(() => _currentStep = 6),
         onEditAll: () => setState(() => _currentStep = 0),
         onSend: () => _showConfirmation(context),
       );
-      case 7: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
+      case 8: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
       default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
@@ -300,9 +365,19 @@ class _TransferPageState extends State<TransferPage> {
         taskId,
         resultData: {
           'placa': _selectedPlaca,
-          'origin': 'Concesionario movistar',
+          'origin': _origin,
           'destination': _selectedDestination,
           'delivery_name': _deliveryNameController.text,
+          'client_name': _clientNameController.text,
+          'date': _dateController.text,
+          'placa_input': _placaInputController.text,
+          'km_input': _kmInputController.text,
+          'marca': _selectedMarca,
+          'modelo': _selectedModelo,
+          'color': _selectedColor,
+          'conversion': _selectedConversion,
+          'fuel': _selectedFuel,
+          'lock_test': _lockTestValue,
         },
         observations: '',
       );

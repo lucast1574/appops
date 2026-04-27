@@ -31,7 +31,6 @@ class TransferInventoryStep extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 _section('Entrega y Explicación de Documentación', [
-                  'Prueba de bloqueo / desbloqueo efectiva',
                   'Pasaporte de garantía y mantenimiento',
                   'Placas de rodaje y tercera placa',
                   'Manual del conductor',
@@ -70,9 +69,51 @@ class TransferInventoryStep extends StatelessWidget {
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
+        FlowStepNavigation(
+          onBack: onBack, 
+          onContinue: () {
+            if (_isComplete) {
+              onContinue();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Por favor, marque todos los ítems del inventario antes de continuar.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        ),
       ],
     );
+  }
+
+  bool get _isComplete {
+    final allItems = [
+      'Pasaporte de garantía y mantenimiento',
+      'Placas de rodaje y tercera placa',
+      'Manual del conductor',
+      'Conversión GNV/GLP',
+      'Certificado de Revisión técnica',
+      'Limpieza y estado exterior',
+      'Limpieza y estado interior',
+      'Presión de llantas y niveles',
+      'Antena',
+      'Gata',
+      'Seguro de aros',
+      'Segunda llave',
+      'Encendedor',
+      'Cenicero',
+      'Tapas de ruedas',
+      'Llanta de repuesto',
+      'Kit de emergencia',
+      'Llave inteligente',
+      'Sistema antirrobo',
+      'Aire acondicionado',
+      'Espejos exteriores',
+      'Cámara de retroceso',
+    ];
+    return allItems.every((item) => inventoryValues[item]?['value'] != null);
   }
 
   Widget _section(String title, List<String> items) {
@@ -108,11 +149,11 @@ class TransferInventoryStep extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: value == false ? Colors.red.shade50 : Colors.white,
-                    border: Border.all(color: value == false ? Colors.red : const Color(0xFFCCD4DB)),
+                    color: value == false ? const Color(0xFFFFEBEE) : Colors.white,
+                    border: Border.all(color: value == false ? const Color(0xFFE53935) : const Color(0xFFCCD4DB)),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('No', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == false ? Colors.red : const Color(0xFF668093))),
+                  child: Text('No', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == false ? const Color(0xFFE53935) : const Color(0xFF668093))),
                 ),
               ),
               const SizedBox(width: 8),
@@ -122,28 +163,15 @@ class TransferInventoryStep extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: value == true ? const Color(0xFFE6F3F5) : Colors.white,
-                    border: Border.all(color: value == true ? const Color(0xFF4FA4B5) : const Color(0xFFCCD4DB)),
+                    color: value == true ? const Color(0xFFE0F2F1) : Colors.white,
+                    border: Border.all(color: value == true ? const Color(0xFF00897B) : const Color(0xFFCCD4DB)),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Si', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == true ? const Color(0xFF4FA4B5) : const Color(0xFF668093))),
+                  child: Text('Si', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: value == true ? const Color(0xFF00897B) : const Color(0xFF668093))),
                 ),
               ),
             ],
           ),
-          if (value == false) ...[
-            const SizedBox(height: 8),
-            TextField(
-              onChanged: (val) => onInventoryChanged(label, {...data, 'obs': val}),
-              style: GoogleFonts.inter(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Observación...',
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                filled: true, fillColor: const Color(0xFFF8F9FA),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
-              ),
-            ),
-          ]
         ],
       ),
     );

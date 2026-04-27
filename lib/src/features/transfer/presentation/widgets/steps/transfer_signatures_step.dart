@@ -58,7 +58,21 @@ class TransferSignaturesStep extends StatelessWidget {
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
+        FlowStepNavigation(
+          onBack: onBack, 
+          onContinue: () {
+            if (signatureOperarioPath != null && signatureClientPath != null) {
+              onContinue();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ambas firmas son obligatorias para continuar.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        ),
       ],
     );
   }
