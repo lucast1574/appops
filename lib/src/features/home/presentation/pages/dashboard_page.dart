@@ -11,6 +11,7 @@ import '../../../transfer/presentation/pages/transfer_page.dart';
 import '../../../vehicle_verification/presentation/pages/vehicle_verification_page.dart';
 import '../../../notary/presentation/pages/notary_page.dart';
 import '../../../management/presentation/pages/management_page.dart';
+import '../../../chat/presentation/pages/chat_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -528,10 +529,41 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 16),
 
-          // Action button
+          // Action row: chat shortcut + main action button
           if (!isRescheduled)
-            SizedBox(
-              width: double.infinity,
+            Row(
+              children: [
+                // Chat with supervisor
+                Container(
+                  height: 48,
+                  width: 48,
+                  margin: const EdgeInsets.only(right: 10),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatPage(
+                            taskId: task['id'] as int,
+                            taskTitle: typeName,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF1F4F6),
+                      foregroundColor: const Color(0xFF002B4B),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Icon(Icons.chat_bubble_outline, size: 20),
+                  ),
+                ),
+                Expanded(
+                  child: SizedBox(
             height: 48,
             child: ElevatedButton(
               onPressed: () {
@@ -577,7 +609,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     ),
             ),
-          ),
+                  ), // close SizedBox
+                ), // close Expanded
+              ], // close Row children
+            ), // close Row
         ],
       ),
     );
