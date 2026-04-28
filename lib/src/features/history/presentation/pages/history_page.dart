@@ -278,6 +278,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final String statusKey = task['status'] ?? 'pending';
     final String statusLabel = TaskService.getStatusLabel(statusKey);
     final Color statusColor = _getStatusColor(statusLabel);
+    final bool isExtra = task['is_extra'] == true;
 
     final String scheduledDate = task['scheduled_date'] ?? '';
     final String startTime = TaskService.formatTime(task['start_time']);
@@ -324,13 +325,46 @@ class _HistoryPageState extends State<HistoryPage> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            typeName,
-                            style: GoogleFonts.inter(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF002B4B),
-                            ),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  typeName,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF002B4B),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isExtra) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: const Color(0xFFF59E0B),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'EXTRA',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFFB45309),
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         Text(

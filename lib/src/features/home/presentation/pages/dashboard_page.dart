@@ -366,6 +366,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final String status = task['status'] ?? 'pending';
     final bool isInProgress = status == 'in_progress';
     final bool isRescheduled = status == 'rescheduled';
+    final bool isExtra = task['is_extra'] == true;
     
     final Color buttonColor = isInProgress
         ? const Color(0xFFFBDF83)
@@ -423,6 +424,28 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
+              if (isExtra)
+                Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFF59E0B), width: 1),
+                  ),
+                  child: Text(
+                    '⚠ EXTRA',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFB45309),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
               if (isRescheduled)
                 Container(
                   padding: const EdgeInsets.symmetric(
