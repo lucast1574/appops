@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:dio/dio.dart';
 
 // Import Shared Widgets
 import '../widgets/shared/verification_progress_bar.dart';
@@ -38,6 +39,7 @@ class _VerificationPageState extends State<VerificationPage> {
   bool _startingTask = false;
   late Map<String, dynamic> _task;
   bool _loadingDetail = true;
+  bool _isAutoReschedule = false;
 
   String? _selectedRecipient;
   String? _selectedRelationship;
@@ -197,6 +199,8 @@ class _VerificationPageState extends State<VerificationPage> {
   }
 
   void _nextStep() async {
+    if (_submitting || _startingTask) return;
+
     if (_currentStep == 0) {
       if (_startingTask) return;
       setState(() => _startingTask = true);
@@ -221,30 +225,56 @@ class _VerificationPageState extends State<VerificationPage> {
       }
     }
 
+    if (!mounted) return;
+
+    if (_currentStep == 2 && _selectedRecipient == 'Nadie') {
+      _showConfirmationBottomSheet(context, onConfirm: _submitAutomaticReschedule);
+      return;
+    }
+
+    if (_currentStep == 4) {
+      _showConfirmationBottomSheet(context, onConfirm: _submitAutomaticReschedule);
+      return;
+    }
+
     setState(() {
       if (_currentStep == 2 && _selectedRecipient == 'Cliente') {
         _currentStep = 3;
-      } else if (_currentStep == 2 && (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie')) {
-        _currentStep = 5; // Go to Reschedule Form
-      } else if (_currentStep == 4) {
-        _currentStep = 5;
+      } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
+        _currentStep = 4; // Go to Familiar Form first
       } else {
         _currentStep++;
       }
     });
+
     _saveProgress();
   }
 
   Future<void> _submitAutomaticReschedule() async {
     if (_submitting) return;
+
+    // Check if task is already finished in local state
+    if (_task['status'] == 'completed' || _task['status'] == 'rescheduled' || _task['status'] == 'rejected') {
+      if (mounted) {
+        setState(() {
+          _isAutoReschedule = _task['status'] == 'rescheduled';
+          _currentStep = 10;
+        });
+      }
+      return;
+    }
+
     setState(() => _submitting = true);
 
     try {
-      final int taskId = _task['id'] ?? 0;
-      String reason = "Reprogramación automática: $_selectedReason";
+      final int taskId = _task['id'] is int 
+          ? _task['id'] 
+          : int.parse('${_task['id'] ?? 0}');
+          
+      String reason = "Reprogramación automática. ";
       Map<String, dynamic> resultData = {
         'who_received': _selectedRecipient,
-        'verification_result': 'Reprogramación automática',
+        'verification_result': 'Reprogramada',
       };
 
       if (_selectedRecipient == 'Familiar') {
@@ -261,16 +291,21 @@ class _VerificationPageState extends State<VerificationPage> {
             label: 'firma_familiar',
             contentType: 'image/png',
           );
-          await _taskService.uploadImageToS3(uploadInfo['upload_url'], signatureBytes);
-          final s3Key = uploadInfo['s3_key'];
-          resultData['signature_s3_key'] = s3Key;
           
-          await _taskService.confirmUpload(
-            taskId,
-            s3Key: s3Key,
-            label: 'firma_familiar',
-            tag: 'Firma de familiar: ${_familiarNameController.text}',
-          );
+          final uploadUrl = uploadInfo['upload_url'];
+          final s3Key = uploadInfo['s3_key'];
+          
+          if (uploadUrl != null && s3Key != null) {
+            await _taskService.uploadImageToS3(uploadUrl, signatureBytes);
+            resultData['signature_s3_key'] = s3Key;
+            
+            await _taskService.confirmUpload(
+              taskId,
+              s3Key: s3Key,
+              label: 'firma_familiar',
+              tag: 'Firma de familiar: ${_familiarNameController.text}',
+            );
+          }
         }
       } else {
         reason += "No se encontró a nadie en el domicilio.";
@@ -282,11 +317,30 @@ class _VerificationPageState extends State<VerificationPage> {
         resultData: resultData,
       );
       
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        setState(() {
+          _task['status'] = 'rescheduled';
+          _isAutoReschedule = true;
+          _currentStep = 10;
+        });
+      }
     } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data is Map) {
+          errorMessage = data['error'] ?? data['detail'] ?? data.toString();
+        } else if (data != null) {
+          errorMessage = data.toString();
+        }
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $errorMessage'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
@@ -385,9 +439,11 @@ class _VerificationPageState extends State<VerificationPage> {
       );
     }
 
+    bool showAppBar = _currentStep != 10 && _currentStep != 5;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _currentStep != 10
+      appBar: showAppBar
           ? AppBar(
               backgroundColor: Colors.white,
               elevation: 0,
@@ -481,8 +537,11 @@ class _VerificationPageState extends State<VerificationPage> {
         return WhoReceivedStep(
           selectedRecipient: _selectedRecipient,
           task: _task,
-          onRecipientSelected: (val) =>
-              setState(() => _selectedRecipient = val),
+          onRecipientSelected: (val) {
+            setState(() {
+              _selectedRecipient = val;
+            });
+          },
           onBack: _previousStep,
           onContinue: _nextStep,
         );
@@ -543,6 +602,7 @@ class _VerificationPageState extends State<VerificationPage> {
           observationsController: _observationsController,
           onBack: () => setState(() => _currentStep = 2),
           onFinalizar: _submitAutomaticReschedule,
+          showBackButton: _selectedRecipient != 'Nadie',
         );
       case 6:
         return HousingStep(
@@ -690,10 +750,13 @@ class _VerificationPageState extends State<VerificationPage> {
           onEditGarage: () => setState(() => _currentStep = 7),
           onEditAll: () => setState(() => _currentStep = 0),
           task: _task,
-          onSend: () => _showConfirmationBottomSheet(context),
+          onSend: () => _showConfirmationBottomSheet(context, onConfirm: _submitTask),
         );
       case 10:
-        return SuccessStep(onBackToStart: () => Navigator.pop(context));
+        return SuccessStep(
+          onBackToStart: () => Navigator.pop(context),
+          isReschedule: _isAutoReschedule,
+        );
       default:
         return TaskInfoWidget(task: _task, onContinue: _nextStep);
     }
@@ -756,11 +819,29 @@ class _VerificationPageState extends State<VerificationPage> {
         },
         observations: _observationsController.text,
       );
-      if (mounted) setState(() => _currentStep = 10);
+      if (mounted) {
+        setState(() {
+          _task['status'] = 'completed';
+          _currentStep = 10;
+        });
+      }
     } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data is Map) {
+          errorMessage = data['error'] ?? data['detail'] ?? data.toString();
+        } else if (data != null) {
+          errorMessage = data.toString();
+        }
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error al enviar: $errorMessage'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
@@ -768,9 +849,11 @@ class _VerificationPageState extends State<VerificationPage> {
     }
   }
 
-  void _showConfirmationBottomSheet(BuildContext context) {
+  void _showConfirmationBottomSheet(BuildContext context, {required Future<void> Function() onConfirm}) {
     showModalBottomSheet(
       context: context,
+      isDismissible: !_submitting,
+      enableDrag: !_submitting,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -782,8 +865,9 @@ class _VerificationPageState extends State<VerificationPage> {
         return ConfirmationSheet(
           onCancel: () => Navigator.pop(context),
           onConfirm: () async {
+            if (_submitting) return;
             Navigator.pop(context);
-            await _submitTask();
+            await onConfirm();
           },
         );
       },

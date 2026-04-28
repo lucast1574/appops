@@ -153,9 +153,10 @@ class TaskService {
     return Map<String, dynamic>.from(response.data);
   }
 
-  /// Helper to upload raw bytes to S3 using a presigned URL.
   Future<void> uploadImageToS3(String url, List<int> bytes, {String contentType = 'image/png'}) async {
-    await _api.dio.put(
+    // Use a fresh Dio instance to avoid sending the 'Authorization' header 
+    // from our ApiClient interceptor, which S3 rejects on presigned URLs.
+    await Dio().put(
       url,
       data: Stream.fromIterable([bytes]),
       options: Options(

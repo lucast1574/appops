@@ -99,7 +99,7 @@ class WhoReceivedStep extends StatelessWidget {
           isContinueEnabled: selectedRecipient != null,
           onBack: onBack,
           onContinue: onContinue,
-          buttonText: selectedRecipient == 'Nadie' ? 'Finalizar' : 'Continuar',
+          buttonText: 'Continuar',
         ),
       ],
     );

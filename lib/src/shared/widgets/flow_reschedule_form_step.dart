@@ -12,9 +12,10 @@ class FlowRescheduleFormStep extends StatelessWidget {
   final List<String> reasons;
   final Function(String?) onReasonChanged;
   final TextEditingController observationsController;
-  final VoidCallback onBack;
+  final VoidCallback? onBack;
   final VoidCallback onFinalizar;
   final bool isReversed;
+  final bool showBackButton;
 
   const FlowRescheduleFormStep({
     super.key,
@@ -26,9 +27,10 @@ class FlowRescheduleFormStep extends StatelessWidget {
     required this.reasons,
     required this.onReasonChanged,
     required this.observationsController,
-    required this.onBack,
+    this.onBack,
     required this.onFinalizar,
     this.isReversed = true,
+    this.showBackButton = true,
   });
 
   @override
@@ -84,7 +86,7 @@ class FlowRescheduleFormStep extends StatelessWidget {
           ),
         ),
         FlowStepNavigation(
-          onBack: onBack,
+          onBack: showBackButton ? onBack : null,
           onContinue: onFinalizar,
           buttonText: 'Finalizar',
           isContinueEnabled: selectedReason != null,

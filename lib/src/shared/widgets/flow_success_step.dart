@@ -6,6 +6,10 @@ class FlowSuccessStep extends StatelessWidget {
   final String title;
   final String subtitle;
   final String buttonText;
+  final IconData icon;
+  final Widget? iconWidget;
+  final Color? color;
+  final bool isReschedule;
 
   const FlowSuccessStep({
     super.key,
@@ -13,10 +17,16 @@ class FlowSuccessStep extends StatelessWidget {
     this.title = 'Tarea completada',
     this.subtitle = 'Los datos se han enviado correctamente y el registro ha sido actualizado',
     this.buttonText = 'Volver al inicio',
+    this.icon = Icons.check,
+    this.iconWidget,
+    this.color,
+    this.isReschedule = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = color ?? (isReschedule ? const Color(0xFF4FA4B5) : const Color(0xFF27A376));
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 48.0),
@@ -26,11 +36,11 @@ class FlowSuccessStep extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: const BoxDecoration(
-                color: Color(0xFF27A376),
+              decoration: BoxDecoration(
+                color: themeColor,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: 48),
+              child: iconWidget ?? Icon(icon, color: Colors.white, size: 48),
             ),
             const SizedBox(height: 32),
             Text(
@@ -38,7 +48,7 @@ class FlowSuccessStep extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF27A376),
+                color: themeColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -59,7 +69,7 @@ class FlowSuccessStep extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onBackToStart,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF27A376),
+                  backgroundColor: themeColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                   elevation: 0,

@@ -1,0 +1,804 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
+
+// Import Shared Widgets
+import '../widgets/shared/verification_progress_bar.dart';
+import '../widgets/shared/confirmation_sheet.dart';
+
+// Import Step Widgets
+import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../home/data/task_service.dart';
+import '../widgets/steps/before_starting_step.dart';
+import '../widgets/steps/who_received_step.dart';
+import '../widgets/steps/document_validation_step.dart';
+import '../widgets/steps/familiar_form_step.dart';
+import '../widgets/steps/housing_step.dart';
+import '../widgets/steps/garage_step.dart';
+import '../widgets/steps/verification_result_step.dart';
+import '../widgets/steps/verification_summary_step.dart';
+import '../widgets/steps/success_step.dart';
+import '../../../../shared/widgets/signature_pad.dart';
+import '../../../../shared/widgets/shared_widgets.dart';
+import '../../../../shared/widgets/flow_reschedule_form_step.dart';
+
+class VerificationPage extends StatefulWidget {
+  final Map<String, dynamic> task;
+  const VerificationPage({super.key, required this.task});
+
+  @override
+  State<VerificationPage> createState() => _VerificationPageState();
+}
+
+class _VerificationPageState extends State<VerificationPage> {
+  int _currentStep = 0;
+  final TaskService _taskService = TaskService();
+  bool _submitting = false;
+  bool _startingTask = false;
+  late Map<String, dynamic> _task;
+  bool _loadingDetail = true;
+
+  String? _selectedRecipient;
+  String? _selectedRelationship;
+
+  // States for Document Validation (Step 3)
+  bool _dniUploaded = false;
+  String? _dniTag;
+  String? _dniPath;
+  bool _breveteUploaded = false;
+  String? _breveteTag;
+  String? _brevetePath;
+  bool _reciboUploaded = false;
+  String? _reciboTag;
+  String? _reciboPath;
+
+  // States for Familiar (Step 4)
+  final GlobalKey<SignaturePadState> _signatureKey = GlobalKey<SignaturePadState>();
+  final TextEditingController _familiarDniController = TextEditingController();
+  final TextEditingController _familiarNameController = TextEditingController();
+
+  // States for Housing (Step 6)
+  String? _housingType;
+  final TextEditingController _mapsController = TextEditingController();
+
+  // States for Garage (Step 7)
+  bool? _isGarageAtHome;
+  bool _garageFacadeUploaded = false;
+  String? _garageFacadeTag;
+  String? _garageFacadePath;
+  bool? _hasSecurity;
+  bool? _hasCameras;
+  bool _garageCamerasUploaded = false;
+  String? _garageCamerasTag;
+  String? _garageCamerasPath;
+  String? _accessType;
+  bool? _isRoofing;
+  bool _garageRoofingUploaded = false;
+  String? _garageRoofingTag;
+  String? _garageRoofingPath;
+  bool? _isBasement;
+  bool _garageBasementUploaded = false;
+  String? _garageBasementTag;
+  String? _garageBasementPath;
+  String? _garageDirection;
+  bool _garageDirectionUploaded = false;
+  String? _garageDirectionTag;
+  String? _garageDirectionPath;
+  String? _streetAccessibility;
+  bool _streetAccessibilityUploaded = false;
+  String? _streetAccessibilityTag;
+  String? _streetAccessibilityPath;
+  
+  // Extra garage images
+  int _extraGarageImagesCount = 1;
+  bool _isCocheraFuera = false;
+  final List<bool> _extraGarageImagesUploaded = [false, false, false];
+  final List<String?> _extraGarageImagesTags = [null, null, null];
+  final List<String?> _extraGarageImagesPaths = [null, null, null];
+
+  // States for Result (Step 8)
+  String? _verificationResult;
+  String? _selectedReason;
+  final TextEditingController _observationsController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _task = widget.task;
+    _mapsController.text = _task['google_maps_link'] ?? '';
+    _fetchFullDetail();
+  }
+
+  Future<void> _fetchFullDetail() async {
+    try {
+      final taskId = widget.task['id'];
+      if (taskId != null) {
+        final full = await _taskService.getTaskDetail(
+          taskId is int ? taskId : int.parse('$taskId'),
+        );
+        if (mounted) {
+          setState(() {
+            _task = full;
+            _loadingDetail = false;
+            // Update maps link if it changed or was empty
+            if (_mapsController.text.isEmpty) {
+              _mapsController.text = _task['google_maps_link'] ?? '';
+            }
+
+            // RESTORE PROGRESS
+            if (full['current_step'] != null && full['current_step'] > 0) {
+              _currentStep = full['current_step'];
+            }
+            final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
+            if (draft.isNotEmpty) {
+              if (draft['selected_recipient'] != null) _selectedRecipient = draft['selected_recipient'];
+              if (draft['selected_relationship'] != null) _selectedRelationship = draft['selected_relationship'];
+              if (draft['familiar_name'] != null) _familiarNameController.text = draft['familiar_name'];
+              if (draft['familiar_dni'] != null) _familiarDniController.text = draft['familiar_dni'];
+              if (draft['housing_type'] != null) _housingType = draft['housing_type'];
+              if (draft['is_garage_at_home'] != null) _isGarageAtHome = draft['is_garage_at_home'];
+              if (draft['has_security'] != null) _hasSecurity = draft['has_security'];
+              if (draft['has_cameras'] != null) _hasCameras = draft['has_cameras'];
+              if (draft['access_type'] != null) _accessType = draft['access_type'];
+              if (draft['is_roofing'] != null) _isRoofing = draft['is_roofing'];
+              if (draft['is_basement'] != null) _isBasement = draft['is_basement'];
+              if (draft['garage_direction'] != null) _garageDirection = draft['garage_direction'];
+              if (draft['street_accessibility'] != null) _streetAccessibility = draft['street_accessibility'];
+              if (draft['verification_result'] != null) _verificationResult = draft['verification_result'];
+              if (draft['observations'] != null) _observationsController.text = draft['observations'];
+            }
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loadingDetail = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDetail = false);
+    }
+  }
+
+  Future<bool> _checkLocation() async {
+    try {
+      final taskLat = _task['latitude'] is num
+          ? (_task['latitude'] as num).toDouble()
+          : double.tryParse('${_task['latitude'] ?? ''}');
+      final taskLng = _task['longitude'] is num
+          ? (_task['longitude'] as num).toDouble()
+          : double.tryParse('${_task['longitude'] ?? ''}');
+
+      if (taskLat == null || taskLng == null) return true;
+
+      // Check permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return false;
+      }
+
+      /*
+      Position position = await Geolocator.getCurrentPosition();
+      double distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        taskLat,
+        taskLng,
+      );
+
+      // Must be within 50 meters (TEMPORARILY DISABLED FOR TESTING)
+      if (distance > 50) {
+        ...
+      }
+      */
+      return true; // Bypass slow GPS fix for testing
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _nextStep() async {
+    if (_currentStep == 0) {
+      if (_startingTask) return;
+      setState(() => _startingTask = true);
+      
+      try {
+        final isNear = await _checkLocation();
+        if (!isNear) {
+          setState(() => _startingTask = false);
+          return;
+        }
+
+        // Start task in backend if not already started
+        if (_task['status'] != 'in_progress') {
+          await _taskService.startTask(_task['id'] ?? 0);
+        }
+      } catch (e) {
+        if (!e.toString().contains('400')) {
+          debugPrint('Error starting task: $e');
+        }
+      } finally {
+        if (mounted) setState(() => _startingTask = false);
+      }
+    }
+
+    setState(() {
+      if (_currentStep == 2 && _selectedRecipient == 'Cliente') {
+        _currentStep = 3;
+      } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
+        _currentStep = 4; // Go to Familiar Form first
+      } else if (_currentStep == 2 && _selectedRecipient == 'Nadie') {
+        _currentStep = 5; // Go directly to Reschedule Form
+      } else if (_currentStep == 4) {
+        _submitAutomaticReschedule(); // From Familiar form directly to success
+      } else {
+        _currentStep++;
+      }
+    });
+
+    _saveProgress();
+  }
+
+  Future<void> _submitAutomaticReschedule() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = _task['id'] ?? 0;
+      String reason = "ReprogramaciÃ³n automÃ¡tica" + (_selectedReason != null ? ": $_selectedReason. " : ". ");
+      Map<String, dynamic> resultData = {
+        'who_received': _selectedRecipient,
+        'verification_result': 'ReprogramaciÃ³n automÃ¡tica',
+      };
+
+      if (_selectedRecipient == 'Familiar') {
+        reason += "RecibiÃ³ familiar ${_familiarNameController.text} ($_selectedRelationship).";
+        resultData['relationship'] = _selectedRelationship;
+        resultData['familiar_dni'] = _familiarDniController.text;
+        resultData['familiar_name'] = _familiarNameController.text;
+
+        // Upload signature
+        final signatureBytes = await _signatureKey.currentState?.exportPng();
+        if (signatureBytes != null) {
+          final uploadInfo = await _taskService.requestUploadUrl(
+            taskId,
+            label: 'firma_familiar',
+            contentType: 'image/png',
+          );
+          await _taskService.uploadImageToS3(uploadInfo['upload_url'], signatureBytes);
+          final s3Key = uploadInfo['s3_key'];
+          resultData['signature_s3_key'] = s3Key;
+          
+          await _taskService.confirmUpload(
+            taskId,
+            s3Key: s3Key,
+            label: 'firma_familiar',
+            tag: 'Firma de familiar: ${_familiarNameController.text}',
+          );
+        }
+      } else {
+        reason += "No se encontrÃ³ a nadie en el domicilio.";
+      }
+
+      await _taskService.rescheduleTask(
+        taskId, 
+        reason: reason,
+        resultData: resultData,
+      );
+      
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _saveProgress() async {
+    try {
+      final taskId = _task['id'];
+      if (taskId == null) return;
+
+      final draftData = {
+        'selected_recipient': _selectedRecipient,
+        'selected_relationship': _selectedRelationship,
+        'familiar_name': _familiarNameController.text,
+        'familiar_dni': _familiarDniController.text,
+        'housing_type': _housingType,
+        'is_garage_at_home': _isGarageAtHome,
+        'has_security': _hasSecurity,
+        'has_cameras': _hasCameras,
+        'access_type': _accessType,
+        'is_roofing': _isRoofing,
+        'is_basement': _isBasement,
+        'garage_direction': _garageDirection,
+        'street_accessibility': _streetAccessibility,
+        'verification_result': _verificationResult,
+        'observations': _observationsController.text,
+      };
+
+      await _taskService.updateProgress(
+        taskId is int ? taskId : int.parse('$taskId'),
+        currentStep: _currentStep,
+        draftData: draftData,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep == 0) {
+      Navigator.pop(context);
+    } else if (_currentStep == 2) {
+      setState(() {
+        _currentStep = 0;
+      });
+    } else if (_currentStep == 3 || _currentStep == 4 || _currentStep == 5) {
+      setState(() {
+        _currentStep = 2;
+      });
+    } else if (_currentStep == 9) {
+      setState(() {
+        _currentStep = 8;
+      });
+    } else if (_currentStep == 8) {
+      setState(() {
+        _currentStep = 7;
+      });
+    } else if (_currentStep == 7) {
+      setState(() {
+        _currentStep = 6;
+      });
+    } else if (_currentStep == 6) {
+      setState(() {
+        _currentStep = 3;
+      });
+    } else {
+      setState(() {
+        _currentStep--;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_submitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF4FA4B5)),
+              const SizedBox(height: 16),
+              Text(
+                'Enviando informaciÃ³n...',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    bool showAppBar = _currentStep != 10 && _currentStep != 5;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: showAppBar
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF002B4B)),
+                onPressed: _previousStep,
+              ),
+              title: Text(
+                'VerificaciÃ³n de domicilio',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF002B4B),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/warning.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.red,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  onPressed: () {},
+                ),
+              ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(10),
+                child: VerificationProgressBar(
+                  currentStep: _currentStep,
+                  totalSteps: (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie') ? 3 : 6,
+                ),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        child: _loadingDetail
+            ? const Center(child: CircularProgressIndicator())
+            : _buildCurrentStep(),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return TaskInfoWidget(
+          task: _task,
+          onContinue: _nextStep,
+          isSubmitting: _startingTask,
+          extraFields: [
+            // Warning banner about GPS proximity
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6F8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFCCD5DB)),
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset('assets/alarm.svg', width: 20, height: 20,
+                    colorFilter: const ColorFilter.mode(Color(0xFF002B4B), BlendMode.srcIn)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Antes de comenzar\nRecuerda estar en la ubicaciÃ³n de la tarea antes de comenzar',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFF002B4B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      case 1:
+        return BeforeStartingStep(
+          onContinue: _nextStep,
+          onBack: _previousStep,
+        );
+      case 2:
+        return WhoReceivedStep(
+          selectedRecipient: _selectedRecipient,
+          task: _task,
+          onRecipientSelected: (val) {
+            setState(() {
+              _selectedRecipient = val;
+              if (val == 'Nadie') {
+                _submitAutomaticReschedule(); // Reprogram directly, no form
+              }
+            });
+          },
+          onBack: _previousStep,
+          onContinue: _nextStep,
+        );
+      case 3:
+        return DocumentValidationStep(
+          taskId: _task['id'] ?? 0,
+          dniUploaded: _dniUploaded,
+          dniTag: _dniTag,
+          dniPath: _dniPath,
+          breveteUploaded: _breveteUploaded,
+          breveteTag: _breveteTag,
+          brevetePath: _brevetePath,
+          reciboUploaded: _reciboUploaded,
+          reciboTag: _reciboTag,
+          reciboPath: _reciboPath,
+          onDniUploadedChanged: (val, res) => setState(() {
+            _dniUploaded = val;
+            if (val) _dniPath = res?['localPath'];
+          }),
+          onDniTagChanged: (val) => setState(() => _dniTag = val),
+          onBreveteUploadedChanged: (val, res) => setState(() {
+            _breveteUploaded = val;
+            if (val) _brevetePath = res?['localPath'];
+          }),
+          onBreveteTagChanged: (val) => setState(() => _breveteTag = val),
+          onReciboUploadedChanged: (val, res) => setState(() {
+            _reciboUploaded = val;
+            if (val) _reciboPath = res?['localPath'];
+          }),
+          onReciboTagChanged: (val) => setState(() => _reciboTag = val),
+          onBack: _previousStep,
+          onContinue: () => setState(() => _currentStep = 6),
+        );
+      case 4:
+        return FamiliarFormStep(
+          selectedRelationship: _selectedRelationship,
+          signatureKey: _signatureKey,
+          dniController: _familiarDniController,
+          nameController: _familiarNameController,
+          onRelationshipChanged: (val) =>
+              setState(() => _selectedRelationship = val),
+          onBack: _previousStep,
+          onContinue: _nextStep, // Now goes to Reschedule screen (Step 5)
+        );
+      case 5:
+        return FlowRescheduleFormStep(
+          title: _selectedRecipient == 'Familiar' ? 'Cliente no se encontraba' : 'Nadie en el domicilio',
+          subtitle: 'Se procederÃ¡ a la reprogramaciÃ³n de la visita.',
+          reasons: const [
+            'Cliente no se encontraba',
+            'Solo se encontrÃ³ a un familiar',
+            'DirecciÃ³n no existe / incorrecta',
+            'Zona peligrosa',
+            'Otro'
+          ],
+          selectedReason: _selectedReason,
+          onReasonChanged: (v) => setState(() => _selectedReason = v),
+          observationsController: _observationsController,
+          onBack: () => setState(() => _currentStep = 2),
+          onFinalizar: _submitAutomaticReschedule,
+          showBackButton: _selectedRecipient != 'Nadie',
+        );
+      case 6:
+        return HousingStep(
+          housingType: _housingType,
+          mapsController: _mapsController,
+          onHousingTypeChanged: (val) => setState(() => _housingType = val),
+          onBack: _previousStep,
+          onContinue: () => setState(() => _currentStep = 7),
+        );
+      case 7:
+        return GarageStep(
+          taskId: _task['id'] ?? 0,
+          isGarageAtHome: _isGarageAtHome,
+          garageFacadeUploaded: _garageFacadeUploaded,
+          garageFacadeTag: _garageFacadeTag,
+          garageFacadePath: _garageFacadePath,
+          hasSecurity: _hasSecurity,
+          hasCameras: _hasCameras,
+          garageCamerasUploaded: _garageCamerasUploaded,
+          garageCamerasTag: _garageCamerasTag,
+          garageCamerasPath: _garageCamerasPath,
+          accessType: _accessType,
+          isRoofing: _isRoofing,
+          garageRoofingUploaded: _garageRoofingUploaded,
+          garageRoofingTag: _garageRoofingTag,
+          garageRoofingPath: _garageRoofingPath,
+          isBasement: _isBasement,
+          garageBasementUploaded: _garageBasementUploaded,
+          garageBasementTag: _garageBasementTag,
+          garageBasementPath: _garageBasementPath,
+          garageDirection: _garageDirection,
+          garageDirectionUploaded: _garageDirectionUploaded,
+          garageDirectionTag: _garageDirectionTag,
+          garageDirectionPath: _garageDirectionPath,
+          streetAccessibility: _streetAccessibility,
+          streetAccessibilityUploaded: _streetAccessibilityUploaded,
+          streetAccessibilityTag: _streetAccessibilityTag,
+          streetAccessibilityPath: _streetAccessibilityPath,
+          mapsController: _mapsController,
+          extraImagesCount: _extraGarageImagesCount,
+          isCocheraFuera: _isCocheraFuera,
+          extraImagesUploaded: _extraGarageImagesUploaded,
+          extraImagesTags: _extraGarageImagesTags,
+          extraImagesPaths: _extraGarageImagesPaths,
+          onGarageAtHomeChanged: (val) {
+            setState(() {
+              _isGarageAtHome = val;
+              if (val == true) _isCocheraFuera = false;
+              if (val == false) _isCocheraFuera = true;
+            });
+          },
+          onCocheraFueraChanged: (val) =>
+              setState(() => _isCocheraFuera = val ?? false),
+          onFacadeUploadedChanged: (val, res) => setState(() {
+            _garageFacadeUploaded = val;
+            if (val) _garageFacadePath = res?['localPath'];
+          }),
+          onFacadeTagChanged: (val) => setState(() => _garageFacadeTag = val),
+          onSecurityChanged: (val) => setState(() => _hasSecurity = val),
+          onCamerasChanged: (val) => setState(() => _hasCameras = val),
+          onCamerasUploadedChanged: (val, res) => setState(() {
+            _garageCamerasUploaded = val;
+            if (val) _garageCamerasPath = res?['localPath'];
+          }),
+          onCamerasTagChanged: (val) => setState(() => _garageCamerasTag = val),
+          onAccessTypeChanged: (val) => setState(() => _accessType = val),
+          onRoofingChanged: (val) => setState(() => _isRoofing = val),
+          onRoofingUploadedChanged: (val, res) => setState(() {
+            _garageRoofingUploaded = val;
+            if (val) _garageRoofingPath = res?['localPath'];
+          }),
+          onRoofingTagChanged: (val) => setState(() => _garageRoofingTag = val),
+          onBasementChanged: (val) => setState(() => _isBasement = val),
+          onBasementUploadedChanged: (val, res) => setState(() {
+            _garageBasementUploaded = val;
+            if (val) _garageBasementPath = res?['localPath'];
+          }),
+          onBasementTagChanged: (val) =>
+              setState(() => _garageBasementTag = val),
+          onGarageDirectionChanged: (val) =>
+              setState(() => _garageDirection = val),
+          onDirectionUploadedChanged: (val, res) => setState(() {
+            _garageDirectionUploaded = val;
+            if (val) _garageDirectionPath = res?['localPath'];
+          }),
+          onDirectionTagChanged: (val) =>
+              setState(() => _garageDirectionTag = val),
+          onStreetAccessibilityChanged: (val) =>
+              setState(() => _streetAccessibility = val),
+          onAccessibilityUploadedChanged: (val, res) => setState(() {
+            _streetAccessibilityUploaded = val;
+            if (val) _streetAccessibilityPath = res?['localPath'];
+          }),
+          onAccessibilityTagChanged: (val) =>
+              setState(() => _streetAccessibilityTag = val),
+          onAddExtraImage: () {
+            if (_extraGarageImagesCount < 3) {
+              setState(() => _extraGarageImagesCount++);
+            }
+          },
+          onExtraImageUploadedChanged: (index, val, res) {
+            setState(() {
+              _extraGarageImagesUploaded[index] = val;
+              if (val) _extraGarageImagesPaths[index] = res?['localPath'];
+            });
+          },
+          onExtraImageTagChanged: (index, val) {
+            setState(() {
+              _extraGarageImagesTags[index] = val;
+            });
+          },
+          onBack: _previousStep,
+          onContinue: () => setState(() => _currentStep = 8),
+        );
+      case 8:
+        return VerificationResultStep(
+          verificationResult: _verificationResult,
+          observationsController: _observationsController,
+          onResultChanged: (val) => setState(() => _verificationResult = val),
+          onBack: _previousStep,
+          onContinue: () => setState(() => _currentStep = 9),
+        );
+      case 9:
+        return VerificationSummaryStep(
+          selectedRecipient: _selectedRecipient,
+          selectedRelationship: _selectedRelationship,
+          familiarName: _familiarNameController.text,
+          familiarDni: _familiarDniController.text,
+          isSignatureCaptured: !(_signatureKey.currentState?.isEmpty ?? true),
+          dniUploaded: _dniUploaded,
+          reciboUploaded: _reciboUploaded,
+          breveteUploaded: _breveteUploaded,
+          housingType: _housingType,
+          isGarageAtHome: _isGarageAtHome,
+          hasCameras: _hasCameras,
+          accessType: _accessType,
+          isRoofing: _isRoofing,
+          isBasement: _isBasement,
+          garageDirection: _garageDirection,
+          streetAccessibility: _streetAccessibility,
+          onEditTaskInfo: () => setState(() => _currentStep = 0),
+          onEditRecipient: () => setState(() => _currentStep = 2),
+          onEditDocuments: () => setState(() => _currentStep = 3),
+          onEditHousing: () => setState(() => _currentStep = 6),
+          onEditGarage: () => setState(() => _currentStep = 7),
+          onEditAll: () => setState(() => _currentStep = 0),
+          task: _task,
+          onSend: () => _showConfirmationBottomSheet(context),
+        );
+      case 10:
+        return SuccessStep(onBackToStart: () => Navigator.pop(context));
+      default:
+        return TaskInfoWidget(task: _task, onContinue: _nextStep);
+    }
+  }
+
+  Future<void> _submitTask() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = _task['id'] ?? 0;
+      String? signatureS3Key;
+
+      if (_selectedRecipient == 'Familiar') {
+        final signatureBytes = await _signatureKey.currentState?.exportPng();
+        if (signatureBytes != null) {
+          final uploadInfo = await _taskService.requestUploadUrl(
+            taskId,
+            label: 'firma_familiar',
+            contentType: 'image/png',
+          );
+          final uploadUrl = uploadInfo['upload_url'];
+          signatureS3Key = uploadInfo['s3_key'];
+          await _taskService.uploadImageToS3(uploadUrl, signatureBytes);
+          await _taskService.confirmUpload(
+            taskId,
+            s3Key: signatureS3Key!,
+            label: 'firma_familiar',
+            tag: 'Firma de familiar: ${_familiarNameController.text}',
+          );
+        }
+      }
+
+      await _taskService.submitTask(
+        taskId,
+        resultData: {
+          'who_received': _selectedRecipient,
+          'relationship': _selectedRelationship,
+          'familiar_dni': _familiarDniController.text,
+          'familiar_name': _familiarNameController.text,
+          'signature_s3_key': signatureS3Key,
+          'documents': {
+            'dni_uploaded': _dniUploaded,
+            'brevete_uploaded': _breveteUploaded,
+            'recibo_uploaded': _reciboUploaded,
+          },
+          'housing_type': _housingType,
+          'garage': {
+            'is_at_home': _isGarageAtHome,
+            'is_cochera_fuera': _isCocheraFuera,
+            'has_security': _hasSecurity,
+            'has_cameras': _hasCameras,
+            'access_type': _accessType,
+            'is_roofing': _isRoofing,
+            'is_basement': _isBasement,
+            'garage_direction': _garageDirection,
+            'street_accessibility': _streetAccessibility,
+          },
+          'verification_result': _verificationResult,
+        },
+        observations: _observationsController.text,
+      );
+      if (mounted) setState(() => _currentStep = 10);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al enviar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  void _showConfirmationBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      builder: (context) {
+        return ConfirmationSheet(
+          onCancel: () => Navigator.pop(context),
+          onConfirm: () async {
+            Navigator.pop(context);
+            await _submitTask();
+          },
+        );
+      },
+    );
+  }
+}
