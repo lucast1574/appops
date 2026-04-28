@@ -207,14 +207,14 @@ class FlowImagePreview extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFB9DBE1).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
-                  image: imagePath != null ? DecorationImage(
+                  image: (imagePath != null && imagePath!.isNotEmpty) ? DecorationImage(
                     image: imagePath!.startsWith('http')
                       ? NetworkImage(imagePath!) as ImageProvider
                       : FileImage(File(imagePath!)),
                     fit: BoxFit.cover,
                   ) : null,
                 ),
-                child: imagePath == null ? const Icon(Icons.image_outlined, color: Color(0xFF002B4B)) : null,
+                child: (imagePath == null || imagePath!.isEmpty) ? const Icon(Icons.image_outlined, color: Color(0xFF002B4B)) : null,
               ),
               const SizedBox(width: 16),
               Expanded(
