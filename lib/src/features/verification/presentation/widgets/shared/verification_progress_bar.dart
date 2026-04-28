@@ -3,10 +3,12 @@ import '../../../../../shared/widgets/flow_progress_bar.dart';
 
 class VerificationProgressBar extends StatelessWidget {
   final int currentStep;
+  final int totalSteps;
 
   const VerificationProgressBar({
     super.key,
     required this.currentStep,
+    this.totalSteps = 6,
   });
 
   @override
@@ -31,7 +33,7 @@ class VerificationProgressBar extends StatelessWidget {
     }
 
     return FlowProgressBar(
-      totalSteps: 6,
+      totalSteps: totalSteps,
       activeIndex: activeIndex,
       allComplete: currentStep == 9,
     );

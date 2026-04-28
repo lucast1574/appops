@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../shared/widgets/flow_progress_bar.dart';
-import '../../../../shared/widgets/flow_confirmation_sheet.dart';
-import '../../../../shared/widgets/flow_success_step.dart';
-
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/delivery_info_step.dart';
 import '../widgets/steps/delivery_confirmation_step.dart';
 import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/delivery_summary_step.dart';
+import '../../../../shared/widgets/shared_widgets.dart';
 
 class DeliveryPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -63,7 +60,6 @@ class _DeliveryPageState extends State<DeliveryPage> {
               if (draft['client_name'] != null) _clientNameController.text = draft['client_name'];
               if (draft['dni'] != null) _dniController.text = draft['dni'];
               if (draft['deliver_vehicle'] != null) _deliverVehicle = draft['deliver_vehicle'];
-              if (draft['delivery_time'] != null) _deliveryTimeController.text = draft['delivery_time'];
               if (draft['km'] != null) _kmController.text = draft['km'];
               if (draft['unit_type'] != null) _unitType = draft['unit_type'];
               if (draft['marca'] != null) _selectedMarca = draft['marca'];
@@ -88,23 +84,32 @@ class _DeliveryPageState extends State<DeliveryPage> {
   final TextEditingController _clientNameController = TextEditingController();
   final TextEditingController _dniController = TextEditingController();
   bool? _deliverVehicle;
-  bool _dniPhotoUploaded = false; String? _dniPhotoTag;
+  bool _dniPhotoUploaded = false; String? _dniPhotoTag; String? _dniPhotoPath;
 
   // Step 2 — confirmation
-  bool _clientPhotoUploaded = false; String? _clientPhotoTag;
-  bool _checklistPhotoUploaded = false; String? _checklistPhotoTag;
-  bool _actaUploaded = false; String? _actaTag;
-  final TextEditingController _deliveryTimeController = TextEditingController();
-  bool _checklist2Uploaded = false; String? _checklist2Tag;
+  bool _clientPhotoUploaded = false; String? _clientPhotoTag; String? _clientPhotoPath;
+  bool _checklistPhotoUploaded = false; String? _checklistPhotoTag; String? _checklistPhotoPath;
+  bool _actaUploaded = false; String? _actaTag; String? _actaPhotoPath;
+  bool _checklist2Uploaded = false; String? _checklist2Tag; String? _checklist2PhotoPath;
 
   // Step 3 — inventory checklist (reused from Transfer)
   String? _selectedMarca; String? _selectedModelo; String? _selectedColor;
   String? _unitType; final TextEditingController _kmController = TextEditingController();
+  String? _selectedReason;
+  final TextEditingController _observationsController = TextEditingController();
   String? _selectedConversion; String? _selectedFuelLevel; bool? _bloqueoDesbloqueo;
   final Map<String, bool> _checklistValues = {};
 
   // 0=task, 1=delivery info, 2=confirmation, 3=checklist, 4=summary, 5=success
   int _getProgressIndex() {
+    if (_deliverVehicle == false) {
+      switch (_currentStep) {
+        case 0: return 0;
+        case 1: return 1;
+        case 2: return 2;
+        default: return 2;
+      }
+    }
     switch (_currentStep) {
       case 0: return 0;
       case 1: return 1;
@@ -113,6 +118,10 @@ class _DeliveryPageState extends State<DeliveryPage> {
       case 4: return 4;
       default: return 4;
     }
+  }
+
+  int _getTotalSteps() {
+    return _deliverVehicle == false ? 3 : 5;
   }
 
   void _nextStep() {
@@ -129,7 +138,6 @@ class _DeliveryPageState extends State<DeliveryPage> {
         'client_name': _clientNameController.text,
         'dni': _dniController.text,
         'deliver_vehicle': _deliverVehicle,
-        'delivery_time': _deliveryTimeController.text,
         'km': _kmController.text,
         'unit_type': _unitType,
         'marca': _selectedMarca,
@@ -156,7 +164,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
   }
 
   @override
-  void dispose() { _clientNameController.dispose(); _dniController.dispose(); _deliveryTimeController.dispose(); _kmController.dispose(); super.dispose(); }
+  void dispose() { _clientNameController.dispose(); _dniController.dispose(); _kmController.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +199,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         title: Text('Entrega de unidad', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 5, activeIndex: _getProgressIndex(), allComplete: _currentStep == 4)),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: _getTotalSteps(), activeIndex: _getProgressIndex(), allComplete: _currentStep == (_deliverVehicle == false ? 2 : 4))),
       ) : null,
       body: SafeArea(
         child: _buildCurrentStep(),
@@ -205,25 +213,57 @@ class _DeliveryPageState extends State<DeliveryPage> {
     switch (_currentStep) {
       case 0: return TaskInfoWidget(task: currentTask, onContinue: _nextStep);
       case 1: return DeliveryInfoStep(
+        taskId: widget.task['id'] ?? 0,
         clientNameController: _clientNameController, dniController: _dniController,
-        deliverVehicle: _deliverVehicle, dniPhotoUploaded: _dniPhotoUploaded, dniPhotoTag: _dniPhotoTag,
+        deliverVehicle: _deliverVehicle, 
+        dniPhotoUploaded: _dniPhotoUploaded, dniPhotoTag: _dniPhotoTag, dniPhotoPath: _dniPhotoPath,
         onDeliverVehicleChanged: (v) => setState(() => _deliverVehicle = v),
-        onDniPhotoUploadedChanged: (v) => setState(() => _dniPhotoUploaded = v),
+        onDniPhotoUploadedChanged: (v, path) => setState(() { _dniPhotoUploaded = v; _dniPhotoPath = path; }),
         onDniPhotoTagChanged: (v) => setState(() => _dniPhotoTag = v),
-        onBack: _previousStep, onContinue: _nextStep,
+        onBack: _previousStep, 
+        onContinue: () {
+          if (_deliverVehicle == false) {
+            setState(() => _currentStep = 2); // Go to Reschedule step
+            _saveProgress();
+          } else {
+            _nextStep();
+          }
+        },
+        isReversed: true,
       );
-      case 2: return DeliveryConfirmationStep(
+      case 2: 
+        if (_deliverVehicle == false) {
+          return FlowRescheduleFormStep(
+            title: 'Vehículo no entregado',
+            yesNoValue: _deliverVehicle,
+            onYesNoChanged: (v) => setState(() => _deliverVehicle = v),
+            reasons: const [
+              'No es el color que se pidió',
+              'El cliente no se encontraba',
+              'El vehículo presenta daños',
+              'Documentación incompleta',
+              'Otro'
+            ],
+            selectedReason: _selectedReason,
+            onReasonChanged: (v) => setState(() => _selectedReason = v),
+            observationsController: _observationsController,
+            onBack: () => setState(() => _currentStep = 1),
+            onFinalizar: _submitTask,
+            isReversed: true,
+          );
+        }
+        return DeliveryConfirmationStep(
+        taskId: widget.task['id'] ?? 0,
         deliverVehicle: _deliverVehicle,
-        clientPhotoUploaded: _clientPhotoUploaded, clientPhotoTag: _clientPhotoTag,
-        checklistPhotoUploaded: _checklistPhotoUploaded, checklistPhotoTag: _checklistPhotoTag,
-        actaUploaded: _actaUploaded, actaTag: _actaTag,
-        deliveryTimeController: _deliveryTimeController,
-        checklist2Uploaded: _checklist2Uploaded, checklist2Tag: _checklist2Tag,
+        clientPhotoUploaded: _clientPhotoUploaded, clientPhotoTag: _clientPhotoTag, clientPhotoPath: _clientPhotoPath,
+        checklistPhotoUploaded: _checklistPhotoUploaded, checklistPhotoTag: _checklistPhotoTag, checklistPhotoPath: _checklistPhotoPath,
+        actaUploaded: _actaUploaded, actaTag: _actaTag, actaPhotoPath: _actaPhotoPath,
+        checklist2Uploaded: _checklist2Uploaded, checklist2Tag: _checklist2Tag, checklist2PhotoPath: _checklist2PhotoPath,
         onDeliverVehicleChanged: (v) => setState(() => _deliverVehicle = v),
-        onClientPhotoUploadedChanged: (v) => setState(() => _clientPhotoUploaded = v), onClientPhotoTagChanged: (v) => setState(() => _clientPhotoTag = v),
-        onChecklistPhotoUploadedChanged: (v) => setState(() => _checklistPhotoUploaded = v), onChecklistPhotoTagChanged: (v) => setState(() => _checklistPhotoTag = v),
-        onActaUploadedChanged: (v) => setState(() => _actaUploaded = v), onActaTagChanged: (v) => setState(() => _actaTag = v),
-        onChecklist2UploadedChanged: (v) => setState(() => _checklist2Uploaded = v), onChecklist2TagChanged: (v) => setState(() => _checklist2Tag = v),
+        onClientPhotoUploadedChanged: (v, path) => setState(() { _clientPhotoUploaded = v; _clientPhotoPath = path; }), onClientPhotoTagChanged: (v) => setState(() => _clientPhotoTag = v),
+        onChecklistPhotoUploadedChanged: (v, path) => setState(() { _checklistPhotoUploaded = v; _checklistPhotoPath = path; }), onChecklistPhotoTagChanged: (v) => setState(() => _checklistPhotoTag = v),
+        onActaUploadedChanged: (v, path) => setState(() { _actaUploaded = v; _actaPhotoPath = path; }), onActaTagChanged: (v) => setState(() => _actaTag = v),
+        onChecklist2UploadedChanged: (v, path) => setState(() { _checklist2Uploaded = v; _checklist2PhotoPath = path; }), onChecklist2TagChanged: (v) => setState(() => _checklist2Tag = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
       case 3: return TransferChecklistStep(
@@ -246,7 +286,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         task: currentTask,
         clientName: _clientNameController.text, clientDni: _dniController.text, deliverVehicle: _deliverVehicle,
         clientPhotoUploaded: _clientPhotoUploaded, checklistPhotoUploaded: _checklistPhotoUploaded,
-        actaUploaded: _actaUploaded, deliveryTime: _deliveryTimeController.text,
+        actaUploaded: _actaUploaded,
         checklistChecked: _checklistValues.values.where((v) => v).length,
         checklistTotal: _checklistValues.length,
         onEditTaskInfo: () => setState(() => _currentStep = 0),
@@ -274,7 +314,8 @@ class _DeliveryPageState extends State<DeliveryPage> {
           'client_name': _clientNameController.text,
           'dni': _dniController.text,
           'deliver_vehicle': _deliverVehicle,
-          'delivery_time': _deliveryTimeController.text,
+          'reschedule_reason': _selectedReason,
+          'observations': _observationsController.text,
         },
         observations: '',
       );

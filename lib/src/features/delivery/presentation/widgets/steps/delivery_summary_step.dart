@@ -10,7 +10,6 @@ class DeliverySummaryStep extends StatelessWidget {
   final bool clientPhotoUploaded;
   final bool checklistPhotoUploaded;
   final bool actaUploaded;
-  final String? deliveryTime;
   final int checklistChecked;
   final int checklistTotal;
   final VoidCallback onEditTaskInfo;
@@ -25,7 +24,7 @@ class DeliverySummaryStep extends StatelessWidget {
     required this.task,
     this.clientName, this.clientDni, this.deliverVehicle,
     required this.clientPhotoUploaded, required this.checklistPhotoUploaded,
-    required this.actaUploaded, this.deliveryTime,
+    required this.actaUploaded,
     required this.checklistChecked, required this.checklistTotal,
     required this.onEditTaskInfo, required this.onEditDeliveryInfo,
     required this.onEditConfirmation, required this.onEditChecklist,
@@ -61,7 +60,6 @@ class DeliverySummaryStep extends StatelessWidget {
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Confirmación entrega', onEdit: onEditConfirmation, children: [
                   FlowSummaryStatus(label: 'Foto de entrega (al cliente)', isComplete: clientPhotoUploaded),
-                  FlowSummaryItem(label: 'Hora efectiva de entrega', value: deliveryTime ?? '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Listado Inventario', onEdit: onEditChecklist, children: [

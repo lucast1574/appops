@@ -47,16 +47,36 @@ class FlowYesNoQuestion extends StatelessWidget {
   final String question;
   final bool? currentValue;
   final Function(bool) onChanged;
+  final bool isReversed;
 
   const FlowYesNoQuestion({
     super.key,
     required this.question,
     required this.currentValue,
     required this.onChanged,
+    this.isReversed = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final widgets = [
+      Expanded(
+        child: FlowToggleOption(
+          text: 'Si',
+          isActive: currentValue == true,
+          onTap: () => onChanged(true),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: FlowToggleOption(
+          text: 'No',
+          isActive: currentValue == false,
+          onTap: () => onChanged(false),
+        ),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -70,23 +90,7 @@ class FlowYesNoQuestion extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Row(
-          children: [
-            Expanded(
-              child: FlowToggleOption(
-                text: 'Si',
-                isActive: currentValue == true,
-                onTap: () => onChanged(true),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FlowToggleOption(
-                text: 'No',
-                isActive: currentValue == false,
-                onTap: () => onChanged(false),
-              ),
-            ),
-          ],
+          children: isReversed ? widgets.reversed.toList() : widgets,
         ),
       ],
     );

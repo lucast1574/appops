@@ -14,13 +14,14 @@ import '../widgets/steps/before_starting_step.dart';
 import '../widgets/steps/who_received_step.dart';
 import '../widgets/steps/document_validation_step.dart';
 import '../widgets/steps/familiar_form_step.dart';
-import '../widgets/steps/reschedule_result_step.dart';
 import '../widgets/steps/housing_step.dart';
 import '../widgets/steps/garage_step.dart';
 import '../widgets/steps/verification_result_step.dart';
 import '../widgets/steps/verification_summary_step.dart';
 import '../widgets/steps/success_step.dart';
 import '../../../../shared/widgets/signature_pad.dart';
+import '../../../../shared/widgets/shared_widgets.dart';
+import '../../../../shared/widgets/flow_reschedule_form_step.dart';
 
 class VerificationPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -98,6 +99,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
   // States for Result (Step 8)
   String? _verificationResult;
+  String? _selectedReason;
   final TextEditingController _observationsController = TextEditingController();
 
   @override
@@ -222,12 +224,10 @@ class _VerificationPageState extends State<VerificationPage> {
     setState(() {
       if (_currentStep == 2 && _selectedRecipient == 'Cliente') {
         _currentStep = 3;
-      } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
-        _currentStep = 4;
-      } else if (_currentStep == 2 && _selectedRecipient == 'Nadie') {
-        _currentStep = 5; // Automatic Reschedule screen
+      } else if (_currentStep == 2 && (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie')) {
+        _currentStep = 5; // Go to Reschedule Form
       } else if (_currentStep == 4) {
-        _currentStep = 5; // From Familiar form to Reschedule screen
+        _currentStep = 5;
       } else {
         _currentStep++;
       }
@@ -241,7 +241,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
     try {
       final int taskId = _task['id'] ?? 0;
-      String reason = "Reprogramación automática: ";
+      String reason = "Reprogramación automática: $_selectedReason";
       Map<String, dynamic> resultData = {
         'who_received': _selectedRecipient,
         'verification_result': 'Reprogramación automática',
@@ -385,11 +385,9 @@ class _VerificationPageState extends State<VerificationPage> {
       );
     }
 
-    bool showAppBar = _currentStep < 10;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: showAppBar
+      appBar: _currentStep != 10
           ? AppBar(
               backgroundColor: Colors.white,
               elevation: 0,
@@ -398,7 +396,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 onPressed: _previousStep,
               ),
               title: Text(
-                'Verificación',
+                'Verificación de domicilio',
                 style: GoogleFonts.inter(
                   color: const Color(0xFF002B4B),
                   fontWeight: FontWeight.bold,
@@ -407,25 +405,25 @@ class _VerificationPageState extends State<VerificationPage> {
               ),
               centerTitle: true,
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: TextButton.icon(
-                    onPressed: () => _showRescheduleDialog(context),
-                    icon: SvgPicture.asset(
-                      'assets/warning.svg',
-                      width: 18, height: 18,
-                      colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-                    ),
-                    label: Text(
-                      'Reportar',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red),
+                IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/warning.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.red,
+                      BlendMode.srcIn,
                     ),
                   ),
+                  onPressed: () {},
                 ),
               ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(10),
-                child: VerificationProgressBar(currentStep: _currentStep),
+                child: VerificationProgressBar(
+                  currentStep: _currentStep,
+                  totalSteps: (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie') ? 3 : 6,
+                ),
               ),
             )
           : null,
@@ -530,12 +528,21 @@ class _VerificationPageState extends State<VerificationPage> {
           onContinue: _nextStep, // Now goes to Reschedule screen (Step 5)
         );
       case 5:
-        return RescheduleResultStep(
-          onBack: _previousStep,
-          onContinue: _submitAutomaticReschedule, // Finish and trigger auto-reschedule
-          message: _selectedRecipient == 'Familiar' 
-            ? 'Se ha reprogramado la visita al no encontrar al cliente.'
-            : 'Se ha reprogramado la visita al no encontrar nadie en el domicilio.',
+        return FlowRescheduleFormStep(
+          title: _selectedRecipient == 'Familiar' ? 'Cliente no se encontraba' : 'Nadie en el domicilio',
+          subtitle: 'Se procederá a la reprogramación de la visita.',
+          reasons: const [
+            'Cliente no se encontraba',
+            'Solo se encontró a un familiar',
+            'Dirección no existe / incorrecta',
+            'Zona peligrosa',
+            'Otro'
+          ],
+          selectedReason: _selectedReason,
+          onReasonChanged: (v) => setState(() => _selectedReason = v),
+          observationsController: _observationsController,
+          onBack: () => setState(() => _currentStep = 2),
+          onFinalizar: _submitAutomaticReschedule,
         );
       case 6:
         return HousingStep(
@@ -782,33 +789,4 @@ class _VerificationPageState extends State<VerificationPage> {
       },
     );
   }
-
-  void _showRescheduleDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('¿Reprogramar tarea?', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Text('La tarea volverá a estado pendiente.', style: GoogleFonts.inter()),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () async {
-              final nav = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(ctx);
-              try {
-                await _taskService.rescheduleTask(_task['id'] ?? 0);
-                if (mounted) nav.pop();
-              } catch (e) {
-                if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
-              }
-            },
-            child: Text('Reprogramar', style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
-

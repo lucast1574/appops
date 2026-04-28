@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/widgets/flow_step_navigation.dart';
-import '../../../../../shared/widgets/flow_upload_button.dart';
 import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class RecoveryDocsStep extends StatelessWidget {
@@ -104,6 +104,37 @@ class RecoveryDocsStep extends StatelessWidget {
     const SizedBox(height: 12),
     uploaded
         ? FlowImagePreview(fileName: fileName, tag: tag, onDeleteImage: () { onUploadChanged(false); onTagChanged(null); }, onDeleteTag: () => onTagChanged(null), onTagAdded: (val) => onTagChanged(val))
-        : FlowUploadButton(text: 'Tomar foto', iconAsset: 'assets/CameraPlus.svg', onTap: () => onUploadChanged(true)),
+        : GestureDetector(
+            onTap: () => onUploadChanged(true),
+            child: Container(
+              width: double.infinity,
+              height: 88,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F0F3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFB9DBE1).withValues(alpha: 0.5)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/CameraPlus.svg',
+                    width: 32,
+                    height: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tomar foto',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF002B4B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
   ]);
 }
