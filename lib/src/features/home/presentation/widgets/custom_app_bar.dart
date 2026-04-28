@@ -13,7 +13,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Color dividerColor;
   final double? titleSize;
 
-  final VoidCallback? onNotificationTap;
+  final Future<void> Function()? onNotificationTap;
 
   const CustomAppBar({
     super.key,
@@ -70,10 +70,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _handleTap() async {
     final cb = widget.onNotificationTap;
-    if (cb != null) cb();
+    if (cb != null) {
+      await cb();
+    }
     // After visiting the screen the badge may have changed (user could
     // have marked things read), refresh once we come back.
-    await Future<void>.delayed(const Duration(milliseconds: 500));
     if (mounted) _refresh();
   }
 

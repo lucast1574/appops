@@ -37,8 +37,8 @@ class _MainPageState extends State<MainPage> {
         headerColor: _headerColor,
         dividerColor: _dividerColor,
         titleSize: _selectedIndex == 1 ? 16 : null,
-        onNotificationTap: () {
-          Navigator.push(
+        onNotificationTap: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const NotificationsPage()),
           );

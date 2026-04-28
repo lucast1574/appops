@@ -58,7 +58,7 @@ class FlowPhotoInput extends StatelessWidget {
                     context: context,
                   );
                   if (result != null) {
-                    onChanged(true, result['downloadUrl']);
+                    onChanged(true, result);
                   }
                 },
                 child: Container(
