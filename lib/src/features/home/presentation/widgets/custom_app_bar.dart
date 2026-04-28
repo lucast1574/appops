@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../notifications/data/notifications_service.dart';
+import '../../../chat/data/chat_unread_service.dart';
+import '../../../chat/presentation/pages/chat_inbox_page.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -13,7 +15,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Color dividerColor;
   final double? titleSize;
 
-  final Future<void> Function()? onNotificationTap;
+  final VoidCallback? onNotificationTap;
 
   const CustomAppBar({
     super.key,
@@ -33,18 +35,17 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _CustomAppBarState extends State<CustomAppBar> {
-  final NotificationsService _service = NotificationsService();
+  final NotificationsService _notifService = NotificationsService();
+  final ChatUnreadService _chatService = ChatUnreadService();
   Timer? _pollTimer;
-  int _unread = 0;
+  int _unreadNotifs = 0;
+  int _unreadChats = 0;
 
   @override
   void initState() {
     super.initState();
     if (widget.showNotificationBell) {
       _refresh();
-      // Cheap polling — the unread count is a single integer, fine to
-      // ask every 60s. We pause when off-screen via AppLifecycle if we
-      // ever need to, but most operario sessions are short-lived.
       _pollTimer = Timer.periodic(
         const Duration(seconds: 60),
         (_) => _refresh(),
@@ -60,22 +61,55 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _refresh() async {
     try {
-      final n = await _service.unreadCount();
+      final n = await _notifService.unreadCount();
       if (!mounted) return;
-      setState(() => _unread = n);
-    } catch (_) {
-      // Silent fail — keep last known value.
-    }
+      setState(() => _unreadNotifs = n);
+    } catch (_) {}
+    try {
+      final c = await _chatService.unreadCount();
+      if (!mounted) return;
+      setState(() => _unreadChats = c);
+    } catch (_) {}
   }
 
-  Future<void> _handleTap() async {
+  Future<void> _handleNotifTap() async {
     final cb = widget.onNotificationTap;
-    if (cb != null) {
-      await cb();
-    }
-    // After visiting the screen the badge may have changed (user could
-    // have marked things read), refresh once we come back.
+    if (cb != null) cb();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     if (mounted) _refresh();
+  }
+
+  Future<void> _handleChatTap() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ChatInboxPage()),
+    );
+    if (mounted) _refresh();
+  }
+
+  Widget _buildBadge(int n, Color color) {
+    return Positioned(
+      top: -6, right: -8,
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          n > 99 ? '99+' : '$n',
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -101,11 +135,31 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
       ),
       actions: [
-        if (widget.showNotificationBell)
+        if (widget.showNotificationBell) ...[
+          // Chat icon (right next to the bell)
+          Padding(
+            padding: const EdgeInsets.only(right: 18),
+            child: GestureDetector(
+              onTap: _handleChatTap,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    color: widget.headerColor,
+                    size: 24,
+                  ),
+                  if (_unreadChats > 0)
+                    _buildBadge(_unreadChats, const Color(0xFF4FA4B5)),
+                ],
+              ),
+            ),
+          ),
+          // Notification bell
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
             child: GestureDetector(
-              onTap: _handleTap,
+              onTap: _handleNotifTap,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -115,38 +169,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     width: 24,
                     height: 24,
                   ),
-                  if (_unread > 0)
-                    Positioned(
-                      top: -6,
-                      right: -8,
-                      child: Container(
-                        constraints: const BoxConstraints(
-                          minWidth: 18, minHeight: 18,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE53935),
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          _unread > 99 ? '99+' : '$_unread',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                    ),
+                  if (_unreadNotifs > 0)
+                    _buildBadge(_unreadNotifs, const Color(0xFFE53935)),
                 ],
               ),
             ),
           ),
+        ],
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
