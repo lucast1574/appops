@@ -6,6 +6,10 @@ import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/delivery_info_step.dart';
 import '../widgets/steps/delivery_confirmation_step.dart';
+import '../../../transfer/presentation/widgets/steps/transfer_inventory_step.dart';
+import '../../../transfer/presentation/widgets/steps/transfer_inventory_summary_step.dart';
+import '../../../transfer/presentation/widgets/steps/transfer_inspection_step.dart';
+import '../../../transfer/presentation/widgets/steps/transfer_signatures_step.dart';
 import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/delivery_summary_step.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
@@ -24,10 +28,13 @@ class _DeliveryPageState extends State<DeliveryPage> {
   bool _submitting = false;
   bool _loadingDetail = true;
   Map<String, dynamic>? _taskDetail;
+  bool _isAutoReschedule = false;
 
   @override
   void initState() {
     super.initState();
+    _effectiveTimeController.text = "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}";
+    _kmController.addListener(() => setState(() {}));
     _fetchFullDetail();
   }
 
@@ -95,34 +102,34 @@ class _DeliveryPageState extends State<DeliveryPage> {
   // Step 3 — inventory checklist (reused from Transfer)
   String? _selectedMarca; String? _selectedModelo; String? _selectedColor;
   String? _unitType; final TextEditingController _kmController = TextEditingController();
+  final TextEditingController _effectiveTimeController = TextEditingController();
   String? _selectedReason;
   final TextEditingController _observationsController = TextEditingController();
   String? _selectedConversion; String? _selectedFuelLevel; bool? _bloqueoDesbloqueo;
   final Map<String, bool> _checklistValues = {};
 
   // 0=task, 1=delivery info, 2=confirmation, 3=checklist, 4=summary, 5=success
+  // Inventory
+  final Map<String, Map<String, dynamic>> _inventoryValues = {};
+  List<VehicleObservation> _vehicleObservations = [];
+
+  // Signatures
+  String? _signatureOperarioPath;
+  String? _signatureClientPath;
+
   int _getProgressIndex() {
     if (_deliverVehicle == false) {
       switch (_currentStep) {
         case 0: return 0;
         case 1: return 1;
         case 2: return 2;
-        default: return 2;
+        case 11: return 11; // Success
+        default: return _currentStep;
       }
     }
-    switch (_currentStep) {
-      case 0: return 0;
-      case 1: return 1;
-      case 2: return 2;
-      case 3: return 3;
-      case 4: return 4;
-      default: return 4;
-    }
+    return _currentStep;
   }
 
-  int _getTotalSteps() {
-    return _deliverVehicle == false ? 3 : 5;
-  }
 
   void _nextStep() {
     setState(() => _currentStep++);
@@ -155,6 +162,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
       debugPrint('Error saving progress: $e');
     }
   }
+
   void _previousStep() {
     if (_currentStep == 0) {
       Navigator.pop(context);
@@ -164,7 +172,14 @@ class _DeliveryPageState extends State<DeliveryPage> {
   }
 
   @override
-  void dispose() { _clientNameController.dispose(); _dniController.dispose(); _kmController.dispose(); super.dispose(); }
+  void dispose() { 
+    _observationsController.dispose(); 
+    _effectiveTimeController.dispose();
+    _kmController.dispose();
+    _clientNameController.dispose();
+    _dniController.dispose();
+    super.dispose(); 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +205,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
       );
     }
 
-    bool showAppBar = _currentStep != 5;
+    bool showAppBar = _currentStep < 9; // Success step is index 9
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: showAppBar ? AppBar(
@@ -199,7 +214,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         title: Text('Entrega de unidad', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: _getTotalSteps(), activeIndex: _getProgressIndex(), allComplete: _currentStep == (_deliverVehicle == false ? 2 : 4))),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 11, activeIndex: _getProgressIndex(), allComplete: _currentStep == 11)),
       ) : null,
       body: SafeArea(
         child: _buildCurrentStep(),
@@ -248,7 +263,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
             onReasonChanged: (v) => setState(() => _selectedReason = v),
             observationsController: _observationsController,
             onBack: () => setState(() => _currentStep = 1),
-            onFinalizar: _submitTask,
+            onFinalizar: () => _showConfirmation(context, isReschedule: true),
             isReversed: true,
           );
         }
@@ -264,10 +279,12 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onChecklistPhotoUploadedChanged: (v, path) => setState(() { _checklistPhotoUploaded = v; _checklistPhotoPath = path; }), onChecklistPhotoTagChanged: (v) => setState(() => _checklistPhotoTag = v),
         onActaUploadedChanged: (v, path) => setState(() { _actaUploaded = v; _actaPhotoPath = path; }), onActaTagChanged: (v) => setState(() => _actaTag = v),
         onChecklist2UploadedChanged: (v, path) => setState(() { _checklist2Uploaded = v; _checklist2PhotoPath = path; }), onChecklist2TagChanged: (v) => setState(() => _checklist2Tag = v),
+        effectiveTimeController: _effectiveTimeController,
+        onTimeChanged: () => setState(() {}),
         onBack: _previousStep, onContinue: _nextStep,
       );
       case 3: return TransferChecklistStep(
-        placa: currentTask['placa'], date: currentTask['date'], clientName: _clientNameController.text,
+        placa: currentTask['placa'], date: currentTask['scheduled_date'], clientName: _clientNameController.text,
         selectedMarca: _selectedMarca, selectedModelo: _selectedModelo, selectedColor: _selectedColor,
         unitType: _unitType, kmController: _kmController,
         selectedConversion: _selectedConversion, selectedFuelLevel: _selectedFuelLevel, bloqueoDesbloqueo: _bloqueoDesbloqueo,
@@ -282,21 +299,144 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onBloqueoDesbloqueoChanged: (v) => setState(() => _bloqueoDesbloqueo = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
-      case 4: return DeliverySummaryStep(
-        task: currentTask,
-        clientName: _clientNameController.text, clientDni: _dniController.text, deliverVehicle: _deliverVehicle,
-        clientPhotoUploaded: _clientPhotoUploaded, checklistPhotoUploaded: _checklistPhotoUploaded,
-        actaUploaded: _actaUploaded,
-        checklistChecked: _checklistValues.values.where((v) => v).length,
-        checklistTotal: _checklistValues.length,
-        onEditTaskInfo: () => setState(() => _currentStep = 0),
-        onEditDeliveryInfo: () => setState(() => _currentStep = 1),
-        onEditConfirmation: () => setState(() => _currentStep = 2),
-        onEditChecklist: () => setState(() => _currentStep = 3),
-        onEditAll: () => setState(() => _currentStep = 0),
-        onSend: () => _showConfirmation(context),
+      case 4: return TransferInventoryStep(
+        title: 'Listado Inventario (1/3)',
+        sections: {
+          'Entrega y Explicación de Documentación del Vehículo': [
+            'Prueba de bloqueo / desbloqueo efectiva',
+            'Pasaporte de garantía y mantenimiento',
+            'Placas de rodaje y tercera placa',
+            'Manual del conductor',
+            'Conversión GNV/GLP – Pasaporte de proveedor',
+            'Certificado de Revisión técnica complementaria vigente',
+          ],
+          'Instalaciones del Concesionario': [
+            'Explicación de talleres',
+            'Explicación para agendar cita',
+            'Explicación de activación GNV/GLP',
+          ],
+          'Inspección del Vehículo': [
+            'Limpieza y estado exterior del vehículo',
+            'Limpieza y estado interior del vehículo',
+            'Presión de llantas y niveles de líquidos (aceite, anticongelante, gasolina, otros)',
+          ],
+        },
+        inventoryValues: _inventoryValues,
+        onInventoryChanged: (key, val) => setState(() => _inventoryValues[key] = Map<String, dynamic>.from(val)),
+        onBack: _previousStep, onContinue: _nextStep,
+        isContinueEnabled: _isInventoryPart1Complete,
       );
-      case 5: return FlowSuccessStep(onBackToStart: () => Navigator.pop(context));
+      case 5: return TransferInventoryStep(
+        title: 'Listado Inventario (2/3)',
+        sections: {
+          'Detalle de Inventario': [
+            'Antena', 'Gata', 'Seguro de aros', 'Segunda llave de contacto', 
+            'Simple', 'Con control', 'Encendedor', 'Cenicero', 'Tapas de ruedas', 
+            'Tapas de remolque', 'Dado de seguro de ruedas', 'Llanta de repuesto', 
+            'Equipo multimedia', 'Pisos: Hule / Alfombra', 'Kit de emergencia:',
+            'Extintor', 'Triángulo o cono de seguridad', 'Botiquín', 'Linterna', 'Cintas reflectivas',
+          ],
+        },
+        inventoryValues: _inventoryValues,
+        onInventoryChanged: (key, val) => setState(() {
+          _inventoryValues[key] = Map<String, dynamic>.from(val);
+          if (key == 'Segunda llave de contacto' && val['value'] == false) {
+            _inventoryValues['Simple'] = {'value': null, 'obs': ''};
+            _inventoryValues['Con control'] = {'value': null, 'obs': ''};
+          } else if (key == 'Kit de emergencia:' && val['value'] == false) {
+            final kitSubItems = ['Extintor', 'Triángulo o cono de seguridad', 'Botiquín', 'Linterna', 'Cintas reflectivas'];
+            for (var item in kitSubItems) {
+              _inventoryValues[item] = {'value': null, 'obs': ''};
+            }
+          }
+        }),
+        onBack: _previousStep, onContinue: _nextStep,
+        isContinueEnabled: _isInventoryPart2Complete,
+      );
+      case 6: return TransferInventoryStep(
+        title: 'Descripción General (3/3)',
+        sections: {
+          'Descripción General': [
+            'Llave inteligente', 'Sistema antirrobo – alarma', 'Bloqueo y desbloqueo de puertas',
+            'Paneles de puertas y maletera – controles', 'Seguridad', 'Cinturones',
+            'Bolsas de aire', 'Seguro de niños', 'Ventanas y retrovisores',
+            'Aire acondicionado', 'Plumillas delanteras y traseras', 'Luz direccional delantera izquierda',
+            'Luz direccional delantera derecha', 'Luz trasera izquierda', 'Luz trasera derecha',
+            'Sensor de retroceso posterior', 'Reloj', 'Tapasoles', 'Indicadores del tablero de instrumentos',
+            'Indicadores del nivel de gasolina y aceite', 'Sistema de audio y auxiliares',
+            'Espejos exteriores', 'Faro delantero izquierdo', 'Faro delantero derecho',
+            'Luz de placa', 'Emblemas', 'Accionamiento capot', 'Accionamiento de tapa de depósito de combustible',
+            'Cámara de retroceso', 'Navegador and bluetooth', 'Porta documentos',
+          ],
+        },
+        inventoryValues: _inventoryValues,
+        onInventoryChanged: (key, val) => setState(() {
+          _inventoryValues[key] = Map<String, dynamic>.from(val);
+          if (key == 'Seguridad' && val['value'] == false) {
+            _inventoryValues['Cinturones'] = {'value': null, 'obs': ''};
+            _inventoryValues['Bolsas de aire'] = {'value': null, 'obs': ''};
+            _inventoryValues['Seguro de niños'] = {'value': null, 'obs': ''};
+          }
+        }),
+        onBack: _previousStep, onContinue: _nextStep,
+        isContinueEnabled: _isInventoryPart3Complete,
+      );
+      case 7: return TransferInspectionStep(
+        taskId: widget.task['id'] ?? 0,
+        observations: _vehicleObservations,
+        onObservationsChanged: (v) => setState(() => _vehicleObservations = v),
+        onBack: _previousStep, onContinue: _nextStep,
+      );
+      case 8: return TransferInventorySummaryStep(
+        inventoryValues: _inventoryValues,
+        onBack: _previousStep, onContinue: _nextStep,
+      );
+      case 9: return TransferSignaturesStep(
+        signatureOperarioPath: _signatureOperarioPath,
+        signatureClientPath: _signatureClientPath,
+        onOperarioSignatureChanged: (v) => setState(() => _signatureOperarioPath = v),
+        onClientSignatureChanged: (v) => setState(() => _signatureClientPath = v),
+        onBack: _previousStep, onContinue: _nextStep,
+      );
+      case 10: 
+        final docsCount = _getSectionCount(['Prueba de bloqueo / desbloqueo efectiva', 'Pasaporte de garantía y mantenimiento', 'Placas de rodaje y tercera placa', 'Manual del conductor', 'Conversión GNV/GLP – Pasaporte de proveedor', 'Certificado de Revisión técnica complementaria vigente']);
+        final facilitiesCount = _getSectionCount(['Explicación de talleres', 'Explicación para agendar cita', 'Explicación de activación GNV/GLP']);
+        final inspectionCount = _getSectionCount(['Limpieza y estado exterior del vehículo', 'Limpieza y estado interior del vehículo', 'Presión de llantas y niveles de líquidos (aceite, anticongelante, gasolina, otros)']);
+        final invDetailCount = _getSectionCount(['Antena', 'Gata', 'Seguro de aros', 'Segunda llave de contacto', 'Encendedor', 'Cenicero', 'Tapas de ruedas', 'Tapas de remolque', 'Dado de seguro de ruedas', 'Llanta de repuesto', 'Equipo multimedia', 'Pisos: Hule / Alfombra', 'Kit de emergencia:']);
+        final generalCount = _getSectionCount(['Llave inteligente', 'Sistema antirrobo – alarma', 'Bloqueo y desbloqueo de puertas', 'Paneles de puertas y maletera – controles', 'Seguridad', 'Cinturones', 'Bolsas de aire', 'Seguro de niños', 'Ventanas y retrovisores', 'Aire acondicionado', 'Plumillas delanteras y traseras', 'Luz direccional delantera izquierda', 'Luz direccional delantera derecha', 'Luz trasera izquierda', 'Luz trasera derecha', 'Sensor de retroceso posterior', 'Reloj', 'Tapasoles', 'Indicadores del tablero de instrumentos', 'Indicadores del nivel de gasolina y aceite', 'Sistema de audio y auxiliares', 'Espejos exteriores', 'Faro delantero izquierdo', 'Faro delantero derecho', 'Luz de placa', 'Emblemas', 'Accionamiento capot', 'Accionamiento de tapa de depósito de combustible', 'Cámara de retroceso', 'Navegador and bluetooth', 'Porta documentos']);
+
+        return DeliverySummaryStep(
+          task: currentTask,
+          clientName: _clientNameController.text, clientDni: _dniController.text, deliverVehicle: _deliverVehicle,
+          effectiveTime: _effectiveTimeController.text,
+          clientPhotoUploaded: _clientPhotoUploaded, checklistPhotoUploaded: _checklistPhotoUploaded,
+          actaUploaded: _actaUploaded,
+          checklistChecked: docsCount + facilitiesCount + inspectionCount + invDetailCount + generalCount,
+          checklistTotal: 6 + 3 + 3 + 13 + 31,
+          observationsCount: _vehicleObservations.length,
+          sectionCounts: {
+            'docs': '$docsCount/6',
+            'facilities': '$facilitiesCount/3',
+            'inspection': '$inspectionCount/3',
+            'inventory': '$invDetailCount/20',
+            'general': '$generalCount/31',
+          },
+          hasOperarioSignature: _signatureOperarioPath != null,
+          hasClientSignature: _signatureClientPath != null,
+          onEditTaskInfo: () => setState(() => _currentStep = 0),
+          onEditDeliveryInfo: () => setState(() => _currentStep = 1),
+          onEditConfirmation: () => setState(() => _currentStep = 2),
+          onEditChecklist: () => setState(() => _currentStep = 3),
+          onEditInventory: () => setState(() => _currentStep = 4),
+          onEditInspection: () => setState(() => _currentStep = 7),
+          onEditSignatures: () => setState(() => _currentStep = 9),
+          onEditAll: () => setState(() => _currentStep = 0),
+          onSend: () => _showConfirmation(context),
+        );
+      case 11: return FlowSuccessStep(
+        onBackToStart: () => Navigator.pop(context),
+        isReschedule: _isAutoReschedule,
+      );
       default: return TaskInfoWidget(task: widget.task, onContinue: _nextStep);
     }
   }
@@ -316,10 +456,29 @@ class _DeliveryPageState extends State<DeliveryPage> {
           'deliver_vehicle': _deliverVehicle,
           'reschedule_reason': _selectedReason,
           'observations': _observationsController.text,
+          'effective_delivery_time': _effectiveTimeController.text,
+          'km_input': _kmController.text,
+          'conversion': _selectedConversion,
+          'fuel_level': _selectedFuelLevel,
         },
-        observations: '',
+        checklistData: _inventoryValues,
+        observations: _vehicleObservations.map((o) {
+          return {
+            'id': o.id,
+            'part': o.part,
+            'type': o.type,
+            'description': o.description,
+            'photos': o.photos,
+            'position_x': o.position?.dx,
+            'position_y': o.position?.dy,
+          };
+        }).toList(),
+        signatures: {
+          'signature_operario': _signatureOperarioPath,
+          'signature_client': _signatureClientPath,
+        },
       );
-      if (mounted) setState(() => _currentStep = 5);
+      if (mounted) setState(() => _currentStep = 11);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -331,9 +490,130 @@ class _DeliveryPageState extends State<DeliveryPage> {
     }
   }
 
-  void _showConfirmation(BuildContext context) {
-    showModalBottomSheet(context: context, backgroundColor: Colors.white, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
-      builder: (context) => FlowConfirmationSheet(onCancel: () => Navigator.pop(context), onConfirm: () async { Navigator.pop(context); await _submitTask(); }),
+  void _showConfirmation(BuildContext context, {bool isReschedule = false}) {
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.white, 
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+      builder: (context) => FlowConfirmationSheet(
+        onCancel: () => Navigator.pop(context), 
+        onConfirm: () async { 
+          Navigator.pop(context); 
+          if (isReschedule) {
+            await _submitAutomaticReschedule();
+          } else {
+            await _submitTask(); 
+          }
+        }
+      ),
     );
+  }
+
+  Future<void> _submitAutomaticReschedule() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    try {
+      final int taskId = widget.task['id'] ?? 0;
+      
+      String reason = "Reprogramación automática (Entrega). ";
+      if (_selectedReason != null) reason += "Motivo: $_selectedReason. ";
+      if (_observationsController.text.isNotEmpty) reason += "Obs: ${_observationsController.text}";
+
+      await _taskService.rescheduleTask(
+        taskId, 
+        reason: reason,
+        resultData: {
+          'deliver_vehicle': false,
+          'reschedule_reason': _selectedReason,
+          'observations': _observationsController.text,
+        },
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isAutoReschedule = true;
+          _currentStep = 11;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  int _getSectionCount(List<String> items) {
+    return items.where((item) {
+      final val = _inventoryValues[item];
+      return val != null && val['value'] != null;
+    }).length;
+  }
+
+  bool get _isInventoryPart1Complete {
+    final items = [
+      'Prueba de bloqueo / desbloqueo efectiva',
+      'Pasaporte de garantía y mantenimiento',
+      'Placas de rodaje y tercera placa',
+      'Manual del conductor',
+      'Conversión GNV/GLP – Pasaporte de proveedor',
+      'Certificado de Revisión técnica complementaria vigente',
+      'Explicación de talleres',
+      'Explicación para agendar cita',
+      'Explicación de activación GNV/GLP',
+      'Limpieza y estado exterior del vehículo',
+      'Limpieza y estado interior del vehículo',
+      'Presión de llantas y niveles de líquidos (aceite, anticongelante, gasolina, otros)',
+    ];
+    return items.every((item) => _inventoryValues[item]?['value'] != null);
+  }
+
+  bool get _isInventoryPart2Complete {
+    final parentKey = _inventoryValues['Segunda llave de contacto']?['value'];
+    final parentKit = _inventoryValues['Kit de emergencia:']?['value'];
+
+    final items = [
+      'Antena', 'Gata', 'Seguro de aros', 'Segunda llave de contacto', 
+      'Encendedor', 'Cenicero', 'Tapas de ruedas', 'Tapas de remolque', 'Dado de seguro de ruedas',
+      'Llanta de repuesto', 'Equipo multimedia', 'Pisos: Hule / Alfombra',
+      'Kit de emergencia:',
+    ];
+
+    if (!items.every((item) => _inventoryValues[item]?['value'] != null)) return false;
+
+    if (parentKey == true) {
+      if (_inventoryValues['Simple']?['value'] == null || _inventoryValues['Con control']?['value'] == null) return false;
+    }
+
+    if (parentKit == true) {
+      final kitSubItems = ['Extintor', 'Triángulo o cono de seguridad', 'Botiquín', 'Linterna', 'Cintas reflectivas'];
+      if (!kitSubItems.every((item) => _inventoryValues[item]?['value'] != null)) return false;
+    }
+
+    return true;
+  }
+
+  bool get _isInventoryPart3Complete {
+    final parentSeguridad = _inventoryValues['Seguridad']?['value'];
+
+    final items = [
+      'Llave inteligente', 'Sistema antirrobo – alarma', 'Bloqueo y desbloqueo de puertas',
+      'Paneles de puertas y maletera – controles', 'Seguridad',
+      'Ventanas y retrovisores',
+      'Aire acondicionado', 'Plumillas delanteras y traseras', 'Luz direccional delantera izquierda',
+      'Luz direccional delantera derecha', 'Luz trasera izquierda', 'Luz trasera derecha',
+      'Sensor de retroceso posterior', 'Reloj', 'Tapasoles', 'Indicadores del tablero de instrumentos',
+      'Indicadores del nivel de gasolina y aceite', 'Sistema de audio y auxiliares',
+      'Espejos exteriores', 'Faro delantero izquierdo', 'Faro delantero derecho',
+      'Luz de placa', 'Emblemas', 'Accionamiento capot', 'Accionamiento de tapa de depósito de combustible',
+      'Cámara de retroceso', 'Navegador and bluetooth', 'Porta documentos',
+    ];
+
+    if (!items.every((item) => _inventoryValues[item]?['value'] != null)) return false;
+
+    if (parentSeguridad == true) {
+      final securitySubItems = ['Cinturones', 'Bolsas de aire', 'Seguro de niños'];
+      if (!securitySubItems.every((item) => _inventoryValues[item]?['value'] != null)) return false;
+    }
+
+    return true;
   }
 }

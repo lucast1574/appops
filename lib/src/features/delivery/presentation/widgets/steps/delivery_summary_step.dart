@@ -12,10 +12,18 @@ class DeliverySummaryStep extends StatelessWidget {
   final bool actaUploaded;
   final int checklistChecked;
   final int checklistTotal;
+  final int observationsCount;
+  final bool hasOperarioSignature;
+  final bool hasClientSignature;
+  final String? effectiveTime;
+  final Map<String, String> sectionCounts;
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditDeliveryInfo;
   final VoidCallback onEditConfirmation;
   final VoidCallback onEditChecklist;
+  final VoidCallback onEditInventory;
+  final VoidCallback onEditInspection;
+  final VoidCallback onEditSignatures;
   final VoidCallback onEditAll;
   final VoidCallback onSend;
 
@@ -23,11 +31,18 @@ class DeliverySummaryStep extends StatelessWidget {
     super.key,
     required this.task,
     this.clientName, this.clientDni, this.deliverVehicle,
+    this.effectiveTime,
     required this.clientPhotoUploaded, required this.checklistPhotoUploaded,
     required this.actaUploaded,
     required this.checklistChecked, required this.checklistTotal,
+    required this.observationsCount,
+    required this.sectionCounts,
+    required this.hasOperarioSignature, required this.hasClientSignature,
     required this.onEditTaskInfo, required this.onEditDeliveryInfo,
     required this.onEditConfirmation, required this.onEditChecklist,
+    required this.onEditInventory,
+    required this.onEditInspection,
+    required this.onEditSignatures,
     required this.onEditAll, required this.onSend,
   });
 
@@ -41,15 +56,25 @@ class DeliverySummaryStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: Text('Resumen de tarea', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B)))),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Resumen de tarea', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(color: const Color(0xFFFFEAEA), borderRadius: BorderRadius.circular(16)),
+                      child: Text('Reportar', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFFF7171))),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 32),
                 FlowSummarySection(title: 'Información de la tarea', onEdit: onEditTaskInfo, children: [
-                  FlowSummaryItem(label: 'Fecha', value: task['date'] ?? '---'),
+                  FlowSummaryItem(label: 'Fecha', value: task['scheduled_date'] ?? '---'),
                   FlowSummaryItem(label: 'Hora de entrega', value: task['start_time'] ?? '---'),
-                  FlowSummaryItem(label: 'Marca', value: task['marca'] ?? '---', secondLabel: 'Modelo', secondValue: task['modelo'] ?? '---'),
-                  FlowSummaryItem(label: 'Tipo', value: task['vehicle_type'] ?? '---'),
-                  FlowSummaryItem(label: 'Placa', value: task['placa'] ?? '---'),
-                  FlowSummaryItem(label: 'Ubicación', value: task['address'] ?? '---'),
+                  FlowSummaryItem(label: 'Marca de carro', value: task['marca'] ?? '---', secondLabel: 'Modelo', secondValue: task['modelo'] ?? '---'),
+                  FlowSummaryItem(label: 'Tipo de vehículo', value: task['vehicle_type'] ?? '---'),
+                  FlowSummaryItem(label: 'Placa', value: task['placa'] ?? '---', secondLabel: 'Tipo', secondValue: 'Blanca'), // Placeholder for "Tipo" if needed
+                  FlowSummaryItem(label: 'Dirección', value: task['address'] ?? '---'),
                 ]),
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Información de la entrega', onEdit: onEditDeliveryInfo, children: [
@@ -60,11 +85,25 @@ class DeliverySummaryStep extends StatelessWidget {
                 const SizedBox(height: 24),
                 FlowSummarySection(title: 'Confirmación entrega', onEdit: onEditConfirmation, children: [
                   FlowSummaryStatus(label: 'Foto de entrega (al cliente)', isComplete: clientPhotoUploaded),
+                  FlowSummaryItem(label: 'Hora efectiva de entrega', value: effectiveTime ?? '---'),
                 ]),
                 const SizedBox(height: 24),
-                FlowSummarySection(title: 'Listado Inventario', onEdit: onEditChecklist, children: [
-                  FlowSummaryItem(label: 'Datos Generales', value: '●'),
-                  FlowSummaryItem(label: 'Entrega y Explicación de Documentación del Vehículo', value: '$checklistChecked/$checklistTotal'),
+                FlowSummarySection(title: 'Listado Inventario', onEdit: onEditInventory, children: [
+                  FlowSummaryStatus(label: 'Datos Generales', isComplete: true), // Assuming if they reached here, general data was done
+                  FlowSummaryItem(label: 'Entrega y Explicación de Documentación del Vehículo', value: sectionCounts['docs'] ?? '0/0'),
+                  FlowSummaryItem(label: 'Instalaciones del Concesionario', value: sectionCounts['facilities'] ?? '0/0'),
+                  FlowSummaryItem(label: 'Inspección del Vehículo', value: sectionCounts['inspection'] ?? '0/0'),
+                  FlowSummaryItem(label: 'Detalle de Inventario', value: sectionCounts['inventory'] ?? '0/0'),
+                  FlowSummaryItem(label: 'Descripción General', value: sectionCounts['general'] ?? '0/0'),
+                ]),
+                const SizedBox(height: 24),
+                FlowSummarySection(title: 'Inspección de Vehículo', onEdit: onEditInspection, children: [
+                  FlowSummaryItem(label: 'Observaciones registradas', value: '$observationsCount'),
+                ]),
+                const SizedBox(height: 24),
+                FlowSummarySection(title: 'Firmas', onEdit: onEditSignatures, children: [
+                  FlowSummaryStatus(label: 'Firma de operario', isComplete: hasOperarioSignature),
+                  FlowSummaryStatus(label: 'Firma de cliente', isComplete: hasClientSignature),
                 ]),
               ],
             ),

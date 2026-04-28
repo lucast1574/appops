@@ -417,7 +417,7 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
             hintText: 'Describa el detalle...',
             hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7)),
             filled: true,
-            fillColor: const Color(0xFFF8FBFC),
+            fillColor: Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4FA4B5), width: 1)),

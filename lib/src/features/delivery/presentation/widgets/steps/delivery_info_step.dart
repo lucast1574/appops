@@ -67,7 +67,11 @@ class DeliveryInfoStep extends StatelessWidget {
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
+        FlowStepNavigation(
+          onBack: onBack, 
+          onContinue: onContinue,
+          isContinueEnabled: (deliverVehicle == false) || (deliverVehicle == true && dniPhotoUploaded),
+        ),
       ],
     );
   }

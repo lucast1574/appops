@@ -84,6 +84,7 @@ class TaskService {
     Map<String, dynamic> resultData = const {},
     Map<String, dynamic> checklistData = const {},
     dynamic observations,
+    Map<String, dynamic> signatures = const {},
   }) async {
     final response = await _api.dio.post(
       '/tasks/$taskId/submit/',
@@ -91,6 +92,7 @@ class TaskService {
         'result_data': resultData,
         'checklist_data': checklistData,
         'observations': observations,
+        'signatures': signatures,
       },
     );
     return Map<String, dynamic>.from(response.data);

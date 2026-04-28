@@ -16,6 +16,8 @@ class DeliveryConfirmationStep extends StatelessWidget {
   final Function(bool, dynamic) onChecklistPhotoUploadedChanged; final Function(String?) onChecklistPhotoTagChanged;
   final Function(bool, dynamic) onActaUploadedChanged; final Function(String?) onActaTagChanged;
   final Function(bool, dynamic) onChecklist2UploadedChanged; final Function(String?) onChecklist2TagChanged;
+  final TextEditingController effectiveTimeController;
+  final VoidCallback onTimeChanged;
   final VoidCallback onBack;
   final VoidCallback onContinue;
 
@@ -32,6 +34,8 @@ class DeliveryConfirmationStep extends StatelessWidget {
     required this.onChecklistPhotoUploadedChanged, required this.onChecklistPhotoTagChanged,
     required this.onActaUploadedChanged, required this.onActaTagChanged,
     required this.onChecklist2UploadedChanged, required this.onChecklist2TagChanged,
+    required this.effectiveTimeController,
+    required this.onTimeChanged,
     required this.onBack, required this.onContinue,
   });
 
@@ -48,20 +52,70 @@ class DeliveryConfirmationStep extends StatelessWidget {
               children: [
                 Text('Confirmación entrega', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 24),
-                FlowYesNoQuestion(question: '¿Se entregó vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged),
+                FlowYesNoQuestion(
+                  question: '¿Se entregó vehículo?', 
+                  currentValue: deliverVehicle, 
+                  onChanged: (v) {}, // Locked in this step
+                  isReversed: true,
+                ),
                 const SizedBox(height: 24),
                 FlowPhotoInput(label: 'Foto de entrega (al cliente)', taskId: taskId, photoLabel: 'client_delivery_photo', previewFileName: 'Imagen-x122.png', isUploaded: clientPhotoUploaded, imagePath: clientPhotoPath, tag: clientPhotoTag, onChanged: onClientPhotoUploadedChanged, onTagChanged: onClientPhotoTagChanged),
                 const SizedBox(height: 24),
                 FlowPhotoInput(label: 'Foto del checklist*', taskId: taskId, photoLabel: 'checklist_photo', previewFileName: 'Checklist.png', isUploaded: checklistPhotoUploaded, imagePath: checklistPhotoPath, tag: checklistPhotoTag, onChanged: onChecklistPhotoUploadedChanged, onTagChanged: onChecklistPhotoTagChanged),
                 const SizedBox(height: 24),
                 FlowPhotoInput(label: 'Acta de entrega*', taskId: taskId, photoLabel: 'acta_photo', previewFileName: 'acta_de_entrega.png', isUploaded: actaUploaded, imagePath: actaPhotoPath, tag: actaTag, onChanged: onActaUploadedChanged, onTagChanged: onActaTagChanged),
+                const SizedBox(height: 24),
+                _label('Hora efectiva de entrega'), const SizedBox(height: 8),
+                TextField(
+                  controller: effectiveTimeController,
+                  readOnly: true,
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Color(0xFF4FA4B5),
+                              onPrimary: Colors.white,
+                              onSurface: Color(0xFF002B4B),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (time != null) {
+                      effectiveTimeController.text = "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+                      onTimeChanged();
+                    }
+                  },
+                  style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                  decoration: InputDecoration(
+                    hintText: 'Seleccionar hora',
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
+                    suffixIcon: const Icon(Icons.access_time, color: Color(0xFF4FA4B5)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF002B4B))),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        FlowStepNavigation(onBack: onBack, onContinue: onContinue),
+        FlowStepNavigation(
+          onBack: onBack, 
+          onContinue: onContinue,
+          isContinueEnabled: clientPhotoUploaded && checklistPhotoUploaded && actaUploaded && effectiveTimeController.text.isNotEmpty,
+        ),
       ],
     );
   }
+
+  Widget _label(String t) => Text(t, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333)));
 
 }
