@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../features/home/data/task_service.dart';
@@ -9,7 +10,7 @@ class PhotoUploadHelper {
   static final ImagePicker _picker = ImagePicker();
 
   /// Take a photo with the camera, upload to S3, and confirm.
-  /// Returns a Map with {'s3Key': string, 'localPath': string} on success, or null on failure.
+  /// Returns a Map with {'s3Key': string, 'localPath': string, 'downloadUrl': string} on success, or null on failure.
   static Future<Map<String, String>?> pickAndUpload({
     required int taskId,
     required String label,
@@ -50,7 +51,7 @@ class PhotoUploadHelper {
       );
 
       // 4. Confirm upload in backend
-      await _taskService.confirmUpload(
+      final confirm = await _taskService.confirmUpload(
         taskId,
         s3Key: s3Key,
         label: label,
@@ -60,6 +61,7 @@ class PhotoUploadHelper {
       return {
         's3Key': s3Key,
         'localPath': image.path,
+        'downloadUrl': confirm['download_url'] ?? '',
       };
     } catch (e) {
       // Log error but don't crash
@@ -82,6 +84,52 @@ class PhotoUploadHelper {
     required dynamic context, // BuildContext
   }) async {
     return pickAndUpload(taskId: taskId, label: label, tag: tag);
+  }
+
+  /// Upload an existing file (e.g. signature) to S3.
+  /// Returns the download URL on success.
+  static Future<String?> uploadFile({
+    required int taskId,
+    required String label,
+    required String filePath,
+  }) async {
+    try {
+      final String contentType = _getContentType(filePath);
+      final urlData = await _taskService.requestUploadUrl(
+        taskId,
+        label: label,
+        contentType: contentType,
+      );
+      final String uploadUrl = urlData['upload_url'];
+      final String s3Key = urlData['s3_key'];
+
+      final Uint8List bytes = await File(filePath).readAsBytes();
+      await Dio().put(
+        uploadUrl,
+        data: Stream.fromIterable([bytes]),
+        options: Options(
+          headers: {
+            'Content-Type': contentType,
+            'Content-Length': bytes.length,
+          },
+        ),
+      );
+
+      final confirm = await _taskService.confirmUpload(
+        taskId,
+        s3Key: s3Key,
+        label: label,
+      );
+
+      return confirm['download_url'];
+    } catch (e) {
+      assert(() {
+        // ignore: avoid_print
+        print('[PhotoUpload] Error uploading file: $e');
+        return true;
+      }());
+      return null;
+    }
   }
 
   static String _getContentType(String path) {

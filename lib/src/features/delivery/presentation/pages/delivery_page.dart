@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../shared/widgets/task_info_widget.dart';
+import 'package:leasy_ops_mobile/src/core/network/photo_upload_helper.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/delivery_info_step.dart';
 import '../widgets/steps/delivery_confirmation_step.dart';
@@ -448,6 +449,26 @@ class _DeliveryPageState extends State<DeliveryPage> {
 
     try {
       final int taskId = widget.task['id'] ?? 0;
+
+      // Upload signatures to S3 if they are local paths
+      String? operarioUrl = _signatureOperarioPath;
+      if (operarioUrl != null && !operarioUrl.startsWith('http')) {
+        operarioUrl = await PhotoUploadHelper.uploadFile(
+          taskId: taskId,
+          label: 'signature_operario',
+          filePath: operarioUrl,
+        );
+      }
+
+      String? clientUrl = _signatureClientPath;
+      if (clientUrl != null && !clientUrl.startsWith('http')) {
+        clientUrl = await PhotoUploadHelper.uploadFile(
+          taskId: taskId,
+          label: 'signature_client',
+          filePath: clientUrl,
+        );
+      }
+
       await _taskService.submitTask(
         taskId,
         resultData: {
@@ -474,8 +495,8 @@ class _DeliveryPageState extends State<DeliveryPage> {
           };
         }).toList(),
         signatures: {
-          'signature_operario': _signatureOperarioPath,
-          'signature_client': _signatureClientPath,
+          'signature_operario': operarioUrl,
+          'signature_client': clientUrl,
         },
       );
       if (mounted) setState(() => _currentStep = 11);

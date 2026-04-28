@@ -387,13 +387,9 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
         ),
         const SizedBox(height: 24),
         
-        _buildDropdownField(
-          label: 'Seleccionar parte',
+        _buildReadOnlyField(
+          label: 'Parte del vehículo',
           value: obs.part,
-          items: ['Superior', 'Lateral Izquierdo', 'Lateral Derecho', 'Frontal', 'Posterior'],
-          onChanged: (val) {
-            setState(() { _currentEditingObs = obs.copyWith(part: val); });
-          },
         ),
         const SizedBox(height: 16),
         
@@ -513,6 +509,29 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
               items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B))))).toList(),
               onChanged: (val) { if (val != null) onChanged(val); },
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReadOnlyField({required String label, required String value}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          initialValue: value,
+          readOnly: true,
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF002B4B)),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7), fontSize: 12),
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            filled: true,
+            fillColor: const Color(0xFFF8F9FA),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E9EB))),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
       ],
