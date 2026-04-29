@@ -64,6 +64,12 @@ class PushService {
   bool _initialized = false;
   String? _currentToken;
 
+  /// Returns true if the user has already granted push notification permission.
+  Future<bool> isPermissionGranted() async {
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    return settings.authorizationStatus == AuthorizationStatus.authorized;
+  }
+
   /// Call once during app startup (after WidgetsFlutterBinding ensureInitialized).
   Future<void> bootstrap() async {
     if (_initialized) return;
@@ -82,10 +88,6 @@ class PushService {
     // Local notifications (so we can show a banner when foreground).
     await _initLocalNotifications();
 
-    // Request OS permission. On Android 13+ this triggers the prompt.
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true, badge: true, sound: true,
-    );
 
     // iOS: ensure the app shows banners while in foreground.
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(

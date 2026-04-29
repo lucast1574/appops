@@ -4,7 +4,7 @@ import '../../data/auth_service.dart';
 import '../../data/location_service.dart';
 import '../../../../core/notifications/push_service.dart';
 import 'login_page.dart';
-import 'location_gate_page.dart';
+import 'permission_gate_page.dart';
 import '../../../home/presentation/pages/main_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -66,18 +66,19 @@ class _SplashPageState extends State<SplashPage>
         // ignore: unawaited_futures
         PushService.instance.registerCurrentDevice();
 
-        // Token valid — check if "always" location permission is already granted.
+        // Token valid — check if permissions are already granted.
         final locationService = LocationService();
         final hasAlways = await locationService.hasAlwaysPermission();
+        final hasNotifs = await PushService.instance.isPermissionGranted();
 
-        if (hasAlways) {
+        if (hasAlways && hasNotifs) {
           // Send current location to backend (assigns city if missing)
           // and start background tracking.
           await locationService.sendCurrentLocation();
           locationService.startTracking();
           destination = const MainPage();
         } else {
-          destination = const LocationGatePage();
+          destination = const PermissionGatePage();
         }
       } catch (_) {
         // Token expired or invalid, go to login

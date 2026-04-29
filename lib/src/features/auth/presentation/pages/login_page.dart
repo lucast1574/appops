@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../../data/auth_service.dart';
-import 'location_gate_page.dart';
+import 'permission_gate_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
       //    (location sending & tracking start after permission is confirmed)
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LocationGatePage()),
+        MaterialPageRoute(builder: (_) => const PermissionGatePage()),
       );
     } catch (e, stackTrace) {
       debugPrint('DEBUG: Google Sign-In ERROR: $e');
