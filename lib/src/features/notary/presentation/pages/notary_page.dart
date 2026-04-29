@@ -13,6 +13,7 @@ import '../widgets/steps/notary_receive_docs_step.dart';
 import '../widgets/steps/notary_deliver_docs_step.dart';
 import '../widgets/steps/notary_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 
 class NotaryPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -136,6 +137,10 @@ class _NotaryPageState extends State<NotaryPage> {
                     ),
                   ),
                   onPressed: () {},
+                ),
+                TaskChatActionButton(
+                  taskId: _task['id'] ?? 0,
+                  taskTitle: 'Notaría',
                 ),
               ],
               bottom: PreferredSize(

@@ -15,6 +15,7 @@ import '../widgets/steps/transfer_signatures_step.dart';
 import '../widgets/steps/transfer_general_data_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 
 import '../../../../shared/widgets/vehicle_inspection_widget.dart';
 
@@ -261,7 +262,21 @@ class _TransferPageState extends State<TransferPage> {
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF002B4B)), onPressed: _previousStep),
         title: Text('Traslado', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
-        actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
+        actions: [
+          IconButton(
+            icon: SvgPicture.asset(
+              'assets/warning.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+            ),
+            onPressed: () {},
+          ),
+          TaskChatActionButton(
+            taskId: widget.task['id'] ?? 0,
+            taskTitle: 'Traslado',
+          ),
+        ],
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 10, activeIndex: _getProgressIndex(), allComplete: _currentStep == 9)),
       ) : null,
       body: SafeArea(

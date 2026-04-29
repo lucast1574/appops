@@ -14,6 +14,7 @@ import '../widgets/steps/management_payment_step.dart';
 import '../widgets/steps/management_detail_step.dart';
 import '../widgets/steps/management_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 import '../../../auth/data/auth_service.dart';
 import '../../../home/data/catalog_service.dart';
 
@@ -246,6 +247,10 @@ class _ManagementPageState extends State<ManagementPage> {
                     colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
                   ),
                   onPressed: () {},
+                ),
+                TaskChatActionButton(
+                  taskId: widget.task['id'] ?? 0,
+                  taskTitle: 'Gestiones / Otros',
                 ),
               ],
               bottom: PreferredSize(

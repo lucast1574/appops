@@ -14,6 +14,7 @@ import '../../../transfer/presentation/widgets/steps/transfer_signatures_step.da
 import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/delivery_summary_step.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 
 class DeliveryPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -214,7 +215,21 @@ class _DeliveryPageState extends State<DeliveryPage> {
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF002B4B)), onPressed: _previousStep),
         title: Text('Entrega de unidad', style: GoogleFonts.inter(color: const Color(0xFF002B4B), fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
-        actions: [IconButton(icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)), onPressed: () {})],
+        actions: [
+          IconButton(
+            icon: SvgPicture.asset(
+              'assets/warning.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+            ),
+            onPressed: () {},
+          ),
+          TaskChatActionButton(
+            taskId: widget.task['id'] ?? 0,
+            taskTitle: 'Entrega de unidad',
+          ),
+        ],
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 11, activeIndex: _getProgressIndex(), allComplete: _currentStep == 11)),
       ) : null,
       body: SafeArea(

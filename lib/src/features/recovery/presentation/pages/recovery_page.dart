@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
@@ -186,9 +187,18 @@ class _RecoveryPageState extends State<RecoveryPage> {
               centerTitle: true,
               actions: [
                 IconButton(
-                  icon: SvgPicture.asset('assets/warning.svg', width: 24, height: 24, colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn)),
+                  icon: SvgPicture.asset(
+                    'assets/warning.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+                  ),
                   onPressed: () {},
-                )
+                ),
+                TaskChatActionButton(
+                  taskId: widget.task['id'] ?? 0,
+                  taskTitle: 'Recupero',
+                ),
               ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(10),

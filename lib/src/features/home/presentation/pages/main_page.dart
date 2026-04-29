@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +7,19 @@ import '../../../history/presentation/pages/history_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../widgets/custom_app_bar.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../chat/presentation/pages/chat_page.dart';
+import '../../../../core/notifications/push_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+// Task flows for deep linking
+import '../../../verification/presentation/pages/verification_page.dart';
+import '../../../recovery/presentation/pages/recovery_page.dart';
+import '../../../delivery/presentation/pages/delivery_page.dart';
+import '../../../conversion/presentation/pages/conversion_page.dart';
+import '../../../transfer/presentation/pages/transfer_page.dart';
+import '../../../vehicle_verification/presentation/pages/vehicle_verification_page.dart';
+import '../../../notary/presentation/pages/notary_page.dart';
+import '../../../management/presentation/pages/management_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -27,6 +41,93 @@ class _MainPageState extends State<MainPage> {
     const HistoryPage(),
     const ProfilePage(),
   ];
+  StreamSubscription? _notifSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _notifSubscription = PushService.instance.messages.listen(_handleMessage);
+  }
+
+  @override
+  void dispose() {
+    _notifSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _handleMessage(RemoteMessage message) {
+    final data = message.data;
+    final taskId = int.tryParse(data['task_id']?.toString() ?? '');
+    if (taskId == null) return;
+
+    final isChat = data['chat'] == 'true' || data['chat'] == true;
+
+    if (isChat) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatPage(
+            taskId: taskId,
+            taskTitle: data['task_type_name']?.toString() ?? 'Chat de Tarea',
+          ),
+        ),
+      );
+    } else {
+      // Direct task deep-link
+      final slug = data['task_type_slug']?.toString();
+      if (slug == null) return;
+
+      final taskMap = {
+        'id': taskId,
+        'type': {
+          'slug': slug,
+          'name': data['task_type_name'],
+        },
+        'scheduled_date': data['scheduled_date'],
+        'start_time': data['start_time'],
+        'address': data['address'],
+        'placa': data['placa'],
+        'client_name': data['client_name'],
+        'is_extra': data['is_extra'] == 'true' || data['is_extra'] == true,
+        'status': data['status'] ?? 'pending',
+      };
+
+      Widget? page;
+      switch (slug) {
+        case 'verificacion':
+          page = VerificationPage(task: taskMap);
+          break;
+        case 'recupero':
+          page = RecoveryPage(task: taskMap);
+          break;
+        case 'entrega':
+          page = DeliveryPage(task: taskMap);
+          break;
+        case 'conversion':
+          page = ConversionPage(task: taskMap);
+          break;
+        case 'traslado':
+          page = TransferPage(task: taskMap);
+          break;
+        case 'verificar_vehiculo':
+          page = VehicleVerificationPage(task: taskMap);
+          break;
+        case 'notaria':
+          page = NotaryPage(task: taskMap);
+          break;
+        case 'gestiones':
+          page = ManagementPage(task: taskMap);
+          break;
+      }
+
+      if (page != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => page!),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

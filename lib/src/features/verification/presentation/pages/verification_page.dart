@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 // Import Shared Widgets
 import '../widgets/shared/verification_progress_bar.dart';
 import '../widgets/shared/confirmation_sheet.dart';
+import '../../../../shared/widgets/task_chat_action_button.dart';
 
 // Import Step Widgets
 import '../../../../shared/widgets/task_info_widget.dart';
@@ -472,6 +473,10 @@ class _VerificationPageState extends State<VerificationPage> {
                     ),
                   ),
                   onPressed: () {},
+                ),
+                TaskChatActionButton(
+                  taskId: _task['id'] ?? 0,
+                  taskTitle: _task['type']?['name'] ?? 'Verificación',
                 ),
               ],
               bottom: PreferredSize(
