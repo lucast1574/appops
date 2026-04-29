@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../data/auth_service.dart';
 import '../../data/location_service.dart';
+import '../../../../core/notifications/push_service.dart';
 import 'login_page.dart';
 import 'location_gate_page.dart';
 import '../../../home/presentation/pages/main_page.dart';
@@ -59,6 +60,11 @@ class _SplashPageState extends State<SplashPage>
       // Verify token is still valid by fetching user data
       try {
         await authService.fetchMe();
+
+        // Refresh FCM token registration with the backend (token may
+        // have rotated while the app was closed). Best-effort.
+        // ignore: unawaited_futures
+        PushService.instance.registerCurrentDevice();
 
         // Token valid — check if "always" location permission is already granted.
         final locationService = LocationService();

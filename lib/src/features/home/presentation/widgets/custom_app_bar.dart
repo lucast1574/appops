@@ -15,7 +15,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Color dividerColor;
   final double? titleSize;
 
-  final VoidCallback? onNotificationTap;
+  final FutureOr<void> Function()? onNotificationTap;
 
   const CustomAppBar({
     super.key,
@@ -74,8 +74,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   Future<void> _handleNotifTap() async {
     final cb = widget.onNotificationTap;
-    if (cb != null) cb();
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (cb != null) {
+      final res = cb();
+      if (res is Future) await res;
+    }
     if (mounted) _refresh();
   }
 

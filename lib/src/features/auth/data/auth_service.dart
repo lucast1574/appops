@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/notifications/push_service.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
@@ -30,6 +31,11 @@ class AuthService {
         refresh: data['refresh'],
       );
       await _storage.write(key: 'user_data', value: jsonEncode(data['user']));
+      // Register this device's FCM token with the backend so push
+      // notifications start working for this user. Best-effort: any
+      // failure is logged inside PushService and never blocks login.
+      // ignore: unawaited_futures
+      PushService.instance.registerCurrentDevice();
     }
 
     return data;
@@ -57,6 +63,12 @@ class AuthService {
 
   /// Logout: clear all stored tokens and user data.
   Future<void> logout() async {
+    // Mark this device's FCM token inactive so the backend stops
+    // sending pushes to it. Run before clearing tokens (the request
+    // needs auth) and don't let a failure block the logout flow.
+    try {
+      await PushService.instance.unregisterCurrentDevice();
+    } catch (_) {}
     await _apiClient.clearTokens();
   }
 
