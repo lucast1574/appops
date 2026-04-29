@@ -201,7 +201,6 @@ class PushService {
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    _messageController.add(message);
     final notif = message.notification;
     if (notif == null) return;
     await _localNotifs.show(
