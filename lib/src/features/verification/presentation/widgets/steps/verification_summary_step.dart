@@ -68,7 +68,7 @@ class VerificationSummaryStep extends StatelessWidget {
               children: [
                 Center(
                   child: Text(
-                    'Resumen de verificación',
+                    'Resumen de Verificación Domiciliaria',
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

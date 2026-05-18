@@ -18,7 +18,7 @@ class _HistoryPageState extends State<HistoryPage> {
   final List<String> filters = [
     'Todas',
     'En curso',
-    'Verificación',
+    'Verificación Domiciliaria',
     'Recupero',
     'Entrega',
     'Conversión',
@@ -75,7 +75,7 @@ class _HistoryPageState extends State<HistoryPage> {
           .toList();
     }
     const chipToSlug = {
-      'Verificación': 'verificacion',
+      'Verificación Domiciliaria': 'verificacion',
       'Recupero': 'recupero',
       'Entrega': 'entrega',
       'Conversión': 'conversion',

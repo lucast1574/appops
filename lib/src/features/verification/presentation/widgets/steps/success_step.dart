@@ -23,7 +23,7 @@ class SuccessStep extends StatelessWidget {
       onBackToStart: onBackToStart,
       title: title ?? (isReschedule ? 'Reprogramación automática' : 'Tarea completada'),
       subtitle: subtitle ?? (isReschedule 
-        ? 'Verificación no es posible de completar. La visita será reprogramada automáticamente.' 
+        ? 'La Verificación Domiciliaria no es posible de completar. La visita será reprogramada automáticamente.' 
         : 'Los datos se han enviado correctamente y el registro ha sido actualizado'),
       icon: icon ?? (isReschedule ? Icons.event_available : Icons.check),
       isReschedule: isReschedule,

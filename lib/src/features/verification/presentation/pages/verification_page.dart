@@ -453,7 +453,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 onPressed: _previousStep,
               ),
               title: Text(
-                'Verificación de domicilio',
+                'Verificación Domiciliaria',
                 style: GoogleFonts.inter(
                   color: const Color(0xFF002B4B),
                   fontWeight: FontWeight.bold,
@@ -476,7 +476,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 ),
                 TaskChatActionButton(
                   taskId: _task['id'] ?? 0,
-                  taskTitle: _task['type']?['name'] ?? 'Verificación',
+                  taskTitle: _task['type']?['name'] ?? 'Verificación Domiciliaria',
                 ),
               ],
               bottom: PreferredSize(

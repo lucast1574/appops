@@ -288,7 +288,7 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
   static const Map<String, String> _translations = {
     'start_time': 'Hora inicio',
     'end_time': 'Hora fin',
-    'verification_result': 'Resultado de verificación',
+    'verification_result': 'Resultado de Verificación Domiciliaria',
     'management_type': 'Tipo de gestión',
     'fine_type': 'Tipo de multa',
     'selected_municipality': 'Municipalidad',
