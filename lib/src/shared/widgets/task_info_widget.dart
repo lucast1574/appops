@@ -282,7 +282,7 @@ class TaskInfoWidget extends StatelessWidget {
                   if (pickupNotary.isNotEmpty || deliveryNotary.isNotEmpty) ...[
                     if (pickupNotary.isNotEmpty) ...[
                       FlowAddressDisplay(
-                        label: 'Ubicación de recibida de documentos',
+                        label: 'Lugar de recojo de documentos',
                         address: '$pickupNotary\n$address',
                         mapsLink: primaryMapsLink,
                         onOpenMaps: () => _launchMaps(primaryMapsLink),
@@ -291,7 +291,7 @@ class TaskInfoWidget extends StatelessWidget {
                     ],
                     if (deliveryNotary.isNotEmpty) ...[
                       FlowAddressDisplay(
-                        label: 'Ubicación de entrega de documentos',
+                        label: 'Lugar de entrega de documentos',
                         address: '$deliveryNotary\n$deliveryAddress',
                         mapsLink: deliveryGoogleMapsLink,
                         onOpenMaps: () => _launchMaps(deliveryGoogleMapsLink),

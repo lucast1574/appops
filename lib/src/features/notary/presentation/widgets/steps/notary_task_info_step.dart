@@ -64,15 +64,15 @@ class NotaryTaskInfoStep extends StatelessWidget {
                 const SizedBox(height: 8),
                 _buildDropdown(
                   value: selectedPickupNotary,
-                  hint: 'Seleccionar notaría',
+                  hint: 'Seleccionar ubicación',
                   onChanged: onPickupNotaryChanged,
                 ),
                 const SizedBox(height: 16),
-                _buildHeader('Notaría (recojo)'),
+                _buildHeader('Lugar de recojo'),
                 const SizedBox(height: 8),
                 _buildValueContainer(
                   child: Text(
-                    selectedPickupNotary ?? 'Notaría Ramos',
+                    selectedPickupNotary ?? 'Oficina Leasy',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF002B4B),
@@ -84,15 +84,15 @@ class NotaryTaskInfoStep extends StatelessWidget {
                 const SizedBox(height: 8),
                 _buildDropdown(
                   value: selectedDeliveryNotary,
-                  hint: 'Seleccionar notaría',
+                  hint: 'Seleccionar ubicación',
                   onChanged: onDeliveryNotaryChanged,
                 ),
                 const SizedBox(height: 16),
-                _buildHeader('Notaría (entrega)'),
+                _buildHeader('Lugar de entrega'),
                 const SizedBox(height: 8),
                 _buildValueContainer(
                   child: Text(
-                    selectedDeliveryNotary ?? 'Notaría López',
+                    selectedDeliveryNotary ?? 'Oficina Leasy',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: const Color(0xFF002B4B),
@@ -190,7 +190,7 @@ class NotaryTaskInfoStep extends StatelessWidget {
             fontSize: 15,
             color: const Color(0xFF002B4B),
           ),
-          items: ['Notaría Ramos', 'Notaría López', 'Notaría García', 'Notaría Torres']
+          items: ['Oficina Leasy', 'Notaría Ramos', 'Notaría López', 'Notaría García', 'Notaría Torres']
               .map((n) => DropdownMenuItem(value: n, child: Text(n)))
               .toList(),
           onChanged: onChanged,

@@ -56,11 +56,11 @@ class NotarySummaryStep extends StatelessWidget {
                   onEdit: onEditTaskInfo,
                   children: [
                     FlowSummaryItem(
-                      label: 'Ubicación de recibida de documentos',
+                      label: 'Lugar de recojo de documentos',
                       value: selectedPickupNotary ?? '---',
                     ),
                     FlowSummaryItem(
-                      label: 'Ubicación de entrega de documentos',
+                      label: 'Lugar de entrega de documentos',
                       value: selectedDeliveryNotary ?? '---',
                     ),
                   ],

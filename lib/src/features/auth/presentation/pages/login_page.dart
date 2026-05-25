@@ -94,22 +94,27 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e, stackTrace) {
       debugPrint('DEBUG: Google Sign-In ERROR: $e');
+      String errorMessage = 'Error al iniciar sesión: ${e.toString()}';
+
       if (e is DioException && e.response != null) {
         debugPrint('DEBUG: Response status: ${e.response?.statusCode}');
         debugPrint('DEBUG: Response body: ${e.response?.data}');
+        final responseData = e.response?.data;
+        if (responseData is Map && responseData.containsKey('error')) {
+          errorMessage = responseData['error'].toString();
+        } else if (e.response?.statusCode == 403) {
+          errorMessage = 'Solo se permiten correos @leasyauto.com y @floty.mx';
+        } else if (e.response?.statusCode == 400) {
+          errorMessage = 'Token de Google inválido';
+        }
+      } else {
+        if (e.toString().contains('SocketException') ||
+            e.toString().contains('TimeoutException')) {
+          errorMessage = 'Sin conexión al servidor';
+        }
       }
       debugPrint('DEBUG: Stack trace: $stackTrace');
       if (!mounted) return;
-      String errorMessage = 'Error al iniciar sesión: ${e.toString()}';
-
-      if (e.toString().contains('403')) {
-        errorMessage = 'Solo se permiten correos @leasyauto.com y @floty.mx';
-      } else if (e.toString().contains('400')) {
-        errorMessage = 'Token de Google inválido';
-      } else if (e.toString().contains('SocketException') ||
-          e.toString().contains('TimeoutException')) {
-        errorMessage = 'Sin conexión al servidor';
-      }
 
       setState(() {
         _error = errorMessage;
