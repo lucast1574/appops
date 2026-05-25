@@ -367,6 +367,25 @@ class _DashboardPageState extends State<DashboardPage> {
     final bool isInProgress = status == 'in_progress';
     final bool isRescheduled = status == 'rescheduled';
     final bool isExtra = task['is_extra'] == true;
+
+    // Detect overdue: scheduled_date is before today and task is not finished
+    final String scheduledDateRaw = task['scheduled_date'] ?? '';
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final bool isOverdue = scheduledDateRaw.isNotEmpty &&
+        scheduledDateRaw.compareTo(todayStr) < 0 &&
+        (status == 'pending' || status == 'in_progress' || status == 'unassigned');
+    // Days overdue count
+    int daysOverdue = 0;
+    if (isOverdue) {
+      final scheduled = DateTime.tryParse(scheduledDateRaw);
+      if (scheduled != null) {
+        daysOverdue = DateTime(today.year, today.month, today.day)
+            .difference(DateTime(scheduled.year, scheduled.month, scheduled.day))
+            .inDays;
+      }
+    }
     
     final Color buttonColor = isInProgress
         ? const Color(0xFFFBDF83)
@@ -382,7 +401,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final String address = task['address'] ?? '';
     final String clientName = task['client_name'] ?? '';
     final String placa = task['placa'] ?? '';
-    final String scheduledDate = task['scheduled_date'] ?? '';
+    final String scheduledDate = scheduledDateRaw;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -424,6 +443,28 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
+              if (isOverdue)
+                Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE4E4),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE53935), width: 1),
+                  ),
+                  child: Text(
+                    '⚠ ATRASADA${daysOverdue > 0 ? ' -${daysOverdue}d' : ''}',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFB71C1C),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
               if (isExtra)
                 Container(
                   margin: const EdgeInsets.only(right: 6),

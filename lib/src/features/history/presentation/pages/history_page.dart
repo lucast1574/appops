@@ -200,16 +200,19 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildTaskList() {
     final filteredTasks = _filterTasks();
 
-    // Sort: completed/rejected sink to the bottom, active on top.
+    // Sort:
+    //  - Active tasks (pending/in_progress/rescheduled) come first.
+    //  - Within active: oldest scheduled date first (overdue appears at top).
+    //  - Completed/rejected sink to the bottom: newest first (most recent history on top).
     filteredTasks.sort((a, b) {
       final aDone = a['status'] == 'completed' || a['status'] == 'rejected';
       final bDone = b['status'] == 'completed' || b['status'] == 'rejected';
       if (aDone && !bDone) return 1;
       if (!aDone && bDone) return -1;
-      // Within the same bucket, newest scheduled date first.
       final ad = (a['scheduled_date'] ?? '') as String;
       final bd = (b['scheduled_date'] ?? '') as String;
-      return bd.compareTo(ad);
+      // Active → oldest first (overdue at top); Done → newest first.
+      return aDone ? bd.compareTo(ad) : ad.compareTo(bd);
     });
 
     if (filteredTasks.isEmpty) {
@@ -244,15 +247,19 @@ class _HistoryPageState extends State<HistoryPage> {
       case 'Pendiente':
         return const Color(0xFFFBC108);
       case 'En curso':
-        return const Color(0xFFF104DD);
+        return const Color(0xFFA855F7); // purple — fixed from wrong magenta
       case 'Completada':
         return const Color(0xFF23A26D);
       case 'Rechazada':
         return const Color(0xFFE53935);
       case 'Reprogramada':
         return const Color(0xFF4FA4B5);
+      case 'Sin asignar':
+        return const Color(0xFF3B82F6);
+      case 'Aprobación':
+        return const Color(0xFFF59E0B);
       default:
-        return const Color(0xFF002B4B);
+        return const Color(0xFF668093);
     }
   }
 
@@ -281,6 +288,23 @@ class _HistoryPageState extends State<HistoryPage> {
     final bool isExtra = task['is_extra'] == true;
 
     final String scheduledDate = task['scheduled_date'] ?? '';
+
+    // Detect overdue for history display (pending/in_progress tasks with past date)
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final bool isOverdue = scheduledDate.isNotEmpty &&
+        scheduledDate.compareTo(todayStr) < 0 &&
+        (statusKey == 'pending' || statusKey == 'in_progress' || statusKey == 'unassigned');
+    int daysOverdue = 0;
+    if (isOverdue) {
+      final scheduled = DateTime.tryParse(scheduledDate);
+      if (scheduled != null) {
+        daysOverdue = DateTime(today.year, today.month, today.day)
+            .difference(DateTime(scheduled.year, scheduled.month, scheduled.day))
+            .inDays;
+      }
+    }
     final String startTime = TaskService.formatTime(task['start_time']);
     final String endTime = TaskService.formatTime(task['end_time']);
     final String timeRange = [startTime, endTime]
@@ -380,6 +404,28 @@ class _HistoryPageState extends State<HistoryPage> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
+                        if (isOverdue)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFE4E4),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: const Color(0xFFE53935), width: 1),
+                            ),
+                            child: Text(
+                              '⚠ -${daysOverdue}d',
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFB71C1C),
+                              ),
+                            ),
+                          ),
                         Flexible(
                           child: Text(
                             scheduledDate.isNotEmpty
@@ -388,7 +434,9 @@ class _HistoryPageState extends State<HistoryPage> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF99AAB7),
+                              color: isOverdue
+                                  ? const Color(0xFFE53935)
+                                  : const Color(0xFF99AAB7),
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
