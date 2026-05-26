@@ -296,6 +296,9 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
     'is_visible': '¿Vehículo visible?',
     'observations': 'Observaciones',
     'photo_uploaded': 'Foto subida',
+    'deliver_photo_uploaded': 'Foto de entrega subida',
+    'delivery_name': 'Nombre de quien recibe',
+    'receive_photo_uploaded': 'Foto de recepción subida',
   };
 
   /// Walk a `Map<String, dynamic>` and emit one widget per entry.
@@ -358,11 +361,31 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
   // ================================================================
   List<Widget> _buildPhotosSection(dynamic photos) {
     if (photos is! List || photos.isEmpty) return const [];
+
+    // Deduplicate photos by s3_key to avoid double rendering
+    final uniquePhotos = <Map<String, dynamic>>[];
+    final seenS3Keys = <String>{};
+    for (final p in photos) {
+      if (p is Map) {
+        final s3Key = p['s3_key'] as String?;
+        if (s3Key != null) {
+          if (!seenS3Keys.contains(s3Key)) {
+            seenS3Keys.add(s3Key);
+            uniquePhotos.add(Map<String, dynamic>.from(p));
+          }
+        } else {
+          uniquePhotos.add(Map<String, dynamic>.from(p));
+        }
+      }
+    }
+
+    if (uniquePhotos.isEmpty) return const [];
+
     return [
       const SizedBox(height: 32),
       const Divider(color: Color(0xFFE5E9EB)),
       const SizedBox(height: 24),
-      _buildSectionHeader('Fotos (${photos.length})'),
+      _buildSectionHeader('Fotos (${uniquePhotos.length})'),
       const SizedBox(height: 16),
       GridView.count(
         shrinkWrap: true,
@@ -371,7 +394,7 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
         childAspectRatio: 1,
-        children: photos.map<Widget>((p) {
+        children: uniquePhotos.map<Widget>((p) {
           final url = p['download_url'] as String?;
           final label = (p['tag'] ?? p['label'] ?? '') as String;
           return GestureDetector(
