@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 
@@ -156,16 +157,23 @@ class TaskService {
   }
 
   Future<void> uploadImageToS3(String url, List<int> bytes, {String contentType = 'image/png'}) async {
-    // Use a fresh Dio instance to avoid sending the 'Authorization' header 
+    // Use a fresh Dio instance to avoid sending the 'Authorization' header
     // from our ApiClient interceptor, which S3 rejects on presigned URLs.
+    //
+    // Do NOT set Content-Length manually: the backend signs the presigned
+    // URL with only Content-Type as a signed header, so any manual
+    // Content-Length that doesn't match the signed value (or that gets
+    // double-set together with a streamed body) makes S3 reject the PUT
+    // with 403 SignatureDoesNotMatch. Dio will set Content-Length itself
+    // from the byte payload.
     await Dio().put(
       url,
-      data: Stream.fromIterable([bytes]),
+      data: Uint8List.fromList(bytes),
       options: Options(
         headers: {
           'Content-Type': contentType,
-          'Content-Length': bytes.length,
         },
+        validateStatus: (status) => status != null && status >= 200 && status < 300,
       ),
     );
   }
