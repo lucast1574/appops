@@ -61,6 +61,13 @@ class _DashboardPageState extends State<DashboardPage> {
       final tasks = await _taskService.getMyTasks();
       final today = DateTime.now();
       final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final tomorrow = today.add(const Duration(days: 1));
+      final tomorrowStr = '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+
+      // Configurable threshold hour (24h format) for showing next day's tasks (default: 6 PM / 18:00)
+      const int showNextDayTasksHour = 18;
+      final bool showNextDay = today.hour >= showNextDayTasksHour;
+      final String maxAllowedDateStr = showNextDay ? tomorrowStr : todayStr;
 
       if (mounted) {
         setState(() {
@@ -70,7 +77,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 // but we will filter them out of "Todas" and "En curso" in _filteredTasks.
                 if (t['status'] == 'completed' || t['status'] == 'rejected') return false;
                 final date = t['scheduled_date'] ?? '';
-                if (date.isNotEmpty && date.compareTo(todayStr) > 0) return false;
+                if (date.isNotEmpty && date.compareTo(maxAllowedDateStr) > 0) return false;
                 return true;
               })
               .toList();
@@ -375,6 +382,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final today = DateTime.now();
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowStr =
+        '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+    final bool isTomorrow = scheduledDateRaw == tomorrowStr;
+
     final bool isDateOverdue = scheduledDateRaw.isNotEmpty &&
         scheduledDateRaw.compareTo(todayStr) < 0 &&
         (status == 'pending' || status == 'in_progress' || status == 'unassigned');
@@ -513,6 +525,28 @@ class _DashboardPageState extends State<DashboardPage> {
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFFB45309),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              if (isTomorrow)
+                Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2F1), // light teal
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF00796B), width: 1),
+                  ),
+                  child: Text(
+                    'MAÑANA',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF004D40),
                       letterSpacing: 0.4,
                     ),
                   ),

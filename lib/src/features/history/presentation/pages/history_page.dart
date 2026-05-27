@@ -45,9 +45,23 @@ class _HistoryPageState extends State<HistoryPage> {
       // Operario's own tasks. Backend filters by `assigned_to=request.user`,
       // so we get exactly the ones this operario should see.
       final tasks = await _taskService.getMyTasks();
+      final today = DateTime.now();
+      final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final tomorrow = today.add(const Duration(days: 1));
+      final tomorrowStr = '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+
+      // Configurable threshold hour (24h format) for showing next day's tasks (default: 6 PM / 18:00)
+      const int showNextDayTasksHour = 18;
+      final bool showNextDay = today.hour >= showNextDayTasksHour;
+      final String maxAllowedDateStr = showNextDay ? tomorrowStr : todayStr;
+
       if (mounted) {
         setState(() {
-          _tasks = tasks;
+          _tasks = tasks.where((t) {
+            final date = t['scheduled_date'] ?? '';
+            if (date.isNotEmpty && date.compareTo(maxAllowedDateStr) > 0) return false;
+            return true;
+          }).toList();
           isLoading = false;
         });
       }
@@ -293,6 +307,11 @@ class _HistoryPageState extends State<HistoryPage> {
     final today = DateTime.now();
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowStr =
+        '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+    final bool isTomorrow = scheduledDate == tomorrowStr;
+
     final bool isOverdue = scheduledDate.isNotEmpty &&
         scheduledDate.compareTo(todayStr) < 0 &&
         (statusKey == 'pending' || statusKey == 'in_progress' || statusKey == 'unassigned');
@@ -383,6 +402,32 @@ class _HistoryPageState extends State<HistoryPage> {
                                       fontSize: 9,
                                       fontWeight: FontWeight.w800,
                                       color: const Color(0xFFB45309),
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (isTomorrow) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE0F2F1), // light teal
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: const Color(0xFF00796B),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'MAÑANA',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF004D40),
                                       letterSpacing: 0.4,
                                     ),
                                   ),
