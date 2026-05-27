@@ -213,6 +213,10 @@ class TaskService {
         return 'Pendiente';
       case 'in_progress':
         return 'En curso';
+      case 'overdue':
+        return '⚠ Atrasada';
+      case 'missed':
+        return '⛔ Faltante';
       case 'completed':
         return 'Completada';
       case 'rejected':

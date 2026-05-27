@@ -25,6 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
     'Todas',
     'En curso',
     'Pendiente',
+    'Atrasada',
     'Reprogramada',
   ];
 
@@ -89,18 +90,17 @@ class _DashboardPageState extends State<DashboardPage> {
 
   List<Map<String, dynamic>> get _filteredTasks {
     if (selectedFilter == 'Todas') {
-      // "Todas" should only show active/pending tasks, not rescheduled ones
-      return _tasks.where((t) => t['status'] != 'rescheduled').toList();
+      // "Todas" shows active/pending/overdue, not rescheduled or missed
+      return _tasks.where((t) => t['status'] != 'rescheduled' && t['status'] != 'missed').toList();
     }
     if (selectedFilter == 'En curso') {
-      return _tasks
-          .where(
-            (t) => t['status'] == 'in_progress',
-          )
-          .toList();
+      return _tasks.where((t) => t['status'] == 'in_progress').toList();
     }
     if (selectedFilter == 'Pendiente') {
       return _tasks.where((t) => t['status'] == 'pending').toList();
+    }
+    if (selectedFilter == 'Atrasada') {
+      return _tasks.where((t) => t['status'] == 'overdue').toList();
     }
     if (selectedFilter == 'Reprogramada') {
       return _tasks.where((t) => t['status'] == 'rescheduled').toList();
@@ -365,20 +365,22 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildTaskCard(Map<String, dynamic> task) {
     final String status = task['status'] ?? 'pending';
     final bool isInProgress = status == 'in_progress';
+    final bool isOverdue = status == 'overdue';
+    final bool isMissed = status == 'missed';
     final bool isRescheduled = status == 'rescheduled';
     final bool isExtra = task['is_extra'] == true;
 
-    // Detect overdue: scheduled_date is before today and task is not finished
+    // Detect visually overdue from date (fallback for tasks not yet processed by scheduler)
     final String scheduledDateRaw = task['scheduled_date'] ?? '';
     final today = DateTime.now();
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    final bool isOverdue = scheduledDateRaw.isNotEmpty &&
+    final bool isDateOverdue = scheduledDateRaw.isNotEmpty &&
         scheduledDateRaw.compareTo(todayStr) < 0 &&
         (status == 'pending' || status == 'in_progress' || status == 'unassigned');
     // Days overdue count
     int daysOverdue = 0;
-    if (isOverdue) {
+    if (isOverdue || isDateOverdue) {
       final scheduled = DateTime.tryParse(scheduledDateRaw);
       if (scheduled != null) {
         daysOverdue = DateTime(today.year, today.month, today.day)
@@ -389,8 +391,14 @@ class _DashboardPageState extends State<DashboardPage> {
     
     final Color buttonColor = isInProgress
         ? const Color(0xFFFBDF83)
-        : const Color(0xFF4FA4B5);
-    final String buttonText = isInProgress ? 'Continuar' : 'Iniciar tarea';
+        : isOverdue
+            ? const Color(0xFFFF8A65)  // orange for overdue
+            : const Color(0xFF4FA4B5);
+    final String buttonText = isInProgress
+        ? 'Continuar'
+        : isOverdue
+            ? 'Ejecutar (atrasada)'
+            : 'Iniciar tarea';
 
     // Extract task data
     final type = task['type'] as Map<String, dynamic>?;
@@ -443,7 +451,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
-              if (isOverdue)
+              if (isOverdue || isDateOverdue)
                 Container(
                   margin: const EdgeInsets.only(right: 6),
                   padding: const EdgeInsets.symmetric(
@@ -451,16 +459,38 @@ class _DashboardPageState extends State<DashboardPage> {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE4E4),
+                    color: const Color(0xFFFFE0CC),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE53935), width: 1),
+                    border: Border.all(color: const Color(0xFFE65100), width: 1),
                   ),
                   child: Text(
                     '⚠ ATRASADA${daysOverdue > 0 ? ' -${daysOverdue}d' : ''}',
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFFB71C1C),
+                      color: const Color(0xFFBF360C),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              if (isMissed)
+                Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFCDD2),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFB71C1C), width: 1.5),
+                  ),
+                  child: Text(
+                    '⛔ FALTANTE',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF7F0000),
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -569,8 +599,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 16),
 
-          // Action button
-          if (!isRescheduled)
+          // Action button — shown for all except rescheduled and missed
+          if (!isRescheduled && !isMissed)
             SizedBox(
               width: double.infinity,
             height: 48,
