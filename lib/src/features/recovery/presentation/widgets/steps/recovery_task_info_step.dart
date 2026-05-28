@@ -1,14 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RecoveryTaskInfoStep extends StatelessWidget {
+  final Map<String, dynamic> task;
   final VoidCallback onContinue;
 
-  const RecoveryTaskInfoStep({super.key, required this.onContinue});
+  const RecoveryTaskInfoStep({
+    super.key,
+    required this.task,
+    required this.onContinue,
+  });
+
+  Future<void> _makeCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String scheduledDate = task['scheduled_date'] ?? '';
+    final String startTime = task['start_time'] != null ? task['start_time'].toString().substring(0, 5) : '';
+    final String endTime = task['end_time'] != null ? task['end_time'].toString().substring(0, 5) : '';
+    final String estimatedTime = (startTime.isNotEmpty && endTime.isNotEmpty) ? '$startTime - $endTime' : '';
+    final String address = task['address'] ?? '';
+    final String placa = task['placa'] ?? '';
+    final String clientName = task['client_name'] ?? '';
+    final String clientDni = task['client_dni'] ?? '';
+
+    final String op1 = task['assigned_to'] != null 
+        ? "${task['assigned_to']['first_name'] ?? ''} ${task['assigned_to']['last_name'] ?? ''}".trim()
+        : '';
+
+    final String op2 = task['assigned_to_2'] != null 
+        ? "${task['assigned_to_2']['first_name'] ?? ''} ${task['assigned_to_2']['last_name'] ?? ''}".trim()
+        : '';
+
+    final String phone = task['client_phone'] ?? '';
+    final String phoneAval = task['aval_phone'] ?? '';
+
     return Column(
       children: [
         Expanded(
@@ -17,52 +52,229 @@ class RecoveryTaskInfoStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Información de la tarea', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
+                Text(
+                  'Información de la tarea',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
                 const SizedBox(height: 24),
-                _header('Fecha'), const SizedBox(height: 8),
-                _value(Row(children: [
-                  Text('Miércoles, 18 de marzo de 2026', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B))),
-                  const Spacer(),
-                  SvgPicture.asset('assets/doble.svg', width: 10, height: 10),
-                ])),
-                const SizedBox(height: 16),
-                Row(children: [
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _header('Hora inicio'), const SizedBox(height: 8),
-                    _value(Text('10:00', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                  ])),
-                  const SizedBox(width: 16),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _header('Hora fin'), const SizedBox(height: 8),
-                    _value(Text('12:00', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                  ])),
-                ]),
-                const SizedBox(height: 16),
-                _header('Nombre del cliente'), const SizedBox(height: 8),
-                _value(Text('Carlos Mendoza', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 16),
-                _header('DNI cliente'), const SizedBox(height: 8),
-                _value(Text('45678912', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 16),
-                _header('Placa'), const SizedBox(height: 8),
-                _value(Text('ABC-392', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 16),
-                _header('Dirección de recupero'), const SizedBox(height: 8),
-                _value(Text('Calle Los Manzanos 341, Urb. Monterrico', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 16),
-                _header('Motivo de recupero'), const SizedBox(height: 8),
-                _value(Text('Mora en pagos - 3 cuotas vencidas', style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 32),
+
+                if (clientName.isNotEmpty) ...[
+                  _header('Cliente'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      clientName,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (clientDni.isNotEmpty) ...[
+                  _header('DNI/INE cliente'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      clientDni,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (placa.isNotEmpty) ...[
+                  _header('Placa'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      placa,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (op1.isNotEmpty) ...[
+                  _header('Operador 1 (Tú)'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      op1,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (op2.isNotEmpty) ...[
+                  _header('Operador 2'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      op2,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (scheduledDate.isNotEmpty) ...[
+                  _header('Fecha'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            scheduledDate,
+                            style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                          ),
+                        ),
+                        const Icon(Icons.check, color: Color(0xFF27A376), size: 18),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (estimatedTime.isNotEmpty) ...[
+                  _header('Hora Estimada'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            estimatedTime,
+                            style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                          ),
+                        ),
+                        const Icon(Icons.access_time, color: Color(0xFF27A376), size: 18),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (address.isNotEmpty) ...[
+                  _header('Ubicación'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      address,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (phone.isNotEmpty) ...[
+                  _header('Teléfono'),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _value(
+                          Text(
+                            phone,
+                            style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      _callButton(phone),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (phoneAval.isNotEmpty) ...[
+                  _header('Teléfono aval'),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _value(
+                          Text(
+                            phoneAval,
+                            style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      _callButton(phoneAval),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ],
             ),
           ),
         ),
-        Container(padding: const EdgeInsets.all(24.0), decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE5E9EB)))),
-          child: SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: onContinue, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF27A376), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)), elevation: 0), child: Text('Comenzar tarea', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold))))),
+        Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFE5E9EB))),
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF27A376),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                elevation: 0,
+              ),
+              child: Text(
+                'Comenzar tarea',
+                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _header(String t) => Text(t, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333)));
-  Widget _value(Widget child) => Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFF8F9FA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E9EB))), child: child);
+  Widget _header(String t) => Text(
+        t,
+        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF333333)),
+      );
+
+  Widget _value(Widget child) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F9FA),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E9EB)),
+        ),
+        child: child,
+      );
+
+  Widget _callButton(String phone) => SizedBox(
+        height: 48,
+        child: ElevatedButton.icon(
+          onPressed: () => _makeCall(phone),
+          icon: const Icon(Icons.phone, size: 16, color: Colors.white),
+          label: Text(
+            'Llamar',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF27A376),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+        ),
+      );
 }
