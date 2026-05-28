@@ -1,5 +1,4 @@
 import 'dart:developer' as developer;
-import 'dart:typed_data';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,6 +18,17 @@ class PhotoUploadHelper {
 
   /// Take a photo with the camera, upload to S3, and confirm.
   /// Returns a Map with {'s3Key': string, 'localPath': string, 'downloadUrl': string} on success, or null on failure.
+  ///
+  /// Memory-conscious flow (for low-end Android: 2 GB RAM, ~64 MB heap):
+  ///  - image_picker resizes to <=1600x1600 q75 inside the platform plugin
+  ///    (native, off-heap), so the Dart side only ever sees a ~250 KB JPEG.
+  ///  - We stream the file to S3 with Dio (no full readAsBytes) so we never
+  ///    hold the encoded payload AND a decoded bitmap at the same time.
+  ///
+  /// We deliberately do NOT delete image_picker's tmp file after the upload:
+  /// the UI keeps showing the picked photo via Image.file(localPath) until
+  /// the user navigates away, and image_picker's cache lives under the app's
+  /// own cacheDir which Android trims automatically when storage is low.
   static Future<Map<String, String>?> pickAndUpload({
     required int taskId,
     required String label,
@@ -26,17 +36,25 @@ class PhotoUploadHelper {
   }) async {
     const ImageSource source = ImageSource.camera;
     try {
-      // 1. Pick image
+      // 1. Pick image. Smaller bounds + lower quality means the camera plugin
+      // hands us a ~250 KB JPEG instead of a 1-2 MB one. This is the single
+      // biggest knob for memory pressure on cheap devices, because the decoded
+      // ARGB bitmap is width * height * 4 bytes (1920^2*4 = 14.7 MB,
+      // 1600^2*4 = 10.2 MB).
       final XFile? image = await _picker.pickImage(
         source: source,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 75,
       );
       if (image == null) return null; // User cancelled
 
       // 2. Request presigned URL from backend
       final String contentType = _getContentType(image.path);
+      final File sourceFile = File(image.path);
+      final int fileLength = await sourceFile.length();
+      _log('Picked image path=${image.path} bytes=$fileLength');
+
       final urlData = await _taskService.requestUploadUrl(
         taskId,
         label: label,
@@ -45,24 +63,25 @@ class PhotoUploadHelper {
       final String uploadUrl = urlData['upload_url'];
       final String s3Key = urlData['s3_key'];
 
-      // 3. Upload to S3 (PUT presigned). Send raw bytes; do NOT set
-      // Content-Length manually because Dio handles it from the byte
-      // payload. Manually setting it together with a streamed source
-      // is what used to make S3 reject the request with a 403.
-      final Uint8List bytes = await image.readAsBytes();
+      // 3. Upload to S3 (PUT presigned). Stream the file instead of
+      // readAsBytes() so we don't hold the full payload in the Dart heap.
+      // Dio with a Stream<List<int>> + an explicit Content-Length is the
+      // shape AWS S3 expects for presigned PUTs (chunked transfer-encoding
+      // is rejected with 501).
       final s3Response = await Dio().put(
         uploadUrl,
-        data: bytes,
+        data: sourceFile.openRead(),
         options: Options(
           headers: {
             'Content-Type': contentType,
+            Headers.contentLengthHeader: fileLength,
           },
           // Treat any non-2xx as failure so we don't silently move on
           // and "confirm" a phantom S3 object.
           validateStatus: (status) => status != null && status >= 200 && status < 300,
         ),
       );
-      _log('S3 PUT OK status=${s3Response.statusCode} key=$s3Key bytes=${bytes.length}');
+      _log('S3 PUT OK status=${s3Response.statusCode} key=$s3Key bytes=$fileLength');
 
       // 4. Confirm upload in backend
       final confirm = await _taskService.confirmUpload(
@@ -116,13 +135,16 @@ class PhotoUploadHelper {
       final String uploadUrl = urlData['upload_url'];
       final String s3Key = urlData['s3_key'];
 
-      final Uint8List bytes = await File(filePath).readAsBytes();
+      // Stream from disk; see pickAndUpload for the same rationale.
+      final File sourceFile = File(filePath);
+      final int fileLength = await sourceFile.length();
       await Dio().put(
         uploadUrl,
-        data: bytes,
+        data: sourceFile.openRead(),
         options: Options(
           headers: {
             'Content-Type': contentType,
+            Headers.contentLengthHeader: fileLength,
           },
           validateStatus: (status) => status != null && status >= 200 && status < 300,
         ),

@@ -207,10 +207,21 @@ class FlowImagePreview extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFB9DBE1).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
+                  // IMPORTANT: wrap in ResizeImage so the decoder downsamples
+                  // before allocating the bitmap. Without this, a 1920x1920 JPEG
+                  // is decoded to a ~14 MB ARGB bitmap just to render a 48px
+                  // thumbnail -- and a typical verification flow has 5-8 of
+                  // these on screen at once, which OOM-crashes low-end devices
+                  // (2 GB RAM, ~64 MB heap). 96 = 2x for hi-DPI displays.
                   image: (imagePath != null && imagePath!.isNotEmpty) ? DecorationImage(
-                    image: imagePath!.startsWith('http')
-                      ? NetworkImage(imagePath!) as ImageProvider
-                      : FileImage(File(imagePath!)),
+                    image: ResizeImage(
+                      imagePath!.startsWith('http')
+                        ? NetworkImage(imagePath!) as ImageProvider
+                        : FileImage(File(imagePath!)),
+                      width: 96,
+                      height: 96,
+                      policy: ResizeImagePolicy.fit,
+                    ),
                     fit: BoxFit.cover,
                   ) : null,
                 ),
