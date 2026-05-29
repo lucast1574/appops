@@ -101,7 +101,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return _tasks.where((t) => t['status'] != 'rescheduled' && t['status'] != 'missed').toList();
     }
     if (selectedFilter == 'En curso') {
-      return _tasks.where((t) => t['status'] == 'in_progress').toList();
+      return _tasks.where((t) => t['status'] == 'in_progress' || (t['status'] == 'overdue' && t['started_at'] != null)).toList();
     }
     if (selectedFilter == 'Pendiente') {
       return _tasks.where((t) => t['status'] == 'pending').toList();
@@ -371,8 +371,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildTaskCard(Map<String, dynamic> task) {
     final String status = task['status'] ?? 'pending';
-    final bool isInProgress = status == 'in_progress';
-    final bool isOverdue = status == 'overdue';
+    final bool isInProgress = status == 'in_progress' || (status == 'overdue' && task['started_at'] != null);
+    final bool isOverdue = status == 'overdue' && task['started_at'] == null;
     final bool isMissed = status == 'missed';
     final bool isRescheduled = status == 'rescheduled';
     final bool isExtra = task['is_extra'] == true;
@@ -392,7 +392,7 @@ class _DashboardPageState extends State<DashboardPage> {
         (status == 'pending' || status == 'in_progress' || status == 'unassigned');
     // Days overdue count
     int daysOverdue = 0;
-    if (isOverdue || isDateOverdue) {
+    if (status == 'overdue' || isDateOverdue) {
       final scheduled = DateTime.tryParse(scheduledDateRaw);
       if (scheduled != null) {
         daysOverdue = DateTime(today.year, today.month, today.day)
@@ -463,7 +463,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
-              if (isOverdue || isDateOverdue)
+              if (status == 'overdue' || isDateOverdue)
                 Container(
                   margin: const EdgeInsets.only(right: 6),
                   padding: const EdgeInsets.symmetric(
