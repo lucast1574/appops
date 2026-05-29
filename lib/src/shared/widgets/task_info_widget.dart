@@ -55,9 +55,8 @@ class TaskInfoWidget extends StatelessWidget {
     final String destinationGoogleMapsLink = metadata['dest_google_maps_link'] ?? '';
 
     final String serviceType = metadata['service_type'] ?? '';
-    final String conversionLocation = metadata['location'] ?? '';
+    final String conversionLocation = metadata['conversion_center'] ?? metadata['location'] ?? '';
     final String typeSlug = type?['slug'] ?? '';
-    final bool isConversion = typeSlug == 'conversion';
     final bool isTraslado = typeSlug == 'traslado';
     final bool isDelivery = typeSlug == 'entrega';
 
@@ -246,7 +245,7 @@ class TaskInfoWidget extends StatelessWidget {
                   // --- DEFAULT FIELDS (Traslado, Conversion, etc.) ---
 
                   // Address (only if not a specific task type that shows its own locations below)
-                  if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado && !isConversion) ...[
+                  if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado) ...[
                     FlowAddressDisplay(
                       label: 'Dirección',
                       address: address,
