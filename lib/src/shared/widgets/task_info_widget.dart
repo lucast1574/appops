@@ -48,11 +48,18 @@ class TaskInfoWidget extends StatelessWidget {
     final String deliveryGoogleMapsLink = metadata['delivery_google_maps_link'] ?? '';
     final String origin = metadata['origin'] ?? '';
     final String originAddress = metadata['origin_address'] ?? address;
-    final String originGoogleMapsLink = metadata['origin_google_maps_link'] ?? metadata['google_maps_link'] ?? task['google_maps_link'] ?? '';
+    final String originGoogleMapsLink =
+        metadata['origin_google_maps_link']?.toString().isNotEmpty == true
+            ? metadata['origin_google_maps_link'].toString()
+            : metadata['google_maps_link']?.toString() ?? task['google_maps_link']?.toString() ?? '';
     
     final String destination = metadata['destination'] ?? '';
     final String destinationAddress = metadata['dest_address'] ?? '';
     final String destinationGoogleMapsLink = metadata['dest_google_maps_link'] ?? '';
+    final String pickupGoogleMapsLink =
+        metadata['pickup_google_maps_link']?.toString().isNotEmpty == true
+            ? metadata['pickup_google_maps_link'].toString()
+            : task['google_maps_link']?.toString() ?? '';
 
     final String serviceType = metadata['service_type'] ?? '';
     final String conversionLocation = metadata['conversion_center'] ?? metadata['location'] ?? '';
@@ -283,8 +290,8 @@ class TaskInfoWidget extends StatelessWidget {
                       FlowAddressDisplay(
                         label: 'Lugar de recojo de documentos',
                         address: '$pickupNotary\n$address',
-                        mapsLink: primaryMapsLink,
-                        onOpenMaps: () => _launchMaps(primaryMapsLink),
+                        mapsLink: pickupGoogleMapsLink,
+                        onOpenMaps: () => _launchMaps(pickupGoogleMapsLink),
                       ),
                       const SizedBox(height: 16),
                     ],
