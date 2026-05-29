@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     // Firebase / Google Services plugin (reads google-services.json from this folder)
@@ -16,6 +17,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
         // Required by flutter_local_notifications to support older Android versions.
         isCoreLibraryDesugaringEnabled = true
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     defaultConfig {
