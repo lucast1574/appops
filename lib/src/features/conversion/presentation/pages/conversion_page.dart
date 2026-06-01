@@ -171,8 +171,80 @@ class _ConversionPageState extends State<ConversionPage> {
                     ],
                   ),
                 )
-              : _buildCurrentStep(),
+              : _buildBodyContent(),
       ),
+    );
+  }
+
+  Widget _buildBodyContent() {
+    final metadata = _task['metadata'] as Map<String, dynamic>? ?? {};
+    final String serviceType = metadata['service_type'] ?? '';
+    final bool isRevisionTecnica = serviceType == 'Revisión Técnica';
+
+    if (isRevisionTecnica && _currentStep < 5) {
+      return Column(
+        children: [
+          _buildDocsBanner(),
+          Expanded(child: _buildCurrentStep()),
+        ],
+      );
+    }
+    return _buildCurrentStep();
+  }
+
+  Widget _buildDocsBanner() {
+    final photos = (_task['photos'] as List? ?? [])
+        .where((p) => p['label']?.toString().startsWith('supervisor_doc') == true)
+        .toList();
+
+    if (photos.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF5F3FF),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.description, color: Color(0xFF7C3AED), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Documentos adjuntos por supervisor',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF002B4B),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _showDocsCarouselModal(context, photos),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'Ver documentos',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF7C3AED),
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDocsCarouselModal(BuildContext context, List<dynamic> photos) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return _DocsCarouselDialog(photos: photos);
+      },
     );
   }
 
@@ -253,7 +325,6 @@ class _ConversionPageState extends State<ConversionPage> {
           'google_maps_link': _task['google_maps_link'] ?? '',
           'certificate_uploaded': _certificateUploaded,
           'checklist_uploaded': _checklistUploaded,
-
         },
         observations: '',
       );
@@ -340,6 +411,160 @@ class _ConversionPageState extends State<ConversionPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DocsCarouselDialog extends StatefulWidget {
+  final List<dynamic> photos;
+  const _DocsCarouselDialog({required this.photos});
+
+  @override
+  State<_DocsCarouselDialog> createState() => _DocsCarouselDialogState();
+}
+
+class _DocsCarouselDialogState extends State<_DocsCarouselDialog> {
+  int _currentIndex = 0;
+  final PageController _pageController = PageController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Documentos adjuntos (${_currentIndex + 1}/${widget.photos.length})',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF002B4B),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Color(0xFF002B4B)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // PageView Carousel
+            SizedBox(
+              height: 380,
+              width: double.infinity,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                itemCount: widget.photos.length,
+                itemBuilder: (context, index) {
+                  final photo = widget.photos[index];
+                  final url = photo['download_url'] ?? photo['url'] ?? '';
+                  return InteractiveViewer(
+                    panEnabled: true,
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: url.isNotEmpty
+                          ? Image.network(
+                              url,
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+                                );
+                              },
+                            )
+                          : const Center(
+                              child: Icon(Icons.image, size: 64, color: Colors.grey),
+                            ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Page Indicators and Arrows
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left Arrow
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 18),
+                  color: _currentIndex > 0 ? const Color(0xFF7C3AED) : Colors.grey.shade300,
+                  onPressed: _currentIndex > 0
+                      ? () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                ),
+
+                // Indicators
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    widget.photos.length,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentIndex == index
+                            ? const Color(0xFF7C3AED)
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Right Arrow
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                  color: _currentIndex < widget.photos.length - 1
+                      ? const Color(0xFF7C3AED)
+                      : Colors.grey.shade300,
+                  onPressed: _currentIndex < widget.photos.length - 1
+                      ? () {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
