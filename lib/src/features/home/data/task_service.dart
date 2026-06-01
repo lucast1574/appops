@@ -156,6 +156,19 @@ class TaskService {
     return Map<String, dynamic>.from(response.data);
   }
 
+  /// Update the tag of an already-uploaded photo.
+  /// Called after the operario types/changes the tag field.
+  Future<void> updatePhotoTag(
+    int taskId, {
+    required int photoId,
+    required String tag,
+  }) async {
+    await _api.dio.patch(
+      '/tasks/$taskId/photos/$photoId/tag/',
+      data: {'tag': tag},
+    );
+  }
+
   Future<void> uploadImageToS3(String url, List<int> bytes, {String contentType = 'image/png'}) async {
     // Use a fresh Dio instance to avoid sending the 'Authorization' header
     // from our ApiClient interceptor, which S3 rejects on presigned URLs.

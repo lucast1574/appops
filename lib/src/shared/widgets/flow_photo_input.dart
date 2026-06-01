@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/network/photo_upload_helper.dart';
+import '../../features/home/data/task_service.dart';
 import 'flow_form_widgets.dart';
 
 /// A standardized photo input widget that handles both the upload button
@@ -11,6 +13,10 @@ import 'flow_form_widgets.dart';
 /// foto..." so the operator knows the app is doing something. Tapping is
 /// disabled during the upload to avoid double-taps that would launch the
 /// camera twice.
+///
+/// When [photoId] is provided, any tag change is persisted to the backend
+/// via PATCH /tasks/{taskId}/photos/{photoId}/tag/ so the backoffice can
+/// see the operator's labels.
 class FlowPhotoInput extends StatefulWidget {
   final String label;
   final int taskId;
@@ -19,6 +25,9 @@ class FlowPhotoInput extends StatefulWidget {
   final bool isUploaded;
   final String? imagePath;
   final String? tag;
+  /// Backend ID of the TaskPhoto record (returned by confirm_upload).
+  /// When non-null, tag changes are synced to the backend automatically.
+  final int? photoId;
   final Function(bool, dynamic) onChanged;
   final Function(String?) onTagChanged;
   final String? iconAsset;
@@ -33,6 +42,7 @@ class FlowPhotoInput extends StatefulWidget {
     required this.isUploaded,
     this.imagePath,
     this.tag,
+    this.photoId,
     required this.onChanged,
     required this.onTagChanged,
     this.iconAsset = 'assets/CameraPlus.svg',
@@ -45,9 +55,10 @@ class FlowPhotoInput extends StatefulWidget {
 
 class _FlowPhotoInputState extends State<FlowPhotoInput> {
   bool _isUploading = false;
+  final TaskService _taskService = TaskService();
 
   Future<void> _handleTap() async {
-    if (_isUploading) return; // ignore double-taps
+    if (_isUploading) return;
     setState(() => _isUploading = true);
     try {
       final result = await PhotoUploadHelper.pickAndUploadWithChoice(
@@ -59,9 +70,6 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
       if (result != null) {
         widget.onChanged(true, result);
       } else {
-        // result == null means either the user cancelled the camera (silent)
-        // or the upload failed (logged via developer.log). Show a snackbar
-        // so the operator at least gets *some* feedback instead of nothing.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No se pudo subir la foto. Intenta de nuevo.'),
@@ -74,12 +82,96 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
     }
   }
 
+  /// Notifies the parent and, if a [photoId] is known, persists the tag
+  /// to the backend so the backoffice can see the operator's label.
+  void _handleTagChanged(String? newTag) {
+    widget.onTagChanged(newTag);
+    final int? photoId = widget.photoId;
+    if (photoId != null) {
+      _taskService.updatePhotoTag(
+        widget.taskId,
+        photoId: photoId,
+        tag: newTag ?? '',
+      ).catchError((e) {
+        debugPrint('[FlowPhotoInput] updatePhotoTag failed: $e');
+      });
+    }
+  }
+
+  void _showImageDialog(BuildContext context) {
+    if (widget.imagePath == null || widget.imagePath!.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: widget.imagePath!.startsWith('http')
+                    ? Image.network(
+                        widget.imagePath!,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          );
+                        },
+                      )
+                    : Image.file(
+                        File(widget.imagePath!),
+                        fit: BoxFit.contain,
+                      ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: CircleAvatar(
+                backgroundColor: Colors.black.withValues(alpha: 0.5),
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        FlowSectionLabel(label: widget.label),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            FlowSectionLabel(label: widget.label),
+            if (widget.isUploaded && widget.imagePath != null && widget.imagePath!.isNotEmpty)
+              GestureDetector(
+                onTap: () => _showImageDialog(context),
+                child: Text(
+                  'Ver imagen',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: const Color(0xFF4FA4B5),
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: 12),
         widget.isUploaded
             ? FlowImagePreview(
@@ -87,8 +179,8 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
                 imagePath: widget.imagePath,
                 tag: widget.tag,
                 onDeleteImage: () => widget.onChanged(false, null),
-                onDeleteTag: () => widget.onTagChanged(null),
-                onTagAdded: (val) => widget.onTagChanged(val),
+                onDeleteTag: () => _handleTagChanged(null),
+                onTagAdded: (val) => _handleTagChanged(val),
               )
             : GestureDetector(
                 onTap: _handleTap,
@@ -114,9 +206,7 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
                               height: 28,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.6,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF002B4B),
-                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF002B4B)),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -130,11 +220,7 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
                             ),
                           ]
                         : [
-                            SvgPicture.asset(
-                              widget.iconAsset!,
-                              width: 32,
-                              height: 32,
-                            ),
+                            SvgPicture.asset(widget.iconAsset!, width: 32, height: 32),
                             const SizedBox(height: 8),
                             Text(
                               widget.buttonText,

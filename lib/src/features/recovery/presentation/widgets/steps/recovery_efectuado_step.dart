@@ -47,6 +47,21 @@ class RecoveryEfectuadoStep extends StatelessWidget {
                     final val = option['val'] as bool;
                     final isSelected = value == val;
 
+                    Color getBgColor() {
+                      if (!isSelected) return const Color(0xFFF8FBFA);
+                      return val ? const Color(0xFF4FA4B5).withValues(alpha: 0.1) : const Color(0xFFF25A5A);
+                    }
+
+                    Color getBorderColor() {
+                      if (!isSelected) return const Color(0xFFE5E9EB);
+                      return val ? const Color(0xFF4FA4B5) : const Color(0xFFF25A5A);
+                    }
+
+                    Color getTextColor() {
+                      if (!isSelected) return const Color(0xFF002B4B);
+                      return val ? const Color(0xFF002B4B) : Colors.white;
+                    }
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: InkWell(
@@ -57,12 +72,10 @@ class RecoveryEfectuadoStep extends StatelessWidget {
                           height: 64,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFF4FA4B5).withValues(alpha: 0.1)
-                                : const Color(0xFFF8FBFA),
+                            color: getBgColor(),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? const Color(0xFF4FA4B5) : const Color(0xFFE5E9EB),
+                              color: getBorderColor(),
                               width: isSelected ? 1.5 : 1.0,
                             ),
                           ),
@@ -70,8 +83,8 @@ class RecoveryEfectuadoStep extends StatelessWidget {
                             label,
                             style: GoogleFonts.inter(
                               fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF002B4B),
+                              fontWeight: FontWeight.w600,
+                              color: getTextColor(),
                             ),
                           ),
                         ),

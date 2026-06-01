@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../../shared/widgets/flow_form_widgets.dart';
 
 class RecoveryTaskInfoStep extends StatelessWidget {
   final Map<String, dynamic> task;
@@ -13,12 +14,27 @@ class RecoveryTaskInfoStep extends StatelessWidget {
   });
 
   Future<void> _makeCall(String phoneNumber) async {
+    final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
     final Uri launchUri = Uri(
       scheme: 'tel',
-      path: phoneNumber,
+      path: cleanPhone,
     );
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
+    } else {
+      try {
+        await launchUrl(launchUri);
+      } catch (e) {
+        debugPrint('Could not launch phone dialer: $e');
+      }
+    }
+  }
+
+  Future<void> _launchMaps(String url) async {
+    if (url.isEmpty) return;
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -32,6 +48,22 @@ class RecoveryTaskInfoStep extends StatelessWidget {
     final String placa = task['placa'] ?? '';
     final String clientName = task['client_name'] ?? '';
     final String clientDni = task['client_dni'] ?? '';
+    final String marca = task['marca'] ?? '';
+    final String modelo = task['modelo'] ?? '';
+    final String color = task['color'] ?? '';
+    final String vehicleType = task['vehicle_type'] ?? '';
+    final String observations = task['observations'] ?? '';
+
+    final metadata = task['metadata'] as Map<String, dynamic>? ?? {};
+    final String mapsLink = task['google_maps_link']?.toString() ?? metadata['google_maps_link']?.toString() ?? '';
+
+    final vehicleParts = <String>[
+      if (marca.isNotEmpty) marca,
+      if (modelo.isNotEmpty) modelo,
+      if (color.isNotEmpty) color,
+      if (vehicleType.isNotEmpty) vehicleType,
+    ];
+    final String vehicleInfo = vehicleParts.join(' \u00b7 ');
 
     final String op1 = task['assigned_to'] != null 
         ? "${task['assigned_to']['first_name'] ?? ''} ${task['assigned_to']['last_name'] ?? ''}".trim()
@@ -92,6 +124,18 @@ class RecoveryTaskInfoStep extends StatelessWidget {
                   _value(
                     Text(
                       placa,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (vehicleInfo.isNotEmpty) ...[
+                  _header('Vehículo'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      vehicleInfo,
                       style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
                     ),
                   ),
@@ -161,13 +205,11 @@ class RecoveryTaskInfoStep extends StatelessWidget {
                 ],
 
                 if (address.isNotEmpty) ...[
-                  _header('Ubicación'),
-                  const SizedBox(height: 8),
-                  _value(
-                    Text(
-                      address,
-                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)),
-                    ),
+                  FlowAddressDisplay(
+                    label: 'Ubicación',
+                    address: address,
+                    mapsLink: mapsLink,
+                    onOpenMaps: () => _launchMaps(mapsLink),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -208,6 +250,18 @@ class RecoveryTaskInfoStep extends StatelessWidget {
                       const SizedBox(width: 12),
                       _callButton(phoneAval),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (observations.isNotEmpty) ...[
+                  _header('Observaciones'),
+                  const SizedBox(height: 8),
+                  _value(
+                    Text(
+                      observations,
+                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF668093)),
+                    ),
                   ),
                   const SizedBox(height: 24),
                 ],

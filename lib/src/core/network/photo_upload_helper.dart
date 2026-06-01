@@ -95,6 +95,7 @@ class PhotoUploadHelper {
         's3Key': s3Key,
         'localPath': image.path,
         'downloadUrl': confirm['download_url'] ?? '',
+        'photoId': confirm['id']?.toString() ?? '',
       };
     } on DioException catch (e) {
       _log('DioException uploading photo: status=${e.response?.statusCode} '
