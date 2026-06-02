@@ -42,26 +42,40 @@ class _HistoryPageState extends State<HistoryPage> {
       _error = null;
     });
     try {
-      // Operario's own tasks. Backend filters by `assigned_to=request.user`,
-      // so we get exactly the ones this operario should see.
-      final tasks = await _taskService.getMyTasks();
-      final today = DateTime.now();
-      final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-      final tomorrow = today.add(const Duration(days: 1));
-      final tomorrowStr = '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+      // History page muestra:
+      //  - tareas en curso / reprogramadas del operario (activas),
+      //  - + las primeras 50 tareas históricas (completadas/rechazadas).
+      // Las activas vienen de getMyTasks (default: excluye historial), y
+      // el histórico via /tasks/history/ paginado para no inflar payload.
+      final results = await Future.wait([
+        _taskService.getMyTasks(),
+        _taskService.getTaskHistory(page: 1, pageSize: 50),
+      ]);
+      final List<Map<String, dynamic>> active = results[0] as List<Map<String, dynamic>>;
+      final history = (results[1] as Map<String, dynamic>)['items'] as List? ?? [];
+      final List<Map<String, dynamic>> historyTasks =
+          history.map((e) => Map<String, dynamic>.from(e)).toList();
 
-      // Configurable threshold hour (24h format) for showing next day's tasks (default: 6 PM / 18:00)
+      final today = DateTime.now();
+      final tomorrow = today.add(const Duration(days: 1));
+      final tomorrowStr =
+          '${tomorrow.year}-${tomorrow.month.toString().padLeft(2, '0')}-${tomorrow.day.toString().padLeft(2, '0')}';
+      final todayStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
       const int showNextDayTasksHour = 18;
       final bool showNextDay = today.hour >= showNextDayTasksHour;
       final String maxAllowedDateStr = showNextDay ? tomorrowStr : todayStr;
 
       if (mounted) {
         setState(() {
-          _tasks = tasks.where((t) {
-            final date = t['scheduled_date'] ?? '';
-            if (date.isNotEmpty && date.compareTo(maxAllowedDateStr) > 0) return false;
-            return true;
-          }).toList();
+          _tasks = [
+            ...active.where((t) {
+              final date = t['scheduled_date'] ?? '';
+              if (date.isNotEmpty && date.compareTo(maxAllowedDateStr) > 0) return false;
+              return true;
+            }),
+            ...historyTasks,
+          ];
           isLoading = false;
         });
       }

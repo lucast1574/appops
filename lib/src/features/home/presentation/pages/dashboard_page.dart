@@ -58,7 +58,6 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     try {
-      final tasks = await _taskService.getMyTasks();
       final today = DateTime.now();
       final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
       final tomorrow = today.add(const Duration(days: 1));
@@ -69,15 +68,25 @@ class _DashboardPageState extends State<DashboardPage> {
       final bool showNextDay = today.hour >= showNextDayTasksHour;
       final String maxAllowedDateStr = showNextDay ? tomorrowStr : todayStr;
 
+      // Lookback: we still want overdue/atrasada tasks from the past 30 days
+      // so the operator can see them in the dedicated tab.
+      final lookback = today.subtract(const Duration(days: 30));
+      final lookbackStr =
+          '${lookback.year}-${lookback.month.toString().padLeft(2, '0')}-${lookback.day.toString().padLeft(2, '0')}';
+
+      // Backend already excludes completed/rejected/cancelled. We pass a
+      // 'since' filter so historical pending rows don't bloat the payload.
+      final tasks = await _taskService.getMyTasks();
+
       if (mounted) {
         setState(() {
           _tasks = tasks
               .where((t) {
-                // We keep rescheduled tasks in the list so they can be seen in the "Reprogramada" tab,
-                // but we will filter them out of "Todas" and "En curso" in _filteredTasks.
-                if (t['status'] == 'completed' || t['status'] == 'rejected') return false;
+                // Future tasks beyond the day-after-tomorrow are not shown
+                // in the dashboard until they are imminent.
                 final date = t['scheduled_date'] ?? '';
                 if (date.isNotEmpty && date.compareTo(maxAllowedDateStr) > 0) return false;
+                if (date.isNotEmpty && date.compareTo(lookbackStr) < 0) return false;
                 return true;
               })
               .toList();

@@ -2,6 +2,17 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 
+/// Tiny in-memory cache entry for dashboard tasks.
+/// Keeps the previous response for [TaskService._cacheTtl] so reopening the
+/// dashboard from another page doesn't trigger a fresh roundtrip.
+class _TasksCacheEntry {
+  _TasksCacheEntry(this.key, this.value, this.expiresAt);
+  final String key;
+  final List<Map<String, dynamic>> value;
+  final DateTime expiresAt;
+  bool get isFresh => DateTime.now().isBefore(expiresAt);
+}
+
 /// Task service — connects to the Django backend.
 /// Every operario only sees their own tasks
 /// (backend filters by assigned_to=request.user).
@@ -9,28 +20,86 @@ class TaskService {
   final ApiClient _api = ApiClient();
 
   // ---------------------------------------------------------------
+  // Lightweight cache for repeated GET /tasks/ calls. The dashboard
+  // hits this endpoint on every push/pop, which used to refetch the
+  // entire active task list (potentially hundreds of rows). 30 s of
+  // freshness keeps the UI snappy without showing stale data.
+  // ---------------------------------------------------------------
+  static const Duration _cacheTtl = Duration(seconds: 30);
+  _TasksCacheEntry? _tasksCache;
+
+  /// Force-invalidate the cache (call after start/submit/reschedule).
+  void invalidateTasksCache() {
+    _tasksCache = null;
+  }
+
+  // ---------------------------------------------------------------
   // Task list (GET /tasks/)
   // ---------------------------------------------------------------
 
   /// Fetch tasks assigned to the current operario.
   /// Optional filters: [status], [mainStatus], [type], [date].
+  /// By default the backend already excludes completed/rejected/cancelled
+  /// (set [includeHistory] true to bypass that and ask for everything).
   Future<List<Map<String, dynamic>>> getMyTasks({
     String? status,
     String? mainStatus,
     String? type,
     String? date,
+    bool includeHistory = false,
+    bool useCache = true,
   }) async {
     final params = <String, String>{};
     if (status != null) params['status'] = status;
     if (mainStatus != null) params['main_status'] = mainStatus;
     if (type != null) params['type'] = type;
     if (date != null) params['date'] = date;
+    if (includeHistory) params['include_history'] = '1';
+
+    // Cache key includes the filters so different views don't collide.
+    final cacheKey = params.entries
+        .map((e) => '${e.key}=${e.value}')
+        .toList()
+      ..sort();
+    final keyStr = cacheKey.join('&');
+
+    if (useCache && _tasksCache != null &&
+        _tasksCache!.key == keyStr && _tasksCache!.isFresh) {
+      return _tasksCache!.value;
+    }
 
     final response = await _api.dio.get(
       '/tasks/',
       queryParameters: params,
     );
-    return List<Map<String, dynamic>>.from(response.data);
+    final data = List<Map<String, dynamic>>.from(response.data);
+    _tasksCache = _TasksCacheEntry(
+      keyStr, data, DateTime.now().add(_cacheTtl),
+    );
+    return data;
+  }
+
+  /// Paginated historical tasks (completed/rejected/cancelled).
+  /// Use [page] starting at 1. Backend caps page_size at 100.
+  /// Returns the raw payload: { count, page, page_size, has_next, items }.
+  Future<Map<String, dynamic>> getTaskHistory({
+    int page = 1,
+    int pageSize = 20,
+    String? type,
+    String? since,
+  }) async {
+    final params = <String, String>{
+      'page': '$page',
+      'page_size': '$pageSize',
+    };
+    if (type != null) params['type'] = type;
+    if (since != null) params['since'] = since;
+
+    final response = await _api.dio.get(
+      '/tasks/history/',
+      queryParameters: params,
+    );
+    return Map<String, dynamic>.from(response.data);
   }
 
   /// Fetch today's tasks for the operario.
@@ -58,6 +127,7 @@ class TaskService {
   /// Start a task (marks it as in_progress).
   Future<Map<String, dynamic>> startTask(int taskId) async {
     final response = await _api.dio.post('/tasks/$taskId/start/');
+    invalidateTasksCache();
     return Map<String, dynamic>.from(response.data);
   }
 
@@ -96,6 +166,7 @@ class TaskService {
         'signatures': signatures,
       },
     );
+    invalidateTasksCache();
     return Map<String, dynamic>.from(response.data);
   }
 
@@ -114,6 +185,7 @@ class TaskService {
         'checklist_data': checklistData,
       }..removeWhere((_, value) => value == null),
     );
+    invalidateTasksCache();
     return Map<String, dynamic>.from(response.data);
   }
 
