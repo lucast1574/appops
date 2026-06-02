@@ -69,8 +69,10 @@ class _LoginPageState extends State<LoginPage> {
       double? lng;
       try {
         final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 5),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 5),
+          ),
         );
         lat = pos.latitude;
         lng = pos.longitude;
