@@ -12,14 +12,27 @@ class AuthService {
 
   /// Sends the Google ID token to the backend for verification.
   /// [source] should be 'mobile' or 'backoffice'.
+  /// [latitude] / [longitude] (opcionales): si se pasan, el backend los
+  /// usa para resolver el país cuando varios países comparten el mismo
+  /// sufijo de dominio Google (PE, EC, CO… todos en 'leasyauto.com').
   /// Returns the full response data map.
-  Future<Map<String, dynamic>> loginWithGoogle(String googleIdToken, {String source = 'mobile'}) async {
+  Future<Map<String, dynamic>> loginWithGoogle(
+    String googleIdToken, {
+    String source = 'mobile',
+    double? latitude,
+    double? longitude,
+  }) async {
+    final payload = <String, dynamic>{
+      'token': googleIdToken,
+      'source': source,
+    };
+    if (latitude != null && longitude != null) {
+      payload['latitude'] = latitude;
+      payload['longitude'] = longitude;
+    }
     final response = await _apiClient.dio.post(
       '/users/auth/google/',
-      data: {
-        'token': googleIdToken,
-        'source': source,
-      },
+      data: payload,
     );
 
     final data = response.data;

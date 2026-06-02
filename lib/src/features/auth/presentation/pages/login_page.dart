@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
@@ -60,9 +61,30 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // 3. Send token to backend with source='mobile'
-      final result =
-          await _authService.loginWithGoogle(idToken, source: 'mobile');
+      // 3. Best-effort: capture current GPS so the backend can resolve
+      // the country when several share the same domain suffix (PE/EC/CO
+      // all on leasyauto.com). PermissionGatePage already prompted for
+      // permission, but we tolerate any failure here.
+      double? lat;
+      double? lng;
+      try {
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 5),
+        );
+        lat = pos.latitude;
+        lng = pos.longitude;
+      } catch (_) {
+        // GPS not available; backend will fall back to first matching country.
+      }
+
+      // 4. Send token + GPS hint to backend with source='mobile'
+      final result = await _authService.loginWithGoogle(
+        idToken,
+        source: 'mobile',
+        latitude: lat,
+        longitude: lng,
+      );
 
       if (!mounted) return;
 
