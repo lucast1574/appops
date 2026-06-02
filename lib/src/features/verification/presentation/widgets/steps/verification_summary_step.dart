@@ -90,6 +90,12 @@ class VerificationSummaryStep extends StatelessWidget {
                     ),
                     FlowSummaryItem(label: 'Dirección', value: task['address'] ?? '---'),
                     FlowSummaryItem(label: 'DNI/INE cliente', value: task['client_dni'] ?? '---'),
+                    FlowSummaryItem(
+                      label: 'Celular del cliente',
+                      value: (task['client_phone']?.toString().isNotEmpty == true)
+                          ? task['client_phone']
+                          : '---',
+                    ),
                     FlowSummaryItem(label: 'Observaciones', value: task['observations']?.toString().isNotEmpty == true ? task['observations'] : 'Sin observaciones'),
                   ],
                 ),

@@ -33,6 +33,7 @@ class TaskInfoWidget extends StatelessWidget {
     final String address = task['address'] ?? '';
     final String clientName = task['client_name'] ?? '';
     final String clientDni = task['client_dni'] ?? '';
+    final String clientPhone = task['client_phone'] ?? '';
     final String placa = task['placa'] ?? '';
     final String marca = task['marca'] ?? '';
     final String modelo = task['modelo'] ?? '';
@@ -326,6 +327,53 @@ class TaskInfoWidget extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
+                  // Client phone (Celular). Tappable: opens the dialer.
+                  if (clientPhone.isNotEmpty) ...[
+                    _buildHeader('Celular del cliente'),
+                    const SizedBox(height: 8),
+                    _buildValueContainer(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              clientPhone,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                color: const Color(0xFF002B4B),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _launchPhone(clientPhone),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4FA4B5).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.phone, size: 14, color: Color(0xFF4FA4B5)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Llamar',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF4FA4B5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Placa
                   if (placa.isNotEmpty) ...[
                     _buildHeader('Placa'),
@@ -459,6 +507,16 @@ class TaskInfoWidget extends StatelessWidget {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _launchPhone(String phone) async {
+    // Sanitize: keep digits and a leading '+'.
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleaned.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: cleaned);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
   }
 
