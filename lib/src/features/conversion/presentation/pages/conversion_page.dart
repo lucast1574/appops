@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../shared/widgets/flow_progress_bar.dart';
 import '../../../../shared/widgets/flow_confirmation_sheet.dart';
@@ -428,6 +429,13 @@ class _DocsCarouselDialogState extends State<_DocsCarouselDialog> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
 
+  Future<void> _launchPdfUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -477,6 +485,67 @@ class _DocsCarouselDialogState extends State<_DocsCarouselDialog> {
                 itemBuilder: (context, index) {
                   final photo = widget.photos[index];
                   final url = photo['download_url'] ?? photo['url'] ?? '';
+                  final String s3Key = photo['s3_key']?.toString().toLowerCase() ?? '';
+                  final String downloadUrl = url.toString().toLowerCase();
+                  final bool isPdf = s3Key.endsWith('.pdf') || downloadUrl.contains('.pdf');
+
+                  if (isPdf) {
+                    return Center(
+                      child: Container(
+                        margin: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.red,
+                              size: 64,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              photo['tag']?.toString().isNotEmpty == true
+                                  ? photo['tag']
+                                  : 'Documento PDF',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF002B4B),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () => _launchPdfUrl(url),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF7C3AED),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              icon: const Icon(Icons.open_in_new, size: 18),
+                              label: Text(
+                                'Abrir Documento',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
                   return InteractiveViewer(
                     panEnabled: true,
                     minScale: 0.5,
