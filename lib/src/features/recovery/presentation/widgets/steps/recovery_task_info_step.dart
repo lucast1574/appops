@@ -255,12 +255,31 @@ class RecoveryTaskInfoStep extends StatelessWidget {
                 ],
 
                 if (observations.isNotEmpty) ...[
-                  _header('Observaciones'),
+                  _header('Motivo de Recupero'),
                   const SizedBox(height: 8),
-                  _value(
-                    Text(
-                      observations,
-                      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF668093)),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6F8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF4FA4B5).withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 16, color: Color(0xFF4FA4B5)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            observations,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF002B4B),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),

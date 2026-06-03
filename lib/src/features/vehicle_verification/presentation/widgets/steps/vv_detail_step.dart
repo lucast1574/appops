@@ -25,6 +25,7 @@ class VehicleVerificationDetailStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final String scheduledDate = task['scheduled_date'] ?? '—';
     final String address = task['address'] ?? '—';
+    final String motivo = task['observations'] ?? '';
 
     return Column(
       children: [
@@ -42,7 +43,40 @@ class VehicleVerificationDetailStep extends StatelessWidget {
                 _header('Ubicación de verificación'),
                 const SizedBox(height: 8),
                 _readOnly(Text(address, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF002B4B)))),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Motivo set by the supervisor
+                if (motivo.isNotEmpty) ...[
+                  _header('Motivo'),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6F8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF4FA4B5).withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 16, color: Color(0xFF4FA4B5)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            motivo,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF002B4B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
                 Text('Detalle de verificación', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF002B4B))),
                 const SizedBox(height: 24),
                 FlowYesNoQuestion(

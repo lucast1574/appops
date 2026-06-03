@@ -428,7 +428,7 @@ class TaskInfoWidget extends StatelessWidget {
 
                 // Observations (read-only if existing)
                 if (observations.isNotEmpty) ...[
-                  _buildHeader('Observaciones'),
+                  _buildHeader(typeSlug == 'verificar_vehiculo' ? 'Motivo' : 'Observaciones'),
                   const SizedBox(height: 8),
                   _buildValueContainer(
                     child: Text(observations, style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF668093))),
