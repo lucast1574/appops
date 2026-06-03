@@ -49,32 +49,41 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    await Future.delayed(const Duration(seconds: 3));
+    // Wait for the splash animation to finish (matches the 1800ms controller
+    // duration). Don't add extra delay beyond what the animation needs.
+    await Future.delayed(const Duration(milliseconds: 1800));
+    if (!mounted) return;
+
+    // Ensure Firebase bootstrap is done before we query notification settings.
+    await PushService.instance.bootstrap();
     if (!mounted) return;
 
     final authService = AuthService();
+    final locationService = LocationService();
     final isLoggedIn = await authService.isAuthenticated();
 
     Widget destination;
     if (isLoggedIn) {
       // Verify token is still valid by fetching user data
       try {
-        await authService.fetchMe();
+        // Run fetchMe and permission checks concurrently to save time.
+        final results = await Future.wait([
+          authService.fetchMe(),
+          locationService.hasAlwaysPermission(),
+          PushService.instance.isPermissionGranted(),
+        ]);
 
-        // Refresh FCM token registration with the backend (token may
-        // have rotated while the app was closed). Best-effort.
+        // Refresh FCM token registration with the backend (best-effort).
         // ignore: unawaited_futures
         PushService.instance.registerCurrentDevice();
 
-        // Token valid — check if permissions are already granted.
-        final locationService = LocationService();
-        final hasAlways = await locationService.hasAlwaysPermission();
-        final hasNotifs = await PushService.instance.isPermissionGranted();
+        final hasAlways = results[1] as bool;
+        final hasNotifs = results[2] as bool;
 
         if (hasAlways && hasNotifs) {
-          // Send current location to backend (assigns city if missing)
-          // and start background tracking.
-          await locationService.sendCurrentLocation();
+          // Start background tracking — don't await sendCurrentLocation so
+          // navigation to MainPage is not blocked by a GPS+HTTP round-trip.
+          locationService.sendCurrentLocation();
           locationService.startTracking();
           destination = const MainPage();
         } else {

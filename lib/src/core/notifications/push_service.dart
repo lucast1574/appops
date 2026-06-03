@@ -33,8 +33,11 @@ import '../network/api_client.dart';
 /// We keep it minimal: just let the OS post the system notification.
 @pragma('vm:entry-point')
 Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
-  // Firebase needs to be initialized in the background isolate too.
-  await Firebase.initializeApp();
+  // Safely initialize Firebase in the background isolate. If it is already
+  // initialized (shouldn't happen in a background isolate, but guard anyway).
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
   // We deliberately do nothing here — the system tray notification is
   // handled by the FCM SDK because we send `notification` in the
   // payload from the backend. Logs only for debugging.
@@ -61,7 +64,11 @@ class PushService {
   /// Stream every incoming push (foreground + tap when opened from background).
   Stream<RemoteMessage> get messages => _messageController.stream;
 
-  bool _initialized = false;
+  // Use a Completer so that if bootstrap() is called concurrently (e.g. from
+  // main() and SplashPage at the same time) all callers await the same Future
+  // instead of running the init sequence twice.
+  Completer<void>? _bootstrapCompleter;
+
   String? _currentToken;
 
   /// Returns true if the user has already granted push notification permission.
@@ -72,13 +79,16 @@ class PushService {
 
   /// Call once during app startup (after WidgetsFlutterBinding ensureInitialized).
   Future<void> bootstrap() async {
-    if (_initialized) return;
-    _initialized = true;
+    if (_bootstrapCompleter != null) {
+      return _bootstrapCompleter!.future;
+    }
+    _bootstrapCompleter = Completer<void>();
 
     try {
       await Firebase.initializeApp();
     } catch (e) {
       debugPrint('[push] Firebase.initializeApp FAILED: $e');
+      _bootstrapCompleter!.complete();
       return;
     }
 
@@ -87,7 +97,6 @@ class PushService {
 
     // Local notifications (so we can show a banner when foreground).
     await _initLocalNotifications();
-
 
     // iOS: ensure the app shows banners while in foreground.
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -113,13 +122,14 @@ class PushService {
       _currentToken = tok;
       await _sendTokenToBackend(tok);
     });
+
+    _bootstrapCompleter!.complete();
   }
 
   /// Register the current device's token with the backend (call after login).
   Future<bool> registerCurrentDevice() async {
-    if (!_initialized) {
-      await bootstrap();
-    }
+    // Ensure bootstrap has completed before trying to get a token.
+    await bootstrap();
     try {
       final tok = _currentToken ?? await FirebaseMessaging.instance.getToken();
       if (tok == null || tok.isEmpty) return false;
