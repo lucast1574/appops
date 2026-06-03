@@ -323,8 +323,20 @@ class FlowAddressDisplay extends StatelessWidget {
     this.onOpenMaps,
   });
 
+  static bool _isGoogleMapsLink(String url) {
+    return url.contains('google.com/maps') ||
+        url.contains('maps.app.goo.gl') ||
+        url.contains('goo.gl/maps') ||
+        url.contains('goo.gl/') ||
+        url.contains('g.co/');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool hasLink = mapsLink != null && mapsLink!.isNotEmpty;
+    final bool isGoogleMaps = hasLink && _isGoogleMapsLink(mapsLink!);
+    final String buttonLabel = isGoogleMaps ? 'Abrir en Google Maps' : 'Abrir ubicación';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -341,23 +353,28 @@ class FlowAddressDisplay extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                address,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: const Color(0xFF002B4B).withValues(alpha: 0.8),
-                  height: 1.5,
+              if (address.isNotEmpty)
+                Text(
+                  address,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: const Color(0xFF002B4B).withValues(alpha: 0.8),
+                    height: 1.5,
+                  ),
                 ),
-              ),
-              if (mapsLink != null && mapsLink!.isNotEmpty) ...[
-                const SizedBox(height: 16),
+              if (hasLink) ...[
+                if (address.isNotEmpty) const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: onOpenMaps,
-                    icon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF4FA4B5)),
+                    icon: Icon(
+                      isGoogleMaps ? Icons.location_on_outlined : Icons.open_in_browser_outlined,
+                      size: 18,
+                      color: const Color(0xFF4FA4B5),
+                    ),
                     label: Text(
-                      'Abrir en Google Maps',
+                      buttonLabel,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

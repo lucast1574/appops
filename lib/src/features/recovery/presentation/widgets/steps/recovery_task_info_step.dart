@@ -204,7 +204,7 @@ class RecoveryTaskInfoStep extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
 
-                if (address.isNotEmpty) ...[
+                if (address.isNotEmpty || mapsLink.isNotEmpty) ...[
                   FlowAddressDisplay(
                     label: 'Ubicación',
                     address: address,

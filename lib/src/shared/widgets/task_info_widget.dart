@@ -253,7 +253,7 @@ class TaskInfoWidget extends StatelessWidget {
                   // --- DEFAULT FIELDS (Traslado, Conversion, etc.) ---
 
                   // Address (only if not a specific task type that shows its own locations below)
-                  if (address.isNotEmpty && pickupNotary.isEmpty && !isTraslado) ...[
+                  if ((address.isNotEmpty || primaryMapsLink.isNotEmpty) && pickupNotary.isEmpty && !isTraslado) ...[
                     FlowAddressDisplay(
                       label: 'Dirección',
                       address: address,
