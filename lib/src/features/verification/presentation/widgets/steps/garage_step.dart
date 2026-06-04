@@ -191,33 +191,6 @@ class GarageStep extends StatelessWidget {
                   currentValue: isGarageAtHome,
                   onChanged: onGarageAtHomeChanged,
                 ),
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => onCocheraFueraChanged(!isCocheraFuera),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: isCocheraFuera,
-                          onChanged: onCocheraFueraChanged,
-                          activeColor: const Color(0xFF002B4B),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Cochera fuera del domicilio',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: const Color(0xFF002B4B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 16),
                 if (isCocheraFuera) ...[
                   Row(

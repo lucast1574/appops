@@ -151,7 +151,10 @@ class _VerificationPageState extends State<VerificationPage> {
               if (draft['familiar_name'] != null) _familiarNameController.text = draft['familiar_name'];
               if (draft['familiar_dni'] != null) _familiarDniController.text = draft['familiar_dni'];
               if (draft['housing_type'] != null) _housingType = draft['housing_type'];
-              if (draft['is_garage_at_home'] != null) _isGarageAtHome = draft['is_garage_at_home'];
+              if (draft['is_garage_at_home'] != null) {
+                _isGarageAtHome = draft['is_garage_at_home'];
+                _isCocheraFuera = _isGarageAtHome == false;
+              }
               if (draft['has_security'] != null) _hasSecurity = draft['has_security'];
               if (draft['has_cameras'] != null) _hasCameras = draft['has_cameras'];
               if (draft['access_type'] != null) _accessType = draft['access_type'];
