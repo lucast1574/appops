@@ -14,7 +14,9 @@ import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/before_starting_step.dart';
 import '../widgets/steps/who_received_step.dart';
-import '../widgets/steps/document_validation_step.dart';
+import '../widgets/steps/dni_validation_step.dart';
+import '../widgets/steps/brevete_validation_step.dart';
+import '../widgets/steps/recibo_validation_step.dart';
 import '../widgets/steps/familiar_form_step.dart';
 import '../widgets/steps/housing_step.dart';
 import '../widgets/steps/garage_step.dart';
@@ -268,7 +270,7 @@ class _VerificationPageState extends State<VerificationPage> {
       return;
     }
 
-    if (_currentStep == 4) {
+    if (_currentStep == 6) {
       _showConfirmationBottomSheet(context, onConfirm: _submitAutomaticReschedule);
       return;
     }
@@ -277,7 +279,9 @@ class _VerificationPageState extends State<VerificationPage> {
       if (_currentStep == 2 && _selectedRecipient == 'Cliente') {
         _currentStep = 3;
       } else if (_currentStep == 2 && _selectedRecipient == 'Familiar') {
-        _currentStep = 4; // Go to Familiar Form first
+        _currentStep = 6; // Go to Familiar Form first
+      } else if (_currentStep == 5) {
+        _currentStep = 8; // From Recibo, go to Housing Step (previously 6)
       } else {
         _currentStep++;
       }
@@ -294,7 +298,7 @@ class _VerificationPageState extends State<VerificationPage> {
       if (mounted) {
         setState(() {
           _isAutoReschedule = _task['status'] == 'rescheduled';
-          _currentStep = 10;
+          _currentStep = 12;
         });
       }
       return;
@@ -359,7 +363,7 @@ class _VerificationPageState extends State<VerificationPage> {
           // (pendiente de aprobación del supervisor) en vez de cerrarla.
           _task['status'] = 'reschedule_requested';
           _isAutoReschedule = true;
-          _currentStep = 10;
+          _currentStep = 12;
         });
       }
     } catch (e) {
@@ -444,9 +448,25 @@ class _VerificationPageState extends State<VerificationPage> {
       setState(() {
         _currentStep = 0;
       });
-    } else if (_currentStep == 3 || _currentStep == 4 || _currentStep == 5) {
+    } else if (_currentStep == 3 || _currentStep == 6 || _currentStep == 7) {
       setState(() {
         _currentStep = 2;
+      });
+    } else if (_currentStep == 4) {
+      setState(() {
+        _currentStep = 3;
+      });
+    } else if (_currentStep == 5) {
+      setState(() {
+        _currentStep = 4;
+      });
+    } else if (_currentStep == 11) {
+      setState(() {
+        _currentStep = 10;
+      });
+    } else if (_currentStep == 10) {
+      setState(() {
+        _currentStep = 9;
       });
     } else if (_currentStep == 9) {
       setState(() {
@@ -454,15 +474,7 @@ class _VerificationPageState extends State<VerificationPage> {
       });
     } else if (_currentStep == 8) {
       setState(() {
-        _currentStep = 7;
-      });
-    } else if (_currentStep == 7) {
-      setState(() {
-        _currentStep = 6;
-      });
-    } else if (_currentStep == 6) {
-      setState(() {
-        _currentStep = 3;
+        _currentStep = 5;
       });
     } else {
       setState(() {
@@ -495,7 +507,7 @@ class _VerificationPageState extends State<VerificationPage> {
       );
     }
 
-    bool showAppBar = _currentStep != 10 && _currentStep != 5;
+    bool showAppBar = _currentStep != 12 && _currentStep != 7;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -538,7 +550,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 preferredSize: const Size.fromHeight(10),
                 child: VerificationProgressBar(
                   currentStep: _currentStep,
-                  totalSteps: (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie') ? 3 : 6,
+                  totalSteps: (_selectedRecipient == 'Familiar' || _selectedRecipient == 'Nadie') ? 3 : 8,
                 ),
               ),
             )
@@ -606,26 +618,15 @@ class _VerificationPageState extends State<VerificationPage> {
           onContinue: _nextStep,
         );
       case 3:
-        return DocumentValidationStep(
+        return DniValidationStep(
           taskId: _task['id'] ?? 0,
+          task: _task,
           dniFrontUploaded: _dniFrontUploaded,
           dniFrontTag: _dniFrontTag,
           dniFrontPath: _dniFrontPath,
           dniBackUploaded: _dniBackUploaded,
           dniBackTag: _dniBackTag,
           dniBackPath: _dniBackPath,
-          breveteFrontUploaded: _breveteFrontUploaded,
-          breveteFrontTag: _breveteFrontTag,
-          breveteFrontPath: _breveteFrontPath,
-          breveteBackUploaded: _breveteBackUploaded,
-          breveteBackTag: _breveteBackTag,
-          breveteBackPath: _breveteBackPath,
-          reciboFrontUploaded: _reciboFrontUploaded,
-          reciboFrontTag: _reciboFrontTag,
-          reciboFrontPath: _reciboFrontPath,
-          reciboBackUploaded: _reciboBackUploaded,
-          reciboBackTag: _reciboBackTag,
-          reciboBackPath: _reciboBackPath,
           onDniFrontUploadedChanged: (val, res) => setState(() {
             _dniFrontUploaded = val;
             _dniFrontPath = (val && res is Map) ? res['localPath'] : null;
@@ -636,6 +637,18 @@ class _VerificationPageState extends State<VerificationPage> {
             _dniBackPath = (val && res is Map) ? res['localPath'] : null;
           }),
           onDniBackTagChanged: (val) => setState(() => _dniBackTag = val),
+          onBack: _previousStep,
+          onContinue: _nextStep,
+        );
+      case 4:
+        return BreveteValidationStep(
+          taskId: _task['id'] ?? 0,
+          breveteFrontUploaded: _breveteFrontUploaded,
+          breveteFrontTag: _breveteFrontTag,
+          breveteFrontPath: _breveteFrontPath,
+          breveteBackUploaded: _breveteBackUploaded,
+          breveteBackTag: _breveteBackTag,
+          breveteBackPath: _breveteBackPath,
           onBreveteFrontUploadedChanged: (val, res) => setState(() {
             _breveteFrontUploaded = val;
             _breveteFrontPath = (val && res is Map) ? res['localPath'] : null;
@@ -646,6 +659,18 @@ class _VerificationPageState extends State<VerificationPage> {
             _breveteBackPath = (val && res is Map) ? res['localPath'] : null;
           }),
           onBreveteBackTagChanged: (val) => setState(() => _breveteBackTag = val),
+          onBack: _previousStep,
+          onContinue: _nextStep,
+        );
+      case 5:
+        return ReciboValidationStep(
+          taskId: _task['id'] ?? 0,
+          reciboFrontUploaded: _reciboFrontUploaded,
+          reciboFrontTag: _reciboFrontTag,
+          reciboFrontPath: _reciboFrontPath,
+          reciboBackUploaded: _reciboBackUploaded,
+          reciboBackTag: _reciboBackTag,
+          reciboBackPath: _reciboBackPath,
           onReciboFrontUploadedChanged: (val, res) => setState(() {
             _reciboFrontUploaded = val;
             _reciboFrontPath = (val && res is Map) ? res['localPath'] : null;
@@ -657,9 +682,9 @@ class _VerificationPageState extends State<VerificationPage> {
           }),
           onReciboBackTagChanged: (val) => setState(() => _reciboBackTag = val),
           onBack: _previousStep,
-          onContinue: () => setState(() => _currentStep = 6),
+          onContinue: _nextStep,
         );
-      case 4:
+      case 6:
         return FamiliarFormStep(
           selectedRelationship: _selectedRelationship,
           signatureKey: _signatureKey,
@@ -668,9 +693,9 @@ class _VerificationPageState extends State<VerificationPage> {
           onRelationshipChanged: (val) =>
               setState(() => _selectedRelationship = val),
           onBack: _previousStep,
-          onContinue: _nextStep, // Now goes to Reschedule screen (Step 5)
+          onContinue: _nextStep,
         );
-      case 5:
+      case 7:
         return FlowRescheduleFormStep(
           title: _selectedRecipient == 'Familiar' ? 'Cliente no se encontraba' : 'Nadie en el domicilio',
           subtitle: 'Se procederá a la reprogramación de la visita.',
@@ -688,15 +713,15 @@ class _VerificationPageState extends State<VerificationPage> {
           onFinalizar: _submitAutomaticReschedule,
           showBackButton: _selectedRecipient != 'Nadie',
         );
-      case 6:
+      case 8:
         return HousingStep(
           housingType: _housingType,
           mapsController: _mapsController,
           onHousingTypeChanged: (val) => setState(() => _housingType = val),
           onBack: _previousStep,
-          onContinue: () => setState(() => _currentStep = 7),
+          onContinue: () => setState(() => _currentStep = 9),
         );
-      case 7:
+      case 9:
         return GarageStep(
           taskId: _task['id'] ?? 0,
           isGarageAtHome: _isGarageAtHome,
@@ -799,17 +824,17 @@ class _VerificationPageState extends State<VerificationPage> {
             });
           },
           onBack: _previousStep,
-          onContinue: () => setState(() => _currentStep = 8),
+          onContinue: () => setState(() => _currentStep = 10),
         );
-      case 8:
+      case 10:
         return VerificationResultStep(
           verificationResult: _verificationResult,
           observationsController: _observationsController,
           onResultChanged: (val) => setState(() => _verificationResult = val),
           onBack: _previousStep,
-          onContinue: () => setState(() => _currentStep = 9),
+          onContinue: () => setState(() => _currentStep = 11),
         );
-      case 9:
+      case 11:
         return VerificationSummaryStep(
           selectedRecipient: _selectedRecipient,
           selectedRelationship: _selectedRelationship,
@@ -835,13 +860,13 @@ class _VerificationPageState extends State<VerificationPage> {
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditRecipient: () => setState(() => _currentStep = 2),
           onEditDocuments: () => setState(() => _currentStep = 3),
-          onEditHousing: () => setState(() => _currentStep = 6),
-          onEditGarage: () => setState(() => _currentStep = 7),
+          onEditHousing: () => setState(() => _currentStep = 8),
+          onEditGarage: () => setState(() => _currentStep = 9),
           onEditAll: () => setState(() => _currentStep = 0),
           task: _task,
           onSend: () => _showConfirmationBottomSheet(context, onConfirm: _submitTask),
         );
-      case 10:
+      case 12:
         return SuccessStep(
           onBackToStart: () => Navigator.pop(context),
           isReschedule: _isAutoReschedule,
@@ -917,7 +942,7 @@ class _VerificationPageState extends State<VerificationPage> {
       if (mounted) {
         setState(() {
           _task['status'] = 'completed';
-          _currentStep = 10;
+          _currentStep = 12;
         });
       }
     } catch (e) {

@@ -13,29 +13,33 @@ class VerificationProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (currentStep == 10) return const SizedBox.shrink();
+    if (currentStep == 12) return const SizedBox.shrink();
 
     int activeIndex = 0;
     if (currentStep == 0 || currentStep == 1) {
       activeIndex = 0;
     } else if (currentStep == 2) {
       activeIndex = 1;
-    } else if (currentStep == 3 || currentStep == 4 || currentStep == 5) {
-      activeIndex = 2;
-    } else if (currentStep == 6) {
-      activeIndex = 3;
-    } else if (currentStep == 7) {
-      activeIndex = 4;
+    } else if (currentStep == 3) {
+      activeIndex = 2; // DNI
+    } else if (currentStep == 4) {
+      activeIndex = 3; // Brevete
+    } else if (currentStep == 5) {
+      activeIndex = 4; // Recibo
+    } else if (currentStep == 6 || currentStep == 7) {
+      activeIndex = 2; // FamiliarForm or Reschedule
     } else if (currentStep == 8) {
-      activeIndex = 5;
+      activeIndex = 5; // Housing
     } else if (currentStep == 9) {
-      activeIndex = 5;
+      activeIndex = 6; // Garage
+    } else if (currentStep == 10 || currentStep == 11) {
+      activeIndex = 7; // Result / Summary
     }
 
     return FlowProgressBar(
       totalSteps: totalSteps,
       activeIndex: activeIndex,
-      allComplete: currentStep == 9,
+      allComplete: currentStep == 11,
     );
   }
 }
