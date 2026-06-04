@@ -56,7 +56,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
             _loadingDetail = false;
             // RESTORE PROGRESS
             if (full['current_step'] != null && full['current_step'] > 0) {
-              _currentStep = full['current_step'];
+              _currentStep = full['current_step'] == 1 ? 2 : full['current_step'];
             }
             final draft = full['draft_data'] as Map<String, dynamic>? ?? {};
             if (draft.isNotEmpty) {
@@ -163,6 +163,11 @@ class _RecoveryPageState extends State<RecoveryPage> {
   }
 
   void _nextStep() {
+    if (_currentStep == 0) {
+      setState(() => _currentStep = 2);
+      _saveProgress();
+      return;
+    }
     if (_currentStep == 2) {
       if (_recoveryEfectuado == false) {
         setState(() => _currentStep = 15); // Go to Interstitial confirmation step (case 15)
@@ -264,7 +269,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
     if (_currentStep == 0) {
       Navigator.pop(context);
     } else if (_currentStep == 2) {
-      setState(() => _currentStep = 1);
+      setState(() => _currentStep = 0);
     } else if (_currentStep == 3) {
       setState(() => _currentStep = 2);
     } else if (_currentStep == 4) {

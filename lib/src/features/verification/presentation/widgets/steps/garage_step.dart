@@ -152,8 +152,7 @@ class GarageStep extends StatelessWidget {
                              
     bool extraPhotosUploaded = true;
     if (isCocheraFuera) {
-      extraPhotosUploaded = extraImagesCount == 3 && 
-                           extraImagesUploaded[0] && 
+      extraPhotosUploaded = extraImagesUploaded[0] && 
                            extraImagesUploaded[1] && 
                            extraImagesUploaded[2];
     }
@@ -220,6 +219,40 @@ class GarageStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (isCocheraFuera) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Color(0xFF002B4B), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'En caso de que la cochera no quede en el domicilio se debe adjuntar 3 fotos más',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: const Color(0xFF002B4B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  for (int i = 0; i < 3; i++) ...[
+                    FlowPhotoInput(
+                      label: 'Foto fachada y calle ${i + 1}',
+                      taskId: taskId,
+                      photoLabel: 'fachada_calle_extra_${i + 1}',
+                      previewFileName: 'extra_${i + 1}.png',
+                      isUploaded: extraImagesUploaded[i],
+                      imagePath: extraImagesPaths[i],
+                      tag: extraImagesTags[i],
+                      onChanged: (val, res) => onExtraImageUploadedChanged(i, val, res),
+                      onTagChanged: (val) => onExtraImageTagChanged(i, val),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
                 FlowPhotoInput(
                   label: 'Foto de la vivienda / fachada',
                   taskId: taskId,
@@ -364,57 +397,7 @@ class GarageStep extends StatelessWidget {
                   onChanged: onAccessibilityUploadedChanged,
                   onTagChanged: onAccessibilityTagChanged,
                 ),
-                
-                if (isCocheraFuera) ...[
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: Color(0xFF002B4B), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'En caso de que la cochera no quede en el domicilio se debe adjuntar 3 fotos más',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: const Color(0xFF002B4B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  for (int i = 0; i < extraImagesCount; i++) ...[
-                    FlowPhotoInput(
-                      label: 'Foto fachada y calle ${i + 1}',
-                      taskId: taskId,
-                      photoLabel: 'fachada_calle_extra_${i + 1}',
-                      previewFileName: 'extra_${i + 1}.png',
-                      isUploaded: extraImagesUploaded[i],
-                      imagePath: extraImagesPaths[i],
-                      tag: extraImagesTags[i],
-                      onChanged: (val, res) => onExtraImageUploadedChanged(i, val, res),
-                      onTagChanged: (val) => onExtraImageTagChanged(i, val),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  
-                  if (extraImagesCount < 3)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: onAddExtraImage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF002B4B),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text('Agregar imagen', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                ],
+
                 
                 const SizedBox(height: 32),
                 FlowGoogleMapsSection(

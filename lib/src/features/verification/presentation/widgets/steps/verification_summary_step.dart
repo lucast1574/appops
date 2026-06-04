@@ -8,9 +8,14 @@ class VerificationSummaryStep extends StatelessWidget {
   final String? familiarName;
   final String? familiarDni;
   final bool isSignatureCaptured;
-  final bool dniUploaded;
-  final bool reciboUploaded;
-  final bool breveteUploaded;
+  
+  final bool dniFrontUploaded;
+  final bool dniBackUploaded;
+  final bool reciboFrontUploaded;
+  final bool reciboBackUploaded;
+  final bool breveteFrontUploaded;
+  final bool breveteBackUploaded;
+
   final String? housingType;
   final bool? isGarageAtHome;
   final bool? hasCameras;
@@ -19,6 +24,8 @@ class VerificationSummaryStep extends StatelessWidget {
   final bool? isBasement;
   final String? garageDirection;
   final String? streetAccessibility;
+  final bool isCocheraFuera;
+  final List<bool> extraGarageImagesUploaded;
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditRecipient;
   final VoidCallback onEditDocuments;
@@ -35,9 +42,12 @@ class VerificationSummaryStep extends StatelessWidget {
     this.familiarName,
     this.familiarDni,
     this.isSignatureCaptured = false,
-    required this.dniUploaded,
-    required this.reciboUploaded,
-    required this.breveteUploaded,
+    required this.dniFrontUploaded,
+    required this.dniBackUploaded,
+    required this.reciboFrontUploaded,
+    required this.reciboBackUploaded,
+    required this.breveteFrontUploaded,
+    required this.breveteBackUploaded,
     this.housingType,
     this.isGarageAtHome,
     this.hasCameras,
@@ -46,6 +56,8 @@ class VerificationSummaryStep extends StatelessWidget {
     this.isBasement,
     this.garageDirection,
     this.streetAccessibility,
+    required this.isCocheraFuera,
+    required this.extraGarageImagesUploaded,
     required this.onEditTaskInfo,
     required this.onEditRecipient,
     required this.onEditDocuments,
@@ -118,9 +130,12 @@ class VerificationSummaryStep extends StatelessWidget {
                   title: 'Validación de documentos',
                   onEdit: onEditDocuments,
                   children: [
-                    FlowSummaryStatus(label: 'DNI/INE', isComplete: dniUploaded),
-                    FlowSummaryStatus(label: 'Recibo de servicios', isComplete: reciboUploaded),
-                    FlowSummaryStatus(label: 'Brevete', isComplete: breveteUploaded),
+                    FlowSummaryStatus(label: 'DNI/INE Frontal', isComplete: dniFrontUploaded),
+                    FlowSummaryStatus(label: 'DNI/INE Reverso', isComplete: dniBackUploaded),
+                    FlowSummaryStatus(label: 'Brevete Frontal', isComplete: breveteFrontUploaded),
+                    FlowSummaryStatus(label: 'Brevete Reverso', isComplete: breveteBackUploaded),
+                    FlowSummaryStatus(label: 'Recibo de servicios Frontal', isComplete: reciboFrontUploaded),
+                    FlowSummaryStatus(label: 'Recibo de servicios Reverso', isComplete: reciboBackUploaded),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -150,15 +165,17 @@ class VerificationSummaryStep extends StatelessWidget {
                     const FlowSummaryStatus(label: 'Foto de calle / condominio', isComplete: true),
                     FlowSummaryItem(label: 'Accesibilidad de la calle', value: streetAccessibility ?? '---'),
                     const FlowSummaryStatus(label: 'Foto accesibilidad de la calle', isComplete: true),
-                    const SizedBox(height: 12),
-                    Text(
-                      'En caso de que la cochera no quede en el domicilio se debe adjuntar 3 fotos más',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF99AAB7)),
-                    ),
-                    const SizedBox(height: 8),
-                    const FlowSummaryStatus(label: 'Foto 1', isComplete: false),
-                    const FlowSummaryStatus(label: 'Foto 2', isComplete: false),
-                    const FlowSummaryStatus(label: 'Foto 3', isComplete: false),
+                    if (isCocheraFuera) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'En caso de que la cochera no quede en el domicilio se debe adjuntar 3 fotos más',
+                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF99AAB7)),
+                      ),
+                      const SizedBox(height: 8),
+                      FlowSummaryStatus(label: 'Foto 1', isComplete: extraGarageImagesUploaded[0]),
+                      FlowSummaryStatus(label: 'Foto 2', isComplete: extraGarageImagesUploaded[1]),
+                      FlowSummaryStatus(label: 'Foto 3', isComplete: extraGarageImagesUploaded[2]),
+                    ],
                     const FlowSummaryStatus(label: 'Link Google Maps · Ubicación de cochera', isComplete: true),
                   ],
                 ),

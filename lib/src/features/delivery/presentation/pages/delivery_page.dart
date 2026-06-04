@@ -78,6 +78,24 @@ class _DeliveryPageState extends State<DeliveryPage> {
                 final Map<String, dynamic> cv = draft['checklist_values'];
                 cv.forEach((k, v) => _checklistValues[k] = v as bool);
               }
+              if (draft['dni_front_uploaded'] != null) _dniFrontPhotoUploaded = draft['dni_front_uploaded'];
+              if (draft['dni_front_tag'] != null) _dniFrontPhotoTag = draft['dni_front_tag'];
+              if (draft['dni_front_path'] != null) _dniFrontPhotoPath = draft['dni_front_path'];
+              if (draft['dni_back_uploaded'] != null) _dniBackPhotoUploaded = draft['dni_back_uploaded'];
+              if (draft['dni_back_tag'] != null) _dniBackPhotoTag = draft['dni_back_tag'];
+              if (draft['dni_back_path'] != null) _dniBackPhotoPath = draft['dni_back_path'];
+              if (draft['client_photo_uploaded'] != null) _clientPhotoUploaded = draft['client_photo_uploaded'];
+              if (draft['client_photo_tag'] != null) _clientPhotoTag = draft['client_photo_tag'];
+              if (draft['client_photo_path'] != null) _clientPhotoPath = draft['client_photo_path'];
+              if (draft['checklist_photo_uploaded'] != null) _checklistPhotoUploaded = draft['checklist_photo_uploaded'];
+              if (draft['checklist_photo_tag'] != null) _checklistPhotoTag = draft['checklist_photo_tag'];
+              if (draft['checklist_photo_path'] != null) _checklistPhotoPath = draft['checklist_photo_path'];
+              if (draft['acta_uploaded'] != null) _actaUploaded = draft['acta_uploaded'];
+              if (draft['acta_tag'] != null) _actaTag = draft['acta_tag'];
+              if (draft['acta_path'] != null) _actaPhotoPath = draft['acta_path'];
+              if (draft['checklist2_uploaded'] != null) _checklist2Uploaded = draft['checklist2_uploaded'];
+              if (draft['checklist2_tag'] != null) _checklist2Tag = draft['checklist2_tag'];
+              if (draft['checklist2_path'] != null) _checklist2PhotoPath = draft['checklist2_path'];
             }
           });
         }
@@ -93,7 +111,8 @@ class _DeliveryPageState extends State<DeliveryPage> {
   final TextEditingController _clientNameController = TextEditingController();
   final TextEditingController _dniController = TextEditingController();
   bool? _deliverVehicle;
-  bool _dniPhotoUploaded = false; String? _dniPhotoTag; String? _dniPhotoPath;
+  bool _dniFrontPhotoUploaded = false; String? _dniFrontPhotoTag; String? _dniFrontPhotoPath;
+  bool _dniBackPhotoUploaded = false; String? _dniBackPhotoTag; String? _dniBackPhotoPath;
 
   // Step 2 — confirmation
   bool _clientPhotoUploaded = false; String? _clientPhotoTag; String? _clientPhotoPath;
@@ -153,6 +172,24 @@ class _DeliveryPageState extends State<DeliveryPage> {
         'modelo': _selectedModelo,
         'color': _selectedColor,
         'checklist_values': _checklistValues,
+        'dni_front_uploaded': _dniFrontPhotoUploaded,
+        'dni_front_tag': _dniFrontPhotoTag,
+        'dni_front_path': _dniFrontPhotoPath,
+        'dni_back_uploaded': _dniBackPhotoUploaded,
+        'dni_back_tag': _dniBackPhotoTag,
+        'dni_back_path': _dniBackPhotoPath,
+        'client_photo_uploaded': _clientPhotoUploaded,
+        'client_photo_tag': _clientPhotoTag,
+        'client_photo_path': _clientPhotoPath,
+        'checklist_photo_uploaded': _checklistPhotoUploaded,
+        'checklist_photo_tag': _checklistPhotoTag,
+        'checklist_photo_path': _checklistPhotoPath,
+        'acta_uploaded': _actaUploaded,
+        'acta_tag': _actaTag,
+        'acta_path': _actaPhotoPath,
+        'checklist2_uploaded': _checklist2Uploaded,
+        'checklist2_tag': _checklist2Tag,
+        'checklist2_path': _checklist2PhotoPath,
       };
 
       await _taskService.updateProgress(
@@ -247,10 +284,19 @@ class _DeliveryPageState extends State<DeliveryPage> {
         taskId: widget.task['id'] ?? 0,
         clientNameController: _clientNameController, dniController: _dniController,
         deliverVehicle: _deliverVehicle, 
-        dniPhotoUploaded: _dniPhotoUploaded, dniPhotoTag: _dniPhotoTag, dniPhotoPath: _dniPhotoPath,
+        dniFrontPhotoUploaded: _dniFrontPhotoUploaded, dniFrontPhotoTag: _dniFrontPhotoTag, dniFrontPhotoPath: _dniFrontPhotoPath,
+        onDniFrontPhotoUploadedChanged: (v, res) => setState(() {
+          _dniFrontPhotoUploaded = v;
+          _dniFrontPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onDniFrontPhotoTagChanged: (v) => setState(() => _dniFrontPhotoTag = v),
+        dniBackPhotoUploaded: _dniBackPhotoUploaded, dniBackPhotoTag: _dniBackPhotoTag, dniBackPhotoPath: _dniBackPhotoPath,
+        onDniBackPhotoUploadedChanged: (v, res) => setState(() {
+          _dniBackPhotoUploaded = v;
+          _dniBackPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onDniBackPhotoTagChanged: (v) => setState(() => _dniBackPhotoTag = v),
         onDeliverVehicleChanged: (v) => setState(() => _deliverVehicle = v),
-        onDniPhotoUploadedChanged: (v, path) => setState(() { _dniPhotoUploaded = v; _dniPhotoPath = path; }),
-        onDniPhotoTagChanged: (v) => setState(() => _dniPhotoTag = v),
         onBack: _previousStep, 
         onContinue: () {
           if (_deliverVehicle == false) {
@@ -291,10 +337,26 @@ class _DeliveryPageState extends State<DeliveryPage> {
         actaUploaded: _actaUploaded, actaTag: _actaTag, actaPhotoPath: _actaPhotoPath,
         checklist2Uploaded: _checklist2Uploaded, checklist2Tag: _checklist2Tag, checklist2PhotoPath: _checklist2PhotoPath,
         onDeliverVehicleChanged: (v) => setState(() => _deliverVehicle = v),
-        onClientPhotoUploadedChanged: (v, path) => setState(() { _clientPhotoUploaded = v; _clientPhotoPath = path; }), onClientPhotoTagChanged: (v) => setState(() => _clientPhotoTag = v),
-        onChecklistPhotoUploadedChanged: (v, path) => setState(() { _checklistPhotoUploaded = v; _checklistPhotoPath = path; }), onChecklistPhotoTagChanged: (v) => setState(() => _checklistPhotoTag = v),
-        onActaUploadedChanged: (v, path) => setState(() { _actaUploaded = v; _actaPhotoPath = path; }), onActaTagChanged: (v) => setState(() => _actaTag = v),
-        onChecklist2UploadedChanged: (v, path) => setState(() { _checklist2Uploaded = v; _checklist2PhotoPath = path; }), onChecklist2TagChanged: (v) => setState(() => _checklist2Tag = v),
+        onClientPhotoUploadedChanged: (v, res) => setState(() {
+          _clientPhotoUploaded = v;
+          _clientPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onClientPhotoTagChanged: (v) => setState(() => _clientPhotoTag = v),
+        onChecklistPhotoUploadedChanged: (v, res) => setState(() {
+          _checklistPhotoUploaded = v;
+          _checklistPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onChecklistPhotoTagChanged: (v) => setState(() => _checklistPhotoTag = v),
+        onActaUploadedChanged: (v, res) => setState(() {
+          _actaUploaded = v;
+          _actaPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onActaTagChanged: (v) => setState(() => _actaTag = v),
+        onChecklist2UploadedChanged: (v, res) => setState(() {
+          _checklist2Uploaded = v;
+          _checklist2PhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onChecklist2TagChanged: (v) => setState(() => _checklist2Tag = v),
         effectiveTimeController: _effectiveTimeController,
         onTimeChanged: () => setState(() {}),
         onBack: _previousStep, onContinue: _nextStep,

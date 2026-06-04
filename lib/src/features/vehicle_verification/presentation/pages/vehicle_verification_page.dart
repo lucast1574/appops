@@ -76,7 +76,13 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
     return 0;
   }
 
-  void _nextStep() => setState(() => _currentStep++);
+  void _nextStep() {
+    if (_currentStep == 0) {
+      setState(() => _currentStep = 2);
+    } else {
+      setState(() => _currentStep++);
+    }
+  }
 
   void _previousStep() {
     if (_currentStep == 0) {

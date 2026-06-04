@@ -9,12 +9,20 @@ class DeliveryInfoStep extends StatelessWidget {
   final TextEditingController clientNameController;
   final TextEditingController dniController;
   final bool? deliverVehicle;
-  final bool dniPhotoUploaded;
-  final String? dniPhotoTag;
-  final String? dniPhotoPath;
   final Function(bool) onDeliverVehicleChanged;
-  final Function(bool, dynamic) onDniPhotoUploadedChanged;
-  final Function(String?) onDniPhotoTagChanged;
+
+  final bool dniFrontPhotoUploaded;
+  final String? dniFrontPhotoTag;
+  final String? dniFrontPhotoPath;
+  final Function(bool, dynamic) onDniFrontPhotoUploadedChanged;
+  final Function(String?) onDniFrontPhotoTagChanged;
+
+  final bool dniBackPhotoUploaded;
+  final String? dniBackPhotoTag;
+  final String? dniBackPhotoPath;
+  final Function(bool, dynamic) onDniBackPhotoUploadedChanged;
+  final Function(String?) onDniBackPhotoTagChanged;
+
   final VoidCallback onBack;
   final VoidCallback onContinue;
   final bool isReversed;
@@ -24,9 +32,11 @@ class DeliveryInfoStep extends StatelessWidget {
     required this.taskId,
     required this.clientNameController, required this.dniController,
     this.deliverVehicle,
-    required this.dniPhotoUploaded, this.dniPhotoTag, this.dniPhotoPath,
     required this.onDeliverVehicleChanged,
-    required this.onDniPhotoUploadedChanged, required this.onDniPhotoTagChanged,
+    required this.dniFrontPhotoUploaded, this.dniFrontPhotoTag, this.dniFrontPhotoPath,
+    required this.onDniFrontPhotoUploadedChanged, required this.onDniFrontPhotoTagChanged,
+    required this.dniBackPhotoUploaded, this.dniBackPhotoTag, this.dniBackPhotoPath,
+    required this.onDniBackPhotoUploadedChanged, required this.onDniBackPhotoTagChanged,
     required this.onBack, required this.onContinue,
     this.isReversed = false,
   });
@@ -53,15 +63,27 @@ class DeliveryInfoStep extends StatelessWidget {
                 FlowYesNoQuestion(question: '¿Se entregó vehículo?', currentValue: deliverVehicle, onChanged: onDeliverVehicleChanged, isReversed: isReversed),
                 const SizedBox(height: 24),
                 FlowPhotoInput(
-                  label: 'DNI',
+                  label: 'DNI Frontal',
                   taskId: taskId,
-                  photoLabel: 'dni_photo',
-                  previewFileName: 'Imagen-x122.png',
-                  isUploaded: dniPhotoUploaded,
-                  imagePath: dniPhotoPath,
-                  tag: dniPhotoTag,
-                  onChanged: onDniPhotoUploadedChanged,
-                  onTagChanged: onDniPhotoTagChanged,
+                  photoLabel: 'dni_frontal',
+                  previewFileName: 'DNI-frontal.png',
+                  isUploaded: dniFrontPhotoUploaded,
+                  imagePath: dniFrontPhotoPath,
+                  tag: dniFrontPhotoTag,
+                  onChanged: onDniFrontPhotoUploadedChanged,
+                  onTagChanged: onDniFrontPhotoTagChanged,
+                ),
+                const SizedBox(height: 16),
+                FlowPhotoInput(
+                  label: 'DNI Reverso',
+                  taskId: taskId,
+                  photoLabel: 'dni_reverso',
+                  previewFileName: 'DNI-reverso.png',
+                  isUploaded: dniBackPhotoUploaded,
+                  imagePath: dniBackPhotoPath,
+                  tag: dniBackPhotoTag,
+                  onChanged: onDniBackPhotoUploadedChanged,
+                  onTagChanged: onDniBackPhotoTagChanged,
                 ),
               ],
             ),
@@ -70,7 +92,7 @@ class DeliveryInfoStep extends StatelessWidget {
         FlowStepNavigation(
           onBack: onBack, 
           onContinue: onContinue,
-          isContinueEnabled: (deliverVehicle == false) || (deliverVehicle == true && dniPhotoUploaded),
+          isContinueEnabled: (deliverVehicle == false) || (deliverVehicle == true && dniFrontPhotoUploaded && dniBackPhotoUploaded),
         ),
       ],
     );

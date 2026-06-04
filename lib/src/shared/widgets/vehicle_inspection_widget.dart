@@ -212,16 +212,21 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
                 border: Border.all(color: const Color(0xFFE5E9EB)),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFF4FA4B5),
-                  radius: 14,
-                  child: Text('$index', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              child: Material(
+                color: Colors.transparent,
+                clipBehavior: Clip.antiAlias,
+                borderRadius: BorderRadius.circular(8),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFF4FA4B5),
+                    radius: 14,
+                    child: Text('$index', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                  title: Text(obs.part, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text(obs.type.isEmpty ? 'Sin tipo' : obs.type, style: GoogleFonts.inter(fontSize: 12)),
+                  trailing: const Icon(Icons.edit, size: 18, color: Color(0xFF4FA4B5)),
+                  onTap: () => _editObservation(obs),
                 ),
-                title: Text(obs.part, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: Text(obs.type.isEmpty ? 'Sin tipo' : obs.type, style: GoogleFonts.inter(fontSize: 12)),
-                trailing: const Icon(Icons.edit, size: 18, color: Color(0xFF4FA4B5)),
-                onTap: () => _editObservation(obs),
               ),
             );
           }),
@@ -238,25 +243,28 @@ class _VehicleInspectionWidgetState extends State<VehicleInspectionWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CheckboxListTile(
-                title: Text(
-                  _observations.isEmpty 
-                      ? 'El vehículo no presenta observaciones (daños o faltantes)'
-                      : 'El vehículo no presenta más observaciones', 
-                  style: GoogleFonts.inter(fontSize: 14)
+              Material(
+                color: Colors.transparent,
+                child: CheckboxListTile(
+                  title: Text(
+                    _observations.isEmpty 
+                        ? 'El vehículo no presenta observaciones (daños o faltantes)'
+                        : 'El vehículo no presenta más observaciones', 
+                    style: GoogleFonts.inter(fontSize: 14)
+                  ),
+                  value: _isFinished,
+                  activeColor: const Color(0xFF27A376),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (val) {
+                    setState(() {
+                      _isFinished = val ?? false;
+                      if (_isFinished) {
+                        _selectedNewObs = null; // Clear pending marker if they mark as finished
+                      }
+                    });
+                  },
                 ),
-                value: _isFinished,
-                activeColor: const Color(0xFF27A376),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                onChanged: (val) {
-                  setState(() {
-                    _isFinished = val ?? false;
-                    if (_isFinished) {
-                      _selectedNewObs = null; // Clear pending marker if they mark as finished
-                    }
-                  });
-                },
               ),
                 
               const SizedBox(height: 16),

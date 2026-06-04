@@ -46,15 +46,26 @@ class _VerificationPageState extends State<VerificationPage> {
   String? _selectedRelationship;
 
   // States for Document Validation (Step 3)
-  bool _dniUploaded = false;
-  String? _dniTag;
-  String? _dniPath;
-  bool _breveteUploaded = false;
-  String? _breveteTag;
-  String? _brevetePath;
-  bool _reciboUploaded = false;
-  String? _reciboTag;
-  String? _reciboPath;
+  bool _dniFrontUploaded = false;
+  String? _dniFrontTag;
+  String? _dniFrontPath;
+  bool _dniBackUploaded = false;
+  String? _dniBackTag;
+  String? _dniBackPath;
+
+  bool _breveteFrontUploaded = false;
+  String? _breveteFrontTag;
+  String? _breveteFrontPath;
+  bool _breveteBackUploaded = false;
+  String? _breveteBackTag;
+  String? _breveteBackPath;
+
+  bool _reciboFrontUploaded = false;
+  String? _reciboFrontTag;
+  String? _reciboFrontPath;
+  bool _reciboBackUploaded = false;
+  String? _reciboBackTag;
+  String? _reciboBackPath;
 
   // States for Familiar (Step 4)
   final GlobalKey<SignaturePadState> _signatureKey = GlobalKey<SignaturePadState>();
@@ -150,6 +161,27 @@ class _VerificationPageState extends State<VerificationPage> {
               if (draft['street_accessibility'] != null) _streetAccessibility = draft['street_accessibility'];
               if (draft['verification_result'] != null) _verificationResult = draft['verification_result'];
               if (draft['observations'] != null) _observationsController.text = draft['observations'];
+
+              if (draft['dni_front_uploaded'] != null) _dniFrontUploaded = draft['dni_front_uploaded'];
+              if (draft['dni_front_tag'] != null) _dniFrontTag = draft['dni_front_tag'];
+              if (draft['dni_front_path'] != null) _dniFrontPath = draft['dni_front_path'];
+              if (draft['dni_back_uploaded'] != null) _dniBackUploaded = draft['dni_back_uploaded'];
+              if (draft['dni_back_tag'] != null) _dniBackTag = draft['dni_back_tag'];
+              if (draft['dni_back_path'] != null) _dniBackPath = draft['dni_back_path'];
+
+              if (draft['brevete_front_uploaded'] != null) _breveteFrontUploaded = draft['brevete_front_uploaded'];
+              if (draft['brevete_front_tag'] != null) _breveteFrontTag = draft['brevete_front_tag'];
+              if (draft['brevete_front_path'] != null) _breveteFrontPath = draft['brevete_front_path'];
+              if (draft['brevete_back_uploaded'] != null) _breveteBackUploaded = draft['brevete_back_uploaded'];
+              if (draft['brevete_back_tag'] != null) _breveteBackTag = draft['brevete_back_tag'];
+              if (draft['brevete_back_path'] != null) _breveteBackPath = draft['brevete_back_path'];
+
+              if (draft['recibo_front_uploaded'] != null) _reciboFrontUploaded = draft['recibo_front_uploaded'];
+              if (draft['recibo_front_tag'] != null) _reciboFrontTag = draft['recibo_front_tag'];
+              if (draft['recibo_front_path'] != null) _reciboFrontPath = draft['recibo_front_path'];
+              if (draft['recibo_back_uploaded'] != null) _reciboBackUploaded = draft['recibo_back_uploaded'];
+              if (draft['recibo_back_tag'] != null) _reciboBackTag = draft['recibo_back_tag'];
+              if (draft['recibo_back_path'] != null) _reciboBackPath = draft['recibo_back_path'];
             }
           });
         }
@@ -370,6 +402,24 @@ class _VerificationPageState extends State<VerificationPage> {
         'street_accessibility': _streetAccessibility,
         'verification_result': _verificationResult,
         'observations': _observationsController.text,
+        'dni_front_uploaded': _dniFrontUploaded,
+        'dni_front_tag': _dniFrontTag,
+        'dni_front_path': _dniFrontPath,
+        'dni_back_uploaded': _dniBackUploaded,
+        'dni_back_tag': _dniBackTag,
+        'dni_back_path': _dniBackPath,
+        'brevete_front_uploaded': _breveteFrontUploaded,
+        'brevete_front_tag': _breveteFrontTag,
+        'brevete_front_path': _breveteFrontPath,
+        'brevete_back_uploaded': _breveteBackUploaded,
+        'brevete_back_tag': _breveteBackTag,
+        'brevete_back_path': _breveteBackPath,
+        'recibo_front_uploaded': _reciboFrontUploaded,
+        'recibo_front_tag': _reciboFrontTag,
+        'recibo_front_path': _reciboFrontPath,
+        'recibo_back_uploaded': _reciboBackUploaded,
+        'recibo_back_tag': _reciboBackTag,
+        'recibo_back_path': _reciboBackPath,
       };
 
       await _taskService.updateProgress(
@@ -553,30 +603,54 @@ class _VerificationPageState extends State<VerificationPage> {
       case 3:
         return DocumentValidationStep(
           taskId: _task['id'] ?? 0,
-          dniUploaded: _dniUploaded,
-          dniTag: _dniTag,
-          dniPath: _dniPath,
-          breveteUploaded: _breveteUploaded,
-          breveteTag: _breveteTag,
-          brevetePath: _brevetePath,
-          reciboUploaded: _reciboUploaded,
-          reciboTag: _reciboTag,
-          reciboPath: _reciboPath,
-          onDniUploadedChanged: (val, res) => setState(() {
-            _dniUploaded = val;
-            if (val) _dniPath = res?['localPath'];
+          dniFrontUploaded: _dniFrontUploaded,
+          dniFrontTag: _dniFrontTag,
+          dniFrontPath: _dniFrontPath,
+          dniBackUploaded: _dniBackUploaded,
+          dniBackTag: _dniBackTag,
+          dniBackPath: _dniBackPath,
+          breveteFrontUploaded: _breveteFrontUploaded,
+          breveteFrontTag: _breveteFrontTag,
+          breveteFrontPath: _breveteFrontPath,
+          breveteBackUploaded: _breveteBackUploaded,
+          breveteBackTag: _breveteBackTag,
+          breveteBackPath: _breveteBackPath,
+          reciboFrontUploaded: _reciboFrontUploaded,
+          reciboFrontTag: _reciboFrontTag,
+          reciboFrontPath: _reciboFrontPath,
+          reciboBackUploaded: _reciboBackUploaded,
+          reciboBackTag: _reciboBackTag,
+          reciboBackPath: _reciboBackPath,
+          onDniFrontUploadedChanged: (val, res) => setState(() {
+            _dniFrontUploaded = val;
+            _dniFrontPath = (val && res is Map) ? res['localPath'] : null;
           }),
-          onDniTagChanged: (val) => setState(() => _dniTag = val),
-          onBreveteUploadedChanged: (val, res) => setState(() {
-            _breveteUploaded = val;
-            if (val) _brevetePath = res?['localPath'];
+          onDniFrontTagChanged: (val) => setState(() => _dniFrontTag = val),
+          onDniBackUploadedChanged: (val, res) => setState(() {
+            _dniBackUploaded = val;
+            _dniBackPath = (val && res is Map) ? res['localPath'] : null;
           }),
-          onBreveteTagChanged: (val) => setState(() => _breveteTag = val),
-          onReciboUploadedChanged: (val, res) => setState(() {
-            _reciboUploaded = val;
-            if (val) _reciboPath = res?['localPath'];
+          onDniBackTagChanged: (val) => setState(() => _dniBackTag = val),
+          onBreveteFrontUploadedChanged: (val, res) => setState(() {
+            _breveteFrontUploaded = val;
+            _breveteFrontPath = (val && res is Map) ? res['localPath'] : null;
           }),
-          onReciboTagChanged: (val) => setState(() => _reciboTag = val),
+          onBreveteFrontTagChanged: (val) => setState(() => _breveteFrontTag = val),
+          onBreveteBackUploadedChanged: (val, res) => setState(() {
+            _breveteBackUploaded = val;
+            _breveteBackPath = (val && res is Map) ? res['localPath'] : null;
+          }),
+          onBreveteBackTagChanged: (val) => setState(() => _breveteBackTag = val),
+          onReciboFrontUploadedChanged: (val, res) => setState(() {
+            _reciboFrontUploaded = val;
+            _reciboFrontPath = (val && res is Map) ? res['localPath'] : null;
+          }),
+          onReciboFrontTagChanged: (val) => setState(() => _reciboFrontTag = val),
+          onReciboBackUploadedChanged: (val, res) => setState(() {
+            _reciboBackUploaded = val;
+            _reciboBackPath = (val && res is Map) ? res['localPath'] : null;
+          }),
+          onReciboBackTagChanged: (val) => setState(() => _reciboBackTag = val),
           onBack: _previousStep,
           onContinue: () => setState(() => _currentStep = 6),
         );
@@ -737,9 +811,12 @@ class _VerificationPageState extends State<VerificationPage> {
           familiarName: _familiarNameController.text,
           familiarDni: _familiarDniController.text,
           isSignatureCaptured: !(_signatureKey.currentState?.isEmpty ?? true),
-          dniUploaded: _dniUploaded,
-          reciboUploaded: _reciboUploaded,
-          breveteUploaded: _breveteUploaded,
+          dniFrontUploaded: _dniFrontUploaded,
+          dniBackUploaded: _dniBackUploaded,
+          reciboFrontUploaded: _reciboFrontUploaded,
+          reciboBackUploaded: _reciboBackUploaded,
+          breveteFrontUploaded: _breveteFrontUploaded,
+          breveteBackUploaded: _breveteBackUploaded,
           housingType: _housingType,
           isGarageAtHome: _isGarageAtHome,
           hasCameras: _hasCameras,
@@ -748,6 +825,8 @@ class _VerificationPageState extends State<VerificationPage> {
           isBasement: _isBasement,
           garageDirection: _garageDirection,
           streetAccessibility: _streetAccessibility,
+          isCocheraFuera: _isCocheraFuera,
+          extraGarageImagesUploaded: _extraGarageImagesUploaded,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditRecipient: () => setState(() => _currentStep = 2),
           onEditDocuments: () => setState(() => _currentStep = 3),
@@ -804,9 +883,15 @@ class _VerificationPageState extends State<VerificationPage> {
           'familiar_name': _familiarNameController.text,
           'signature_s3_key': signatureS3Key,
           'documents': {
-            'dni_uploaded': _dniUploaded,
-            'brevete_uploaded': _breveteUploaded,
-            'recibo_uploaded': _reciboUploaded,
+            'dni_uploaded': _dniFrontUploaded,
+            'dni_front_uploaded': _dniFrontUploaded,
+            'dni_back_uploaded': _dniBackUploaded,
+            'brevete_uploaded': _breveteFrontUploaded,
+            'brevete_front_uploaded': _breveteFrontUploaded,
+            'brevete_back_uploaded': _breveteBackUploaded,
+            'recibo_uploaded': _reciboFrontUploaded,
+            'recibo_front_uploaded': _reciboFrontUploaded,
+            'recibo_back_uploaded': _reciboBackUploaded,
           },
           'housing_type': _housingType,
           'garage': {
