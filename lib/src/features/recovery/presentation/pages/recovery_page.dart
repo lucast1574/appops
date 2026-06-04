@@ -676,15 +676,15 @@ class _RecoveryPageState extends State<RecoveryPage> {
         );
       case 11: return FlowSuccessStep(
         onBackToStart: () => Navigator.pop(context),
-        title: 'Tarea completada',
-        subtitle: 'Los datos se han enviado correctamente y el registro ha sido actualizado',
+        title: 'Tarea enviada',
+        subtitle: 'Tus datos se enviaron correctamente. La tarea queda pendiente de la revisión del supervisor.',
       );
       case 12: return FlowSuccessStep(
         onBackToStart: () => Navigator.pop(context),
-        title: _isAutoReschedule ? 'Tarea reprogramada' : 'Tarea completada',
-        subtitle: _isAutoReschedule 
-            ? 'La tarea ha sido reprogramada y el registro ha sido actualizado.'
-            : 'Los datos se han enviado correctamente y el registro ha sido actualizado',
+        title: _isAutoReschedule ? 'Reprogramación solicitada' : 'Tarea enviada',
+        subtitle: _isAutoReschedule
+            ? 'Tu solicitud de reprogramación queda pendiente de la aprobación del supervisor.'
+            : 'Tus datos se enviaron correctamente. La tarea queda pendiente de la revisión del supervisor.',
         isReschedule: _isAutoReschedule,
       );
       case 13: return RecoveryRescheduleStep(

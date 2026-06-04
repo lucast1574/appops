@@ -352,7 +352,9 @@ class _VerificationPageState extends State<VerificationPage> {
       
       if (mounted) {
         setState(() {
-          _task['status'] = 'rescheduled';
+          // El backend ahora marca la tarea como `reschedule_requested`
+          // (pendiente de aprobación del supervisor) en vez de cerrarla.
+          _task['status'] = 'reschedule_requested';
           _isAutoReschedule = true;
           _currentStep = 10;
         });

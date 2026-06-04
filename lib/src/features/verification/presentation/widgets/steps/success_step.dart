@@ -21,10 +21,10 @@ class SuccessStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return FlowSuccessStep(
       onBackToStart: onBackToStart,
-      title: title ?? (isReschedule ? 'Reprogramación automática' : 'Tarea completada'),
-      subtitle: subtitle ?? (isReschedule 
-        ? 'La Verificación Domiciliaria no es posible de completar. La visita será reprogramada automáticamente.' 
-        : 'Los datos se han enviado correctamente y el registro ha sido actualizado'),
+      title: title ?? (isReschedule ? 'Reprogramación solicitada' : 'Tarea enviada'),
+      subtitle: subtitle ?? (isReschedule
+        ? 'La Verificación Domiciliaria no fue posible. Tu solicitud de reprogramación queda pendiente de la aprobación del supervisor.'
+        : 'Tus datos se enviaron correctamente. La tarea queda pendiente de la revisión del supervisor.'),
       icon: icon ?? (isReschedule ? Icons.event_available : Icons.check),
       isReschedule: isReschedule,
     );

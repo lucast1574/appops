@@ -308,6 +308,12 @@ class TaskService {
         return 'Rechazada';
       case 'rescheduled':
         return 'Reprogramada';
+      case 'pending_review':
+        return 'Enviada, esperando revisión';
+      case 'reschedule_requested':
+        return 'Reprogramación solicitada';
+      case 'approval_pending':
+        return 'Pendiente de aprobación';
       default:
         return status ?? '';
     }

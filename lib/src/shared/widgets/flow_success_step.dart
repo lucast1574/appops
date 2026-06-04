@@ -14,8 +14,8 @@ class FlowSuccessStep extends StatelessWidget {
   const FlowSuccessStep({
     super.key,
     required this.onBackToStart,
-    this.title = 'Tarea completada',
-    this.subtitle = 'Los datos se han enviado correctamente y el registro ha sido actualizado',
+    this.title = 'Tarea enviada',
+    this.subtitle = 'Tus datos se enviaron correctamente. La tarea queda pendiente de la revisión del supervisor.',
     this.buttonText = 'Volver al inicio',
     this.icon = Icons.check,
     this.iconWidget,
