@@ -1,6 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:flutter/material.dart';
+import 'package:leasy_ops_mobile/app.dart';
+import 'package:leasy_ops_mobile/src/features/auth/presentation/pages/upgrade_required_page.dart';
+
 class ApiClient {
   // Production API
   static const String _baseUrl = 'https://api.opps-app.leasyauto.com/api/v1';
@@ -29,9 +33,24 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        options.headers['X-App-Version'] = '0.9.0';
         return handler.next(options);
       },
       onError: (error, handler) async {
+        if (error.response?.statusCode == 426) {
+          final data = error.response?.data;
+          final message = (data is Map) ? data['message'] ?? 'Debes actualizar la aplicación para continuar.' : 'Debes actualizar la aplicación para continuar.';
+          final context = LeasyOpsApp.navigatorKey.currentContext;
+          if (context != null) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => UpgradeRequiredPage(message: message.toString()),
+              ),
+              (route) => false,
+            );
+          }
+          return handler.next(error);
+        }
         if (error.response?.statusCode == 401) {
           final refreshed = await _tryRefreshToken();
           if (refreshed) {
