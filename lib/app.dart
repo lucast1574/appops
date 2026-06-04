@@ -3,11 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'src/features/auth/presentation/pages/splash_page.dart';
 
 class LeasyOpsApp extends StatelessWidget {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   const LeasyOpsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Leasy Ops',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
