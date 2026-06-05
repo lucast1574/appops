@@ -169,7 +169,7 @@ class FlowSectionLabel extends StatelessWidget {
   }
 }
 
-class FlowImagePreview extends StatelessWidget {
+class FlowImagePreview extends StatefulWidget {
   final String fileName;
   final String? imagePath;
   final String? tag;
@@ -186,6 +186,51 @@ class FlowImagePreview extends StatelessWidget {
     required this.onDeleteTag,
     required this.onTagAdded,
   });
+
+  @override
+  State<FlowImagePreview> createState() => _FlowImagePreviewState();
+}
+
+class _FlowImagePreviewState extends State<FlowImagePreview> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.tag);
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant FlowImagePreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tag != oldWidget.tag && widget.tag != _controller.text) {
+      _controller.text = widget.tag ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _submitTag();
+    }
+  }
+
+  void _submitTag() {
+    final text = _controller.text.trim();
+    if (text.isNotEmpty) {
+      widget.onTagAdded(text);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,17 +252,11 @@ class FlowImagePreview extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFB9DBE1).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
-                  // IMPORTANT: wrap in ResizeImage so the decoder downsamples
-                  // before allocating the bitmap. Without this, a 1920x1920 JPEG
-                  // is decoded to a ~14 MB ARGB bitmap just to render a 48px
-                  // thumbnail -- and a typical verification flow has 5-8 of
-                  // these on screen at once, which OOM-crashes low-end devices
-                  // (2 GB RAM, ~64 MB heap). 96 = 2x for hi-DPI displays.
-                  image: (imagePath != null && imagePath!.isNotEmpty) ? DecorationImage(
+                  image: (widget.imagePath != null && widget.imagePath!.isNotEmpty) ? DecorationImage(
                     image: ResizeImage(
-                      imagePath!.startsWith('http')
-                        ? NetworkImage(imagePath!) as ImageProvider
-                        : FileImage(File(imagePath!)),
+                      widget.imagePath!.startsWith('http')
+                        ? NetworkImage(widget.imagePath!) as ImageProvider
+                        : FileImage(File(widget.imagePath!)),
                       width: 96,
                       height: 96,
                       policy: ResizeImagePolicy.fit,
@@ -225,12 +264,12 @@ class FlowImagePreview extends StatelessWidget {
                     fit: BoxFit.cover,
                   ) : null,
                 ),
-                child: (imagePath == null || imagePath!.isEmpty) ? const Icon(Icons.image_outlined, color: Color(0xFF002B4B)) : null,
+                child: (widget.imagePath == null || widget.imagePath!.isEmpty) ? const Icon(Icons.image_outlined, color: Color(0xFF002B4B)) : null,
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  fileName,
+                  widget.fileName,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF002B4B),
@@ -248,13 +287,13 @@ class FlowImagePreview extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                 ),
-                onPressed: onDeleteImage,
+                onPressed: widget.onDeleteImage,
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        tag != null
+        widget.tag != null
             ? Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -267,7 +306,7 @@ class FlowImagePreview extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      tag!,
+                      widget.tag!,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         color: const Color(0xFF002B4B),
@@ -275,7 +314,7 @@ class FlowImagePreview extends StatelessWidget {
                       ),
                     ),
                     InkWell(
-                      onTap: onDeleteTag,
+                      onTap: widget.onDeleteTag,
                       child: SvgPicture.asset(
                         'assets/close.svg',
                         width: 20,
@@ -290,7 +329,9 @@ class FlowImagePreview extends StatelessWidget {
                 ),
               )
             : TextField(
-                onSubmitted: onTagAdded,
+                controller: _controller,
+                focusNode: _focusNode,
+                onSubmitted: (_) => _submitTag(),
                 style: GoogleFonts.inter(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Agregar etiqueta',

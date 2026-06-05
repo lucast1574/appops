@@ -153,6 +153,7 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
     final t = _fullTask!;
     final type = t['type'] as Map<String, dynamic>?;
     final typeName = type?['name'] ?? 'Tarea';
+    final String typeSlug = type?['slug'] ?? '';
     final statusLabel = TaskService.getStatusLabel(t['status'] as String?);
     final statusColor = _statusColor(statusLabel);
 
@@ -235,7 +236,7 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
           ],
           if ((t['observations'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 16),
-            _buildInfoField('Observaciones', t['observations']),
+            _buildInfoField(typeSlug == 'verificacion' ? 'Referencia del domicilio' : 'Observaciones', t['observations']),
           ],
 
           // -------- Result data (dynamic, per task type) --------
@@ -325,12 +326,18 @@ class _TaskSummaryPageState extends State<TaskSummaryPage> {
       return ka.compareTo(kb);
     });
 
+    final type = _fullTask?['type'] as Map<String, dynamic>?;
+    final String typeSlug = type?['slug'] ?? '';
+
     for (final rawKey in keys) {
       final value = map[rawKey];
       if (value == null) continue;
 
       final kStr = rawKey.toString();
-      final translatedLabel = _translations[kStr] ?? _humanize(kStr);
+      String translatedLabel = _translations[kStr] ?? _humanize(kStr);
+      if (kStr == 'observations' && typeSlug == 'verificacion') {
+        translatedLabel = 'Referencias';
+      }
       final key = '$prefix$translatedLabel';
 
       if (value is bool) {
