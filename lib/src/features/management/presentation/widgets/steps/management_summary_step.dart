@@ -19,6 +19,8 @@ class ManagementSummaryStep extends StatelessWidget {
   final String? endTime;
   final String? motivo;
 
+  final bool isEcuador;
+
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditDetail;
   final VoidCallback onEditAll;
@@ -35,6 +37,7 @@ class ManagementSummaryStep extends StatelessWidget {
     this.startTime,
     this.endTime,
     this.motivo,
+    this.isEcuador = false,
     required this.onEditTaskInfo,
     required this.onEditDetail,
     required this.onEditAll,
@@ -72,6 +75,8 @@ class ManagementSummaryStep extends StatelessWidget {
                   children: [
                     FlowSummaryItem(label: 'Fecha', value: scheduledDate),
                     FlowSummaryItem(label: 'Tipo de gestión', value: managementType),
+                    if (managementType == 'Pago servicio')
+                      FlowSummaryItem(label: isEcuador ? 'Tipo de pago' : 'Tipo de multa', value: fineType ?? '---'),
                     if (managementType == 'Prueba de Bloqueo / Desbloqueo')
                       FlowSummaryItem(label: 'Placa', value: placa),
                     FlowSummaryItem(

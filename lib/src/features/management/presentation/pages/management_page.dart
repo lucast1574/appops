@@ -34,6 +34,7 @@ class _ManagementPageState extends State<ManagementPage> {
   bool _submitting = false;
   late String _managementType;
   bool _loadingDetail = true;
+  bool _isEcuador = false;
 
   List<String> _districts = [];
 
@@ -52,6 +53,7 @@ class _ManagementPageState extends State<ManagementPage> {
         // Fetch districts for operario's city
         final user = await _authService.getCurrentUser();
         final cityId = user?['city']?['id'];
+        final countryCode = user?['country']?['code'] as String?;
         if (cityId != null) {
           final dists = await _catalogService.getDistricts(cityId);
           if (mounted) {
@@ -65,6 +67,7 @@ class _ManagementPageState extends State<ManagementPage> {
           setState(() {
             final metadata = full['metadata'] as Map<String, dynamic>? ?? {};
             _managementType = metadata['management_type'] ?? 'Prueba de Bloqueo / Desbloqueo';
+            _isEcuador = countryCode == 'EC';
             
             // Pre-fill from metadata if available
             _fineType = metadata['fine_type'];
@@ -292,6 +295,7 @@ class _ManagementPageState extends State<ManagementPage> {
           startTime: _startTimeController.text,
           endTime: _endTimeController.text,
           motivo: _motivoController.text,
+          isEcuador: _isEcuador,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditDetail: () => setState(() => _currentStep = 2),
           onEditAll: () => setState(() => _currentStep = 0),
@@ -319,6 +323,7 @@ class _ManagementPageState extends State<ManagementPage> {
           fineType: _fineType,
           selectedMunicipality: _selectedMunicipality,
           districts: _districts,
+          isEcuador: _isEcuador,
           onFineTypeChanged: (val) => setState(() => _fineType = val),
           onSelectedMunicipalityChanged: (val) => setState(() => _selectedMunicipality = val),
           onBack: _previousStep,

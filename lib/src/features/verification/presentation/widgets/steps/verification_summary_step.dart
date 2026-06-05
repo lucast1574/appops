@@ -15,6 +15,7 @@ class VerificationSummaryStep extends StatelessWidget {
   final bool reciboBackUploaded;
   final bool breveteFrontUploaded;
   final bool breveteBackUploaded;
+  final bool isEcuador;
 
   final String? housingType;
   final bool? isGarageAtHome;
@@ -48,6 +49,7 @@ class VerificationSummaryStep extends StatelessWidget {
     required this.reciboBackUploaded,
     required this.breveteFrontUploaded,
     required this.breveteBackUploaded,
+    this.isEcuador = false,
     this.housingType,
     this.isGarageAtHome,
     this.hasCameras,
@@ -132,8 +134,8 @@ class VerificationSummaryStep extends StatelessWidget {
                   children: [
                     FlowSummaryStatus(label: 'DNI/INE Frontal', isComplete: dniFrontUploaded),
                     FlowSummaryStatus(label: 'DNI/INE Reverso', isComplete: dniBackUploaded),
-                    FlowSummaryStatus(label: 'Brevete Frontal', isComplete: breveteFrontUploaded),
-                    FlowSummaryStatus(label: 'Brevete Reverso', isComplete: breveteBackUploaded),
+                    FlowSummaryStatus(label: isEcuador ? 'Licencia de conducir Frontal' : 'Brevete Frontal', isComplete: breveteFrontUploaded),
+                    FlowSummaryStatus(label: isEcuador ? 'Licencia de conducir Reverso' : 'Brevete Reverso', isComplete: breveteBackUploaded),
                     FlowSummaryStatus(label: 'Recibo de servicios Frontal', isComplete: reciboFrontUploaded),
                     FlowSummaryStatus(label: 'Recibo de servicios Reverso', isComplete: reciboBackUploaded),
                   ],

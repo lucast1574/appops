@@ -5,6 +5,7 @@ import '../../../../../shared/widgets/flow_photo_input.dart';
 
 class BreveteValidationStep extends StatelessWidget {
   final int taskId;
+  final bool isEcuador;
 
   final bool breveteFrontUploaded;
   final String? breveteFrontTag;
@@ -26,6 +27,7 @@ class BreveteValidationStep extends StatelessWidget {
   const BreveteValidationStep({
     super.key,
     required this.taskId,
+    this.isEcuador = false,
     required this.breveteFrontUploaded,
     this.breveteFrontTag,
     this.breveteFrontPath,
@@ -45,6 +47,7 @@ class BreveteValidationStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool allUploaded = breveteFrontUploaded && breveteBackUploaded;
+    final String docLabel = isEcuador ? 'Licencia de conducir' : 'Brevete';
 
     return Column(
       children: [
@@ -75,7 +78,7 @@ class BreveteValidationStep extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Paso 2 de 3',
+                            isEcuador ? 'Paso 2 de 3' : 'Paso 2 de 3',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -83,7 +86,7 @@ class BreveteValidationStep extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'Validación de Brevete',
+                            isEcuador ? 'Validación de Licencia de conducir' : 'Validación de Brevete',
                             style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -102,7 +105,7 @@ class BreveteValidationStep extends StatelessWidget {
                   child: Column(
                     children: [
                       FlowPhotoInput(
-                        label: 'Brevete Frontal',
+                        label: '$docLabel Frontal',
                         taskId: taskId,
                         photoLabel: 'brevete_cliente',
                         previewFileName: 'Brevete-frontal.png',
@@ -115,7 +118,7 @@ class BreveteValidationStep extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       FlowPhotoInput(
-                        label: 'Brevete Reverso',
+                        label: '$docLabel Reverso',
                         taskId: taskId,
                         photoLabel: 'brevete_cliente_reverso',
                         previewFileName: 'Brevete-reverso.png',

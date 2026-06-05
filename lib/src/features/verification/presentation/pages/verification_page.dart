@@ -12,6 +12,7 @@ import '../../../../shared/widgets/task_chat_action_button.dart';
 // Import Step Widgets
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
+import '../../../auth/data/auth_service.dart';
 import '../widgets/steps/before_starting_step.dart';
 import '../widgets/steps/who_received_step.dart';
 import '../widgets/steps/dni_validation_step.dart';
@@ -43,6 +44,7 @@ class _VerificationPageState extends State<VerificationPage> {
   late Map<String, dynamic> _task;
   bool _loadingDetail = true;
   bool _isAutoReschedule = false;
+  bool _isEcuador = false;
   final Map<String, int> _photoIds = {};
 
   String? _selectedRecipient;
@@ -135,8 +137,12 @@ class _VerificationPageState extends State<VerificationPage> {
           taskId is int ? taskId : int.parse('$taskId'),
         );
         if (mounted) {
+          // Determine Ecuador context from stored user data
+          final user = await AuthService().getCurrentUser();
+          final countryCode = user?['country']?['code'] as String?;
           setState(() {
             _task = full;
+            _isEcuador = countryCode == 'EC';
             _loadingDetail = false;
             // Update maps link if it changed or was empty
             if (_mapsController.text.isEmpty) {
@@ -733,6 +739,7 @@ class _VerificationPageState extends State<VerificationPage> {
       case 4:
         return BreveteValidationStep(
           taskId: _task['id'] ?? 0,
+          isEcuador: _isEcuador,
           breveteFrontUploaded: _breveteFrontUploaded,
           breveteFrontTag: _breveteFrontTag,
           breveteFrontPath: _breveteFrontPath,
@@ -1021,6 +1028,7 @@ class _VerificationPageState extends State<VerificationPage> {
           reciboBackUploaded: _reciboBackUploaded,
           breveteFrontUploaded: _breveteFrontUploaded,
           breveteBackUploaded: _breveteBackUploaded,
+          isEcuador: _isEcuador,
           housingType: _housingType,
           isGarageAtHome: _isGarageAtHome,
           hasCameras: _hasCameras,

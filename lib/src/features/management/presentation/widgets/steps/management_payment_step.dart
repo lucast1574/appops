@@ -7,6 +7,7 @@ class ManagementPaymentStep extends StatelessWidget {
   final String? fineType;
   final String? selectedMunicipality;
   final List<String> districts;
+  final bool isEcuador;
   final Function(String?) onFineTypeChanged;
   final Function(String?) onSelectedMunicipalityChanged;
   final VoidCallback onBack;
@@ -17,6 +18,7 @@ class ManagementPaymentStep extends StatelessWidget {
     this.fineType,
     this.selectedMunicipality,
     this.districts = const [],
+    this.isEcuador = false,
     required this.onFineTypeChanged,
     required this.onSelectedMunicipalityChanged,
     required this.onBack,
@@ -42,12 +44,14 @@ class ManagementPaymentStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const FlowSectionLabel(label: 'Tipo de multa'),
+                FlowSectionLabel(label: isEcuador ? 'Tipo de pago' : 'Tipo de multa'),
                 const SizedBox(height: 8),
                 _buildDropdown(
                   value: fineType,
-                  hint: 'Seleccionar tipo de multa',
-                  items: const ['Multa ATU', 'Multa Municipal', 'SAT', 'MTC', 'SUNARP'],
+                  hint: isEcuador ? 'Seleccionar tipo de pago' : 'Seleccionar tipo de multa',
+                  items: isEcuador
+                      ? const ['Multa ATU', 'Multa Municipal', 'SAT', 'MTC', 'SUNARP', 'Pago matriculación']
+                      : const ['Multa ATU', 'Multa Municipal', 'SAT', 'MTC', 'SUNARP'],
                   onChanged: onFineTypeChanged,
                 ),
                 if (fineType == 'Multa Municipal') ...[
@@ -59,6 +63,29 @@ class ManagementPaymentStep extends StatelessWidget {
                     hint: 'Seleccionar municipio',
                     items: districts,
                     onChanged: onSelectedMunicipalityChanged,
+                  ),
+                ],
+                if (isEcuador && fineType == 'Pago matriculación') ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFFCC02), width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: Color(0xFFB07800), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'El pago de matriculación se realiza en físico (no es una multa).',
+                            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF7A5200)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
