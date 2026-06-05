@@ -108,7 +108,7 @@ class VerificationSummaryStep extends StatelessWidget {
                           ? task['client_phone']
                           : '---',
                     ),
-                    FlowSummaryItem(label: 'Observaciones', value: task['observations']?.toString().isNotEmpty == true ? task['observations'] : 'Sin observaciones'),
+                    FlowSummaryItem(label: 'Referencias del domicilio', value: task['observations']?.toString().isNotEmpty == true ? task['observations'] : 'Sin referencias'),
                   ],
                 ),
                 const SizedBox(height: 24),

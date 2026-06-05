@@ -9,9 +9,11 @@ class ReciboValidationStep extends StatelessWidget {
   final bool reciboFrontUploaded;
   final String? reciboFrontTag;
   final String? reciboFrontPath;
+  final int? reciboFrontPhotoId;
   final bool reciboBackUploaded;
   final String? reciboBackTag;
   final String? reciboBackPath;
+  final int? reciboBackPhotoId;
 
   final Function(bool, dynamic) onReciboFrontUploadedChanged;
   final Function(String?) onReciboFrontTagChanged;
@@ -27,9 +29,11 @@ class ReciboValidationStep extends StatelessWidget {
     required this.reciboFrontUploaded,
     this.reciboFrontTag,
     this.reciboFrontPath,
+    this.reciboFrontPhotoId,
     required this.reciboBackUploaded,
     this.reciboBackTag,
     this.reciboBackPath,
+    this.reciboBackPhotoId,
     required this.onReciboFrontUploadedChanged,
     required this.onReciboFrontTagChanged,
     required this.onReciboBackUploadedChanged,
@@ -105,6 +109,7 @@ class ReciboValidationStep extends StatelessWidget {
                         isUploaded: reciboFrontUploaded,
                         imagePath: reciboFrontPath,
                         tag: reciboFrontTag,
+                        photoId: reciboFrontPhotoId,
                         onChanged: onReciboFrontUploadedChanged,
                         onTagChanged: onReciboFrontTagChanged,
                       ),
@@ -117,6 +122,7 @@ class ReciboValidationStep extends StatelessWidget {
                         isUploaded: reciboBackUploaded,
                         imagePath: reciboBackPath,
                         tag: reciboBackTag,
+                        photoId: reciboBackPhotoId,
                         onChanged: onReciboBackUploadedChanged,
                         onTagChanged: onReciboBackTagChanged,
                       ),

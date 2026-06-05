@@ -9,9 +9,11 @@ class BreveteValidationStep extends StatelessWidget {
   final bool breveteFrontUploaded;
   final String? breveteFrontTag;
   final String? breveteFrontPath;
+  final int? breveteFrontPhotoId;
   final bool breveteBackUploaded;
   final String? breveteBackTag;
   final String? breveteBackPath;
+  final int? breveteBackPhotoId;
 
   final Function(bool, dynamic) onBreveteFrontUploadedChanged;
   final Function(String?) onBreveteFrontTagChanged;
@@ -27,9 +29,11 @@ class BreveteValidationStep extends StatelessWidget {
     required this.breveteFrontUploaded,
     this.breveteFrontTag,
     this.breveteFrontPath,
+    this.breveteFrontPhotoId,
     required this.breveteBackUploaded,
     this.breveteBackTag,
     this.breveteBackPath,
+    this.breveteBackPhotoId,
     required this.onBreveteFrontUploadedChanged,
     required this.onBreveteFrontTagChanged,
     required this.onBreveteBackUploadedChanged,
@@ -105,6 +109,7 @@ class BreveteValidationStep extends StatelessWidget {
                         isUploaded: breveteFrontUploaded,
                         imagePath: breveteFrontPath,
                         tag: breveteFrontTag,
+                        photoId: breveteFrontPhotoId,
                         onChanged: onBreveteFrontUploadedChanged,
                         onTagChanged: onBreveteFrontTagChanged,
                       ),
@@ -117,6 +122,7 @@ class BreveteValidationStep extends StatelessWidget {
                         isUploaded: breveteBackUploaded,
                         imagePath: breveteBackPath,
                         tag: breveteBackTag,
+                        photoId: breveteBackPhotoId,
                         onChanged: onBreveteBackUploadedChanged,
                         onTagChanged: onBreveteBackTagChanged,
                       ),

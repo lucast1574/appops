@@ -46,7 +46,7 @@ class VerificationResultStep extends StatelessWidget {
                 _buildResultOption('Observado', const Color(0xFF002B4B), const Color(0xFFFDE084), const Color(0xFFFCD352)),
                 const SizedBox(height: 24),
                 Text(
-                  'Observaciones',
+                  'Referencias del domicilio (color de fachada, cómo llegar, etc.)',
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF002B4B)),
                 ),
                 const SizedBox(height: 8),
@@ -54,7 +54,7 @@ class VerificationResultStep extends StatelessWidget {
                   controller: observationsController,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'Agregar observaciones',
+                    hintText: 'Ej: Portón verde, frente al parque, etc.',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF99AAB7).withValues(alpha: 0.5)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FA),

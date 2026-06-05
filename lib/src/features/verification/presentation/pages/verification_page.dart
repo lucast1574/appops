@@ -43,6 +43,7 @@ class _VerificationPageState extends State<VerificationPage> {
   late Map<String, dynamic> _task;
   bool _loadingDetail = true;
   bool _isAutoReschedule = false;
+  final Map<String, int> _photoIds = {};
 
   String? _selectedRecipient;
   String? _selectedRelationship;
@@ -140,6 +141,81 @@ class _VerificationPageState extends State<VerificationPage> {
             // Update maps link if it changed or was empty
             if (_mapsController.text.isEmpty) {
               _mapsController.text = _task['google_maps_link'] ?? '';
+            }
+
+            // Restore photos and photo IDs from backend
+            _photoIds.clear();
+            if (full['photos'] != null) {
+              for (var photo in full['photos']) {
+                if (photo is Map && photo['label'] != null) {
+                  final String label = photo['label'];
+                  final int? id = photo['id'] is int ? photo['id'] : int.tryParse('${photo['id']}');
+                  final String? tag = photo['tag'];
+                  final String? url = photo['download_url'];
+                  if (id != null) {
+                    _photoIds[label] = id;
+                  }
+                  
+                  // Map to the state variables
+                  if (label == 'dni_cliente') {
+                    _dniFrontUploaded = true;
+                    _dniFrontTag = tag;
+                    _dniFrontPath = url;
+                  } else if (label == 'dni_cliente_reverso') {
+                    _dniBackUploaded = true;
+                    _dniBackTag = tag;
+                    _dniBackPath = url;
+                  } else if (label == 'brevete_cliente') {
+                    _breveteFrontUploaded = true;
+                    _breveteFrontTag = tag;
+                    _breveteFrontPath = url;
+                  } else if (label == 'brevete_cliente_reverso') {
+                    _breveteBackUploaded = true;
+                    _breveteBackTag = tag;
+                    _breveteBackPath = url;
+                  } else if (label == 'recibo_servicios') {
+                    _reciboFrontUploaded = true;
+                    _reciboFrontTag = tag;
+                    _reciboFrontPath = url;
+                  } else if (label == 'recibo_servicios_reverso') {
+                    _reciboBackUploaded = true;
+                    _reciboBackTag = tag;
+                    _reciboBackPath = url;
+                  } else if (label == 'fachada_vivienda') {
+                    _garageFacadeUploaded = true;
+                    _garageFacadeTag = tag;
+                    _garageFacadePath = url;
+                  } else if (label == 'camara_vigilancia') {
+                    _garageCamerasUploaded = true;
+                    _garageCamerasTag = tag;
+                    _garageCamerasPath = url;
+                  } else if (label == 'cochera_techada' || label == 'cochera_general') {
+                    _garageRoofingUploaded = true;
+                    _garageRoofingTag = tag;
+                    _garageRoofingPath = url;
+                  } else if (label == 'cochera_sotano') {
+                    _garageBasementUploaded = true;
+                    _garageBasementTag = tag;
+                    _garageBasementPath = url;
+                  } else if (label == 'cochera_direccion') {
+                    _garageDirectionUploaded = true;
+                    _garageDirectionTag = tag;
+                    _garageDirectionPath = url;
+                  } else if (label == 'accesibilidad_calle') {
+                    _streetAccessibilityUploaded = true;
+                    _streetAccessibilityTag = tag;
+                    _streetAccessibilityPath = url;
+                  } else if (label.startsWith('fachada_calle_extra_')) {
+                    final idxParts = label.split('_');
+                    final idx = int.tryParse(idxParts.last);
+                    if (idx != null && idx >= 1 && idx <= 3) {
+                      _extraGarageImagesUploaded[idx - 1] = true;
+                      _extraGarageImagesTags[idx - 1] = tag;
+                      _extraGarageImagesPaths[idx - 1] = url;
+                    }
+                  }
+                }
+              }
             }
 
             // RESTORE PROGRESS
@@ -624,17 +700,31 @@ class _VerificationPageState extends State<VerificationPage> {
           dniFrontUploaded: _dniFrontUploaded,
           dniFrontTag: _dniFrontTag,
           dniFrontPath: _dniFrontPath,
+          dniFrontPhotoId: _photoIds['dni_cliente'],
           dniBackUploaded: _dniBackUploaded,
           dniBackTag: _dniBackTag,
           dniBackPath: _dniBackPath,
+          dniBackPhotoId: _photoIds['dni_cliente_reverso'],
           onDniFrontUploadedChanged: (val, res) => setState(() {
             _dniFrontUploaded = val;
             _dniFrontPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['dni_cliente'] = id;
+            } else if (!val) {
+              _photoIds.remove('dni_cliente');
+            }
           }),
           onDniFrontTagChanged: (val) => setState(() => _dniFrontTag = val),
           onDniBackUploadedChanged: (val, res) => setState(() {
             _dniBackUploaded = val;
             _dniBackPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['dni_cliente_reverso'] = id;
+            } else if (!val) {
+              _photoIds.remove('dni_cliente_reverso');
+            }
           }),
           onDniBackTagChanged: (val) => setState(() => _dniBackTag = val),
           onBack: _previousStep,
@@ -646,17 +736,31 @@ class _VerificationPageState extends State<VerificationPage> {
           breveteFrontUploaded: _breveteFrontUploaded,
           breveteFrontTag: _breveteFrontTag,
           breveteFrontPath: _breveteFrontPath,
+          breveteFrontPhotoId: _photoIds['brevete_cliente'],
           breveteBackUploaded: _breveteBackUploaded,
           breveteBackTag: _breveteBackTag,
           breveteBackPath: _breveteBackPath,
+          breveteBackPhotoId: _photoIds['brevete_cliente_reverso'],
           onBreveteFrontUploadedChanged: (val, res) => setState(() {
             _breveteFrontUploaded = val;
             _breveteFrontPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['brevete_cliente'] = id;
+            } else if (!val) {
+              _photoIds.remove('brevete_cliente');
+            }
           }),
           onBreveteFrontTagChanged: (val) => setState(() => _breveteFrontTag = val),
           onBreveteBackUploadedChanged: (val, res) => setState(() {
             _breveteBackUploaded = val;
             _breveteBackPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['brevete_cliente_reverso'] = id;
+            } else if (!val) {
+              _photoIds.remove('brevete_cliente_reverso');
+            }
           }),
           onBreveteBackTagChanged: (val) => setState(() => _breveteBackTag = val),
           onBack: _previousStep,
@@ -668,17 +772,31 @@ class _VerificationPageState extends State<VerificationPage> {
           reciboFrontUploaded: _reciboFrontUploaded,
           reciboFrontTag: _reciboFrontTag,
           reciboFrontPath: _reciboFrontPath,
+          reciboFrontPhotoId: _photoIds['recibo_servicios'],
           reciboBackUploaded: _reciboBackUploaded,
           reciboBackTag: _reciboBackTag,
           reciboBackPath: _reciboBackPath,
+          reciboBackPhotoId: _photoIds['recibo_servicios_reverso'],
           onReciboFrontUploadedChanged: (val, res) => setState(() {
             _reciboFrontUploaded = val;
             _reciboFrontPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['recibo_servicios'] = id;
+            } else if (!val) {
+              _photoIds.remove('recibo_servicios');
+            }
           }),
           onReciboFrontTagChanged: (val) => setState(() => _reciboFrontTag = val),
           onReciboBackUploadedChanged: (val, res) => setState(() {
             _reciboBackUploaded = val;
             _reciboBackPath = (val && res is Map) ? res['localPath'] : null;
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['recibo_servicios_reverso'] = id;
+            } else if (!val) {
+              _photoIds.remove('recibo_servicios_reverso');
+            }
           }),
           onReciboBackTagChanged: (val) => setState(() => _reciboBackTag = val),
           onBack: _previousStep,
@@ -722,40 +840,53 @@ class _VerificationPageState extends State<VerificationPage> {
           onContinue: () => setState(() => _currentStep = 9),
         );
       case 9:
+        final bool needRoofingPhoto = _isRoofing == true;
+        final String roofingLabel = needRoofingPhoto ? 'cochera_techada' : 'cochera_general';
         return GarageStep(
           taskId: _task['id'] ?? 0,
           isGarageAtHome: _isGarageAtHome,
           garageFacadeUploaded: _garageFacadeUploaded,
           garageFacadeTag: _garageFacadeTag,
           garageFacadePath: _garageFacadePath,
+          garageFacadePhotoId: _photoIds['fachada_vivienda'],
           hasSecurity: _hasSecurity,
           hasCameras: _hasCameras,
           garageCamerasUploaded: _garageCamerasUploaded,
           garageCamerasTag: _garageCamerasTag,
           garageCamerasPath: _garageCamerasPath,
+          garageCamerasPhotoId: _photoIds['camara_vigilancia'],
           accessType: _accessType,
           isRoofing: _isRoofing,
           garageRoofingUploaded: _garageRoofingUploaded,
           garageRoofingTag: _garageRoofingTag,
           garageRoofingPath: _garageRoofingPath,
+          garageRoofingPhotoId: _photoIds[roofingLabel],
           isBasement: _isBasement,
           garageBasementUploaded: _garageBasementUploaded,
           garageBasementTag: _garageBasementTag,
           garageBasementPath: _garageBasementPath,
+          garageBasementPhotoId: _photoIds['cochera_sotano'],
           garageDirection: _garageDirection,
           garageDirectionUploaded: _garageDirectionUploaded,
           garageDirectionTag: _garageDirectionTag,
           garageDirectionPath: _garageDirectionPath,
+          garageDirectionPhotoId: _photoIds['cochera_direccion'],
           streetAccessibility: _streetAccessibility,
           streetAccessibilityUploaded: _streetAccessibilityUploaded,
           streetAccessibilityTag: _streetAccessibilityTag,
           streetAccessibilityPath: _streetAccessibilityPath,
+          streetAccessibilityPhotoId: _photoIds['accesibilidad_calle'],
           mapsController: _mapsController,
           extraImagesCount: _extraGarageImagesCount,
           isCocheraFuera: _isCocheraFuera,
           extraImagesUploaded: _extraGarageImagesUploaded,
           extraImagesTags: _extraGarageImagesTags,
           extraImagesPaths: _extraGarageImagesPaths,
+          extraImagesPhotoIds: [
+            _photoIds['fachada_calle_extra_1'],
+            _photoIds['fachada_calle_extra_2'],
+            _photoIds['fachada_calle_extra_3'],
+          ],
           onGarageAtHomeChanged: (val) {
             setState(() {
               _isGarageAtHome = val;
@@ -768,6 +899,12 @@ class _VerificationPageState extends State<VerificationPage> {
           onFacadeUploadedChanged: (val, res) => setState(() {
             _garageFacadeUploaded = val;
             if (val) _garageFacadePath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['fachada_vivienda'] = id;
+            } else if (!val) {
+              _photoIds.remove('fachada_vivienda');
+            }
           }),
           onFacadeTagChanged: (val) => setState(() => _garageFacadeTag = val),
           onSecurityChanged: (val) => setState(() => _hasSecurity = val),
@@ -775,6 +912,12 @@ class _VerificationPageState extends State<VerificationPage> {
           onCamerasUploadedChanged: (val, res) => setState(() {
             _garageCamerasUploaded = val;
             if (val) _garageCamerasPath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['camara_vigilancia'] = id;
+            } else if (!val) {
+              _photoIds.remove('camara_vigilancia');
+            }
           }),
           onCamerasTagChanged: (val) => setState(() => _garageCamerasTag = val),
           onAccessTypeChanged: (val) => setState(() => _accessType = val),
@@ -782,12 +925,24 @@ class _VerificationPageState extends State<VerificationPage> {
           onRoofingUploadedChanged: (val, res) => setState(() {
             _garageRoofingUploaded = val;
             if (val) _garageRoofingPath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds[roofingLabel] = id;
+            } else if (!val) {
+              _photoIds.remove(roofingLabel);
+            }
           }),
           onRoofingTagChanged: (val) => setState(() => _garageRoofingTag = val),
           onBasementChanged: (val) => setState(() => _isBasement = val),
           onBasementUploadedChanged: (val, res) => setState(() {
             _garageBasementUploaded = val;
             if (val) _garageBasementPath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['cochera_sotano'] = id;
+            } else if (!val) {
+              _photoIds.remove('cochera_sotano');
+            }
           }),
           onBasementTagChanged: (val) =>
               setState(() => _garageBasementTag = val),
@@ -796,6 +951,12 @@ class _VerificationPageState extends State<VerificationPage> {
           onDirectionUploadedChanged: (val, res) => setState(() {
             _garageDirectionUploaded = val;
             if (val) _garageDirectionPath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['cochera_direccion'] = id;
+            } else if (!val) {
+              _photoIds.remove('cochera_direccion');
+            }
           }),
           onDirectionTagChanged: (val) =>
               setState(() => _garageDirectionTag = val),
@@ -804,6 +965,12 @@ class _VerificationPageState extends State<VerificationPage> {
           onAccessibilityUploadedChanged: (val, res) => setState(() {
             _streetAccessibilityUploaded = val;
             if (val) _streetAccessibilityPath = res?['localPath'];
+            if (val && res is Map && res['photoId'] != null) {
+              final id = int.tryParse(res['photoId'].toString());
+              if (id != null) _photoIds['accesibilidad_calle'] = id;
+            } else if (!val) {
+              _photoIds.remove('accesibilidad_calle');
+            }
           }),
           onAccessibilityTagChanged: (val) =>
               setState(() => _streetAccessibilityTag = val),
@@ -816,6 +983,13 @@ class _VerificationPageState extends State<VerificationPage> {
             setState(() {
               _extraGarageImagesUploaded[index] = val;
               if (val) _extraGarageImagesPaths[index] = res?['localPath'];
+              final String label = 'fachada_calle_extra_${index + 1}';
+              if (val && res is Map && res['photoId'] != null) {
+                final id = int.tryParse(res['photoId'].toString());
+                if (id != null) _photoIds[label] = id;
+              } else if (!val) {
+                _photoIds.remove(label);
+              }
             });
           },
           onExtraImageTagChanged: (index, val) {
@@ -863,7 +1037,10 @@ class _VerificationPageState extends State<VerificationPage> {
           onEditHousing: () => setState(() => _currentStep = 8),
           onEditGarage: () => setState(() => _currentStep = 9),
           onEditAll: () => setState(() => _currentStep = 0),
-          task: _task,
+          task: {
+            ..._task,
+            'observations': _observationsController.text,
+          },
           onSend: () => _showConfirmationBottomSheet(context, onConfirm: _submitTask),
         );
       case 12:

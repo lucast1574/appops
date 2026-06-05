@@ -56,6 +56,48 @@ class FlowPhotoInput extends StatefulWidget {
 class _FlowPhotoInputState extends State<FlowPhotoInput> {
   bool _isUploading = false;
   final TaskService _taskService = TaskService();
+  int? _photoId;
+
+  @override
+  void initState() {
+    super.initState();
+    _photoId = widget.photoId;
+    if (_photoId == null) {
+      _resolvePhotoId();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant FlowPhotoInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.photoId != oldWidget.photoId) {
+      _photoId = widget.photoId;
+    }
+    if (_photoId == null && (oldWidget.photoLabel != widget.photoLabel || oldWidget.taskId != widget.taskId)) {
+      _resolvePhotoId();
+    }
+  }
+
+  Future<void> _resolvePhotoId() async {
+    try {
+      final task = await _taskService.getTaskDetail(widget.taskId);
+      if (task['photos'] != null) {
+        for (var photo in task['photos']) {
+          if (photo is Map && photo['label'] == widget.photoLabel && photo['id'] != null) {
+            final id = int.tryParse('${photo['id']}');
+            if (id != null && mounted) {
+              setState(() {
+                _photoId = id;
+              });
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[FlowPhotoInput] Failed to resolve photo ID for label ${widget.photoLabel}: $e');
+    }
+  }
 
   Future<void> _handleTap() async {
     if (_isUploading) return;
@@ -68,6 +110,10 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
       );
       if (!mounted) return;
       if (result != null) {
+        final newPhotoId = int.tryParse(result['photoId'] ?? '');
+        setState(() {
+          _photoId = newPhotoId;
+        });
         widget.onChanged(true, result);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +132,7 @@ class _FlowPhotoInputState extends State<FlowPhotoInput> {
   /// to the backend so the backoffice can see the operator's label.
   void _handleTagChanged(String? newTag) {
     widget.onTagChanged(newTag);
-    final int? photoId = widget.photoId;
+    final int? photoId = _photoId;
     if (photoId != null) {
       _taskService.updatePhotoTag(
         widget.taskId,

@@ -10,9 +10,11 @@ class DniValidationStep extends StatelessWidget {
   final bool dniFrontUploaded;
   final String? dniFrontTag;
   final String? dniFrontPath;
+  final int? dniFrontPhotoId;
   final bool dniBackUploaded;
   final String? dniBackTag;
   final String? dniBackPath;
+  final int? dniBackPhotoId;
 
   final Function(bool, dynamic) onDniFrontUploadedChanged;
   final Function(String?) onDniFrontTagChanged;
@@ -29,9 +31,11 @@ class DniValidationStep extends StatelessWidget {
     required this.dniFrontUploaded,
     this.dniFrontTag,
     this.dniFrontPath,
+    this.dniFrontPhotoId,
     required this.dniBackUploaded,
     this.dniBackTag,
     this.dniBackPath,
+    this.dniBackPhotoId,
     required this.onDniFrontUploadedChanged,
     required this.onDniFrontTagChanged,
     required this.onDniBackUploadedChanged,
@@ -164,6 +168,7 @@ class DniValidationStep extends StatelessWidget {
                         isUploaded: dniFrontUploaded,
                         imagePath: dniFrontPath,
                         tag: dniFrontTag,
+                        photoId: dniFrontPhotoId,
                         onChanged: onDniFrontUploadedChanged,
                         onTagChanged: onDniFrontTagChanged,
                       ),
@@ -176,6 +181,7 @@ class DniValidationStep extends StatelessWidget {
                         isUploaded: dniBackUploaded,
                         imagePath: dniBackPath,
                         tag: dniBackTag,
+                        photoId: dniBackPhotoId,
                         onChanged: onDniBackUploadedChanged,
                         onTagChanged: onDniBackTagChanged,
                       ),
