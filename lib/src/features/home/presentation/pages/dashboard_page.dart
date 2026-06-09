@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -353,6 +354,24 @@ class _DashboardPageState extends State<DashboardPage> {
     ).then((_) => _loadTasks()); // Reload tasks when coming back
   }
 
+  /// Extracts a human-friendly message from a Dio error (backend
+  /// returns `{ "error": "..." }` on validation failures) and falls back
+  /// to a generic message when nothing useful is available.
+  String _friendlyError(Object e) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final msg = data['error'] ?? data['detail'] ?? data['message'];
+        if (msg is String && msg.trim().isNotEmpty) return msg;
+      }
+      if (data is String && data.trim().isNotEmpty) return data;
+      final code = e.response?.statusCode;
+      if (code != null) return 'Error $code del servidor';
+      return e.message ?? 'Error de conexión';
+    }
+    return e.toString();
+  }
+
   final Set<int> _startingTaskIds = {};
   Future<void> _onStartTask(Map<String, dynamic> task) async {
     final int taskId = task['id'] ?? 0;
@@ -366,7 +385,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al iniciar tarea: $e'),
+            content: Text('Error al iniciar tarea: ${_friendlyError(e)}'),
             backgroundColor: Colors.red,
           ),
         );
