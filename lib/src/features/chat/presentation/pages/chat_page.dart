@@ -248,6 +248,48 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildBubble(Map<String, dynamic> m) {
+    final isSystem = m['is_system'] ?? false;
+    if (isSystem) {
+      final body = (m['body'] as String?) ?? '';
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.85,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.computer,
+                  size: 14,
+                  color: Color(0xFF64748B),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    body,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final isMe = m['sender_id'] == _currentUserId;
     final senderName = (m['sender_name'] as String?) ?? '';
     final senderPhoto = (m['sender_profile_picture'] ?? m['sender_photo_url'] ?? m['profile_picture'] as String?)?.toString();
