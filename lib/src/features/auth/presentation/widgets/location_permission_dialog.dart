@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -6,6 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 ///
 /// The dialog is fully mandatory: it cannot be dismissed via back button,
 /// drag, or tap outside. The only way forward is the CTA.
+///
+/// Steps adapt to the host platform (Android vs iOS) because the native
+/// settings screens look different on each.
 class LocationPermissionDialog {
   const LocationPermissionDialog._();
 
@@ -97,7 +101,7 @@ class _DialogContent extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Step-by-step instructions
+            // Step-by-step instructions (platform-aware)
             _buildStepsCard(),
             const SizedBox(height: 20),
 
@@ -122,7 +126,7 @@ class _DialogContent extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Permitir todo el tiempo',
+                    Platform.isIOS ? 'Siempre' : 'Permitir todo el tiempo',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -164,6 +168,7 @@ class _DialogContent extends StatelessWidget {
   }
 
   Widget _buildStepsCard() {
+    final steps = Platform.isIOS ? _iosSteps() : _androidSteps();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -184,30 +189,45 @@ class _DialogContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildStep(
-            number: '1',
-            text: 'Toca "Permisos" en la pantalla que se abrirá',
-            subtitle: '(Si ya ves "Ubicación", ve al paso 2)',
-          ),
-          const SizedBox(height: 10),
-          _buildStep(
-            number: '2',
-            text: 'Toca "Ubicación"',
-          ),
-          const SizedBox(height: 10),
-          _buildStep(
-            number: '3',
-            text: 'Selecciona "Permitir todo el tiempo"',
-          ),
-          const SizedBox(height: 10),
-          _buildStep(
-            number: '4',
-            text: 'Regresa a LeasyOps',
-          ),
+          for (int i = 0; i < steps.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            _buildStep(
+              number: '${i + 1}',
+              text: steps[i].text,
+              subtitle: steps[i].subtitle,
+            ),
+          ],
         ],
       ),
     );
   }
+
+  /// Android flow: Settings page deeplink → Permissions → Location → Allow all the time.
+  List<_Step> _androidSteps() => const [
+        _Step(
+          text: 'Toca "Permisos" en la pantalla que se abrirá',
+          subtitle: '(Si ya ves "Ubicación", ve al paso 2)',
+        ),
+        _Step(text: 'Toca "Ubicación"'),
+        _Step(text: 'Selecciona "Permitir todo el tiempo"'),
+        _Step(text: 'Regresa a LeasyOps'),
+      ];
+
+  /// iOS flow: app Settings page → Ubicación → Siempre.
+  /// On iOS we cannot deeplink directly to the location permission row,
+  /// so we open the app's general Settings page.
+  List<_Step> _iosSteps() => const [
+        _Step(text: 'Toca "Ubicación" en la pantalla que se abrirá'),
+        _Step(
+          text: 'Selecciona "Siempre"',
+          subtitle: '(la opción que permite usar la ubicación en segundo plano)',
+        ),
+        _Step(
+          text: 'Activa "Ubicación precisa"',
+          subtitle: '(si aparece, déjalo encendido)',
+        ),
+        _Step(text: 'Regresa a LeasyOps'),
+      ];
 
   Widget _buildStep({
     required String number,
@@ -266,4 +286,10 @@ class _DialogContent extends StatelessWidget {
       ],
     );
   }
+}
+
+class _Step {
+  final String text;
+  final String? subtitle;
+  const _Step({required this.text, this.subtitle});
 }
