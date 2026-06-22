@@ -45,3 +45,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase / Google — archivos sensibles con API keys y OAuth credentials
+# Estos archivos deben compartirse de forma segura (ej: vault, 1Password, Notion interno)
+# y nunca subirse al repositorio
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
