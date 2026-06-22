@@ -31,6 +31,28 @@
 
 ---
 
+## ⚠️ Antes de empezar — NO copies la carpeta del PC
+
+**Importante:** clona el repo desde GitHub, **NO copies la carpeta del proyecto de otra máquina** (USB, Dropbox, mail). Si lo haces, vas a traer archivos generados con paths Windows que rompen `pod install`:
+- `ios/Flutter/Generated.xcconfig` (contiene `FLUTTER_ROOT=C:\Users\...`)
+- `ios/Flutter/ephemeral/`
+- `.dart_tool/`, `build/`
+
+Si **ya copiaste** la carpeta (no clonaste), antes de hacer nada:
+
+```bash
+cd <ruta-del-proyecto>
+rm -rf ios/Flutter/Generated.xcconfig ios/Flutter/ephemeral
+rm -rf ios/Pods ios/Podfile.lock
+rm -rf .dart_tool build
+flutter pub get                                    # regenera Generated.xcconfig con paths Mac
+cat ios/Flutter/Generated.xcconfig | head -3       # confirma: debe decir FLUTTER_ROOT=/Users/...
+```
+
+Recién después correr `pod install`.
+
+---
+
 ## 🍎 Trabajo obligatorio en Mac
 
 ### 1. Setup de toolchain (una sola vez)
