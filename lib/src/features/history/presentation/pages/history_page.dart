@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../home/data/task_service.dart';
 import '../../../task_summary/presentation/pages/task_summary_page.dart';
+import '../../../../core/events/task_events.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -11,7 +14,8 @@ class HistoryPage extends StatefulWidget {
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage> {
+class _HistoryPageState extends State<HistoryPage>
+    with WidgetsBindingObserver {
   // UI filter chips — labels shown to the user. They map to task type slugs
   // (or status keywords) internally in `_filterTasks`.
   String selectedFilter = 'Todas';
@@ -30,9 +34,39 @@ class _HistoryPageState extends State<HistoryPage> {
   bool isLoading = true;
   String? _error;
 
+  StreamSubscription<TaskEvent>? _taskEventSub;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _taskEventSub = TaskEventBus.instance.stream.listen(_onTaskEvent);
+    _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _taskEventSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _taskService.invalidateTasksCache();
+      _loadTasks();
+    }
+  }
+
+  void _onTaskEvent(TaskEvent event) {
+    if (!mounted) return;
+    if (event.kind == TaskEventKind.taskDeleted && event.taskId != null) {
+      setState(() {
+        _tasks.removeWhere((t) => t['id'] == event.taskId);
+      });
+    }
+    _taskService.invalidateTasksCache();
     _loadTasks();
   }
 

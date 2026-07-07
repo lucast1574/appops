@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/task_service.dart';
 import '../../../auth/data/auth_service.dart';
+import '../../../../core/events/task_events.dart';
 import '../../../verification/presentation/pages/verification_page.dart';
 import '../../../recovery/presentation/pages/recovery_page.dart';
 import '../../../delivery/presentation/pages/delivery_page.dart';
@@ -20,7 +23,8 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage>
+    with WidgetsBindingObserver {
   String selectedFilter = 'Todas';
   final List<String> filters = [
     'Todas',
@@ -36,10 +40,54 @@ class _DashboardPageState extends State<DashboardPage> {
   String? _error;
   String _userName = '';
 
+  StreamSubscription<TaskEvent>? _taskEventSub;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Listen to task-event bus: silent push refresh, deletions, etc.
+    _taskEventSub = TaskEventBus.instance.stream.listen(_onTaskEvent);
+
     _loadUser();
+    _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _taskEventSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back to the foreground from another app / lock screen is
+    // the most common way an operator sees a task that was just
+    // deleted by their supervisor while the app was in the background.
+    // Drop the cache and refetch — the RefreshIndicator does the same
+    // work but requires an explicit gesture.
+    if (state == AppLifecycleState.resumed && mounted) {
+      _taskService.invalidateTasksCache();
+      _loadTasks();
+    }
+  }
+
+  void _onTaskEvent(TaskEvent event) {
+    if (!mounted) return;
+
+    // Optimistic UI: if we know the exact task id, drop it locally
+    // right away so the row disappears before the network call
+    // finishes. This also covers the (rare) case where the network is
+    // down when the push arrives.
+    if (event.kind == TaskEventKind.taskDeleted && event.taskId != null) {
+      setState(() {
+        _tasks.removeWhere((t) => t['id'] == event.taskId);
+      });
+    }
+
+    _taskService.invalidateTasksCache();
     _loadTasks();
   }
 

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/events/task_events.dart';
 
 /// Tiny in-memory cache entry for dashboard tasks.
 /// Keeps the previous response for [TaskService._cacheTtl] so reopening the
@@ -11,6 +12,17 @@ class _TasksCacheEntry {
   final List<Map<String, dynamic>> value;
   final DateTime expiresAt;
   bool get isFresh => DateTime.now().isBefore(expiresAt);
+}
+
+/// Thrown by [TaskService.getTaskDetail] when the requested task was
+/// deleted server-side. Callers should typically pop the current
+/// screen and let the dashboard show the refreshed list.
+class TaskGoneException implements Exception {
+  TaskGoneException(this.taskId);
+  final int taskId;
+
+  @override
+  String toString() => 'TaskGoneException(taskId=$taskId)';
 }
 
 /// Task service — connects to the Django backend.
@@ -115,9 +127,27 @@ class TaskService {
   // ---------------------------------------------------------------
 
   /// Fetch full task detail including photos and result.
+  ///
+  /// If the backend responds with 404 (task was deleted by the
+  /// backoffice while the operator still had it visible in the
+  /// dashboard cache) we throw a [TaskGoneException] so the caller
+  /// can pop the screen and refresh the list, and we also fire a
+  /// task-deleted event on the shared bus so the dashboard drops the
+  /// stale row immediately.
   Future<Map<String, dynamic>> getTaskDetail(int taskId) async {
-    final response = await _api.dio.get('/tasks/$taskId/');
-    return Map<String, dynamic>.from(response.data);
+    try {
+      final response = await _api.dio.get('/tasks/$taskId/');
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // The task no longer exists server-side. Kick a refresh so
+        // every list drops it, then surface a typed error.
+        invalidateTasksCache();
+        TaskEventBus.instance.notifyDeleted(taskId, reason: 'http.404');
+        throw TaskGoneException(taskId);
+      }
+      rethrow;
+    }
   }
 
   // ---------------------------------------------------------------

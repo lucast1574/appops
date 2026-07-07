@@ -9,6 +9,7 @@ import '../widgets/custom_app_bar.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../../core/notifications/push_service.dart';
+import '../../../../core/events/task_events.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 // Task flows for deep linking
@@ -57,7 +58,32 @@ class _MainPageState extends State<MainPage> {
 
   void _handleMessage(RemoteMessage message) {
     final data = message.data;
+    final kind = data['kind']?.toString() ?? '';
     final taskId = int.tryParse(data['task_id']?.toString() ?? '');
+
+    // ----------------------------------------------------------------
+    // Silent / cache-invalidation events. These arrive as data-only
+    // pushes from the backend (send_silent_refresh) OR as visible
+    // pushes whose `kind` tells us the target task no longer exists.
+    // In both cases we must:
+    //   * NEVER try to deep-link into the task (it may be gone).
+    //   * Drop any cached copy and tell the task-list pages to reload.
+    // ----------------------------------------------------------------
+    if (kind == 'task.deleted' || kind == 'task.refresh') {
+      // Every task-list page owns its own TaskService instance and is
+      // responsible for invalidating its own cache when it hears the
+      // event on the bus (see DashboardPage._onTaskEvent).
+      if (kind == 'task.deleted' && taskId != null) {
+        TaskEventBus.instance.notifyDeleted(taskId, reason: kind);
+      } else {
+        TaskEventBus.instance.requestRefresh(
+          taskId: taskId,
+          reason: kind.isEmpty ? null : kind,
+        );
+      }
+      return;
+    }
+
     if (taskId == null) return;
 
     final isChat = data['chat'] == 'true' || data['chat'] == true;
