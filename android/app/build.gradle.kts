@@ -27,7 +27,7 @@ android {
         
         // Es mejor poner 21 directamente para asegurar que el ZTE no se queje
         minSdk = flutter.minSdkVersion 
-        targetSdk = 34
+        targetSdk = 35
         
         versionCode = flutter.versionCode
         versionName = flutter.versionName
