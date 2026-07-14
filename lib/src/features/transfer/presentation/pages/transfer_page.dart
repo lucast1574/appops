@@ -15,7 +15,6 @@ import '../widgets/steps/transfer_signatures_step.dart';
 import '../widgets/steps/transfer_general_data_step.dart';
 import '../widgets/steps/transfer_summary_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
-import '../../../../shared/widgets/task_chat_action_button.dart';
 
 import '../../../../shared/widgets/vehicle_inspection_widget.dart';
 
@@ -271,10 +270,6 @@ class _TransferPageState extends State<TransferPage> {
               colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
             ),
             onPressed: () {},
-          ),
-          TaskChatActionButton(
-            taskId: widget.task['id'] ?? 0,
-            taskTitle: 'Traslado',
           ),
         ],
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 10, activeIndex: _getProgressIndex(), allComplete: _currentStep == 9)),

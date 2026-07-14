@@ -8,7 +8,6 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
-import '../../../../shared/widgets/task_chat_action_button.dart';
 import '../widgets/steps/conversion_service_info_step.dart';
 import '../widgets/steps/conversion_certificate_step.dart';
 import '../widgets/steps/conversion_checklist_step.dart';
@@ -135,10 +134,6 @@ class _ConversionPageState extends State<ConversionPage> {
                       ),
                     ),
                   ),
-                ),
-                TaskChatActionButton(
-                  taskId: _task['id'] ?? 0,
-                  taskTitle: 'Conversión',
                 ),
               ],
               bottom: PreferredSize(

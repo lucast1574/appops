@@ -8,7 +8,6 @@ import '../../../../shared/widgets/flow_confirmation_sheet.dart';
 import '../../../../shared/widgets/flow_success_step.dart';
 import '../../../../shared/widgets/task_info_widget.dart';
 import '../../../home/data/task_service.dart';
-import '../../../../shared/widgets/task_chat_action_button.dart';
 import '../widgets/steps/vv_detail_step.dart';
 import '../widgets/steps/vv_photo_step.dart';
 import '../widgets/steps/vv_summary_step.dart';
@@ -239,10 +238,6 @@ class _VehicleVerificationPageState extends State<VehicleVerificationPage> {
                       style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red),
                     ),
                   ),
-                ),
-                TaskChatActionButton(
-                  taskId: _task['id'] ?? 0,
-                  taskTitle: 'Verificar vehículo',
                 ),
               ],
               bottom: PreferredSize(

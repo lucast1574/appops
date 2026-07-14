@@ -14,7 +14,6 @@ import '../../../transfer/presentation/widgets/steps/transfer_signatures_step.da
 import '../../../transfer/presentation/widgets/steps/transfer_checklist_step.dart';
 import '../widgets/steps/delivery_summary_step.dart';
 import '../../../../shared/widgets/shared_widgets.dart';
-import '../../../../shared/widgets/task_chat_action_button.dart';
 
 class DeliveryPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -261,10 +260,6 @@ class _DeliveryPageState extends State<DeliveryPage> {
               colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
             ),
             onPressed: () {},
-          ),
-          TaskChatActionButton(
-            taskId: widget.task['id'] ?? 0,
-            taskTitle: 'Entrega de unidad',
           ),
         ],
         bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 11, activeIndex: _getProgressIndex(), allComplete: _currentStep == 11)),

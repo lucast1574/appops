@@ -7,7 +7,6 @@ import '../../../history/presentation/pages/history_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../widgets/custom_app_bar.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
-import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../../core/notifications/push_service.dart';
 import '../../../../core/events/task_events.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -86,72 +85,58 @@ class _MainPageState extends State<MainPage> {
 
     if (taskId == null) return;
 
-    final isChat = data['chat'] == 'true' || data['chat'] == true;
+    // Direct task deep-link
+    final slug = data['task_type_slug']?.toString();
+    if (slug == null) return;
 
-    if (isChat) {
+    final taskMap = {
+      'id': taskId,
+      'type': {
+        'slug': slug,
+        'name': data['task_type_name'],
+      },
+      'scheduled_date': data['scheduled_date'],
+      'start_time': data['start_time'],
+      'address': data['address'],
+      'placa': data['placa'],
+      'client_name': data['client_name'],
+      'is_extra': data['is_extra'] == 'true' || data['is_extra'] == true,
+      'status': data['status'] ?? 'pending',
+    };
+
+    Widget? page;
+    switch (slug) {
+      case 'verificacion':
+        page = VerificationPage(task: taskMap);
+        break;
+      case 'recupero':
+        page = RecoveryPage(task: taskMap);
+        break;
+      case 'entrega':
+        page = DeliveryPage(task: taskMap);
+        break;
+      case 'conversion':
+        page = ConversionPage(task: taskMap);
+        break;
+      case 'traslado':
+        page = TransferPage(task: taskMap);
+        break;
+      case 'verificar_vehiculo':
+        page = VehicleVerificationPage(task: taskMap);
+        break;
+      case 'notaria':
+        page = NotaryPage(task: taskMap);
+        break;
+      case 'gestiones':
+        page = ManagementPage(task: taskMap);
+        break;
+    }
+
+    if (page != null) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => ChatPage(
-            taskId: taskId,
-            taskTitle: data['task_type_name']?.toString() ?? 'Chat de Tarea',
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => page!),
       );
-    } else {
-      // Direct task deep-link
-      final slug = data['task_type_slug']?.toString();
-      if (slug == null) return;
-
-      final taskMap = {
-        'id': taskId,
-        'type': {
-          'slug': slug,
-          'name': data['task_type_name'],
-        },
-        'scheduled_date': data['scheduled_date'],
-        'start_time': data['start_time'],
-        'address': data['address'],
-        'placa': data['placa'],
-        'client_name': data['client_name'],
-        'is_extra': data['is_extra'] == 'true' || data['is_extra'] == true,
-        'status': data['status'] ?? 'pending',
-      };
-
-      Widget? page;
-      switch (slug) {
-        case 'verificacion':
-          page = VerificationPage(task: taskMap);
-          break;
-        case 'recupero':
-          page = RecoveryPage(task: taskMap);
-          break;
-        case 'entrega':
-          page = DeliveryPage(task: taskMap);
-          break;
-        case 'conversion':
-          page = ConversionPage(task: taskMap);
-          break;
-        case 'traslado':
-          page = TransferPage(task: taskMap);
-          break;
-        case 'verificar_vehiculo':
-          page = VehicleVerificationPage(task: taskMap);
-          break;
-        case 'notaria':
-          page = NotaryPage(task: taskMap);
-          break;
-        case 'gestiones':
-          page = ManagementPage(task: taskMap);
-          break;
-      }
-
-      if (page != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => page!),
-        );
-      }
     }
   }
 

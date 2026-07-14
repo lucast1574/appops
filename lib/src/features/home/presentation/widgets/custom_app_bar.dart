@@ -5,8 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../notifications/data/notifications_service.dart';
-import '../../../chat/data/chat_unread_service.dart';
-import '../../../chat/presentation/pages/chat_inbox_page.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -36,10 +34,8 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _CustomAppBarState extends State<CustomAppBar> {
   final NotificationsService _notifService = NotificationsService();
-  final ChatUnreadService _chatService = ChatUnreadService();
   Timer? _pollTimer;
   int _unreadNotifs = 0;
-  int _unreadChats = 0;
 
   @override
   void initState() {
@@ -65,11 +61,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
       if (!mounted) return;
       setState(() => _unreadNotifs = n);
     } catch (_) {}
-    try {
-      final c = await _chatService.unreadCount();
-      if (!mounted) return;
-      setState(() => _unreadChats = c);
-    } catch (_) {}
   }
 
   Future<void> _handleNotifTap() async {
@@ -78,14 +69,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
       final res = cb();
       if (res is Future) await res;
     }
-    if (mounted) _refresh();
-  }
-
-  Future<void> _handleChatTap() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ChatInboxPage()),
-    );
     if (mounted) _refresh();
   }
 
@@ -137,26 +120,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
         ),
       ),
       actions: [
-        if (widget.showNotificationBell) ...[
-          // Chat icon (right next to the bell)
-          Padding(
-            padding: const EdgeInsets.only(right: 18),
-            child: GestureDetector(
-              onTap: _handleChatTap,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    color: widget.headerColor,
-                    size: 24,
-                  ),
-                  if (_unreadChats > 0)
-                    _buildBadge(_unreadChats, const Color(0xFF4FA4B5)),
-                ],
-              ),
-            ),
-          ),
+        if (widget.showNotificationBell)
           // Notification bell
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
@@ -177,7 +141,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
               ),
             ),
           ),
-        ],
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
