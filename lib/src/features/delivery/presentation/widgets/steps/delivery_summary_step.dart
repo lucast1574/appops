@@ -17,6 +17,8 @@ class DeliverySummaryStep extends StatelessWidget {
   final bool hasClientSignature;
   final String? effectiveTime;
   final Map<String, String> sectionCounts;
+  final bool dniFrontUploaded;
+  final bool dniBackUploaded;
   final VoidCallback onEditTaskInfo;
   final VoidCallback onEditDeliveryInfo;
   final VoidCallback onEditConfirmation;
@@ -24,6 +26,7 @@ class DeliverySummaryStep extends StatelessWidget {
   final VoidCallback onEditInventory;
   final VoidCallback onEditInspection;
   final VoidCallback onEditSignatures;
+  final VoidCallback onEditDni;
   final VoidCallback onEditAll;
   final VoidCallback onSend;
 
@@ -38,11 +41,13 @@ class DeliverySummaryStep extends StatelessWidget {
     required this.observationsCount,
     required this.sectionCounts,
     required this.hasOperarioSignature, required this.hasClientSignature,
+    required this.dniFrontUploaded, required this.dniBackUploaded,
     required this.onEditTaskInfo, required this.onEditDeliveryInfo,
     required this.onEditConfirmation, required this.onEditChecklist,
     required this.onEditInventory,
     required this.onEditInspection,
     required this.onEditSignatures,
+    required this.onEditDni,
     required this.onEditAll, required this.onSend,
   });
 
@@ -104,6 +109,11 @@ class DeliverySummaryStep extends StatelessWidget {
                 FlowSummarySection(title: 'Firmas', onEdit: onEditSignatures, children: [
                   FlowSummaryStatus(label: 'Firma de operario', isComplete: hasOperarioSignature),
                   FlowSummaryStatus(label: 'Firma de cliente', isComplete: hasClientSignature),
+                ]),
+                const SizedBox(height: 24),
+                FlowSummarySection(title: 'DNI de cliente', onEdit: onEditDni, children: [
+                  FlowSummaryStatus(label: 'DNI Frontal', isComplete: dniFrontUploaded),
+                  FlowSummaryStatus(label: 'DNI Reverso', isComplete: dniBackUploaded),
                 ]),
               ],
             ),

@@ -6,6 +6,7 @@ import '../../../../shared/widgets/task_info_widget.dart';
 import 'package:leasy_ops_mobile/src/core/network/photo_upload_helper.dart';
 import '../../../home/data/task_service.dart';
 import '../widgets/steps/delivery_info_step.dart';
+import '../widgets/steps/delivery_dni_step.dart';
 import '../widgets/steps/delivery_confirmation_step.dart';
 import '../../../transfer/presentation/widgets/steps/transfer_inventory_step.dart';
 import '../../../transfer/presentation/widgets/steps/transfer_inventory_summary_step.dart';
@@ -143,7 +144,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
         case 0: return 0;
         case 1: return 1;
         case 2: return 2;
-        case 11: return 11; // Success
+        case 12: return 12; // Success
         default: return _currentStep;
       }
     }
@@ -262,7 +263,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
             onPressed: () {},
           ),
         ],
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 11, activeIndex: _getProgressIndex(), allComplete: _currentStep == 11)),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(10), child: FlowProgressBar(totalSteps: 12, activeIndex: _getProgressIndex(), allComplete: _currentStep == 12)),
       ) : null,
       body: SafeArea(
         child: _buildCurrentStep(),
@@ -279,18 +280,6 @@ class _DeliveryPageState extends State<DeliveryPage> {
         taskId: widget.task['id'] ?? 0,
         clientNameController: _clientNameController, dniController: _dniController,
         deliverVehicle: _deliverVehicle, 
-        dniFrontPhotoUploaded: _dniFrontPhotoUploaded, dniFrontPhotoTag: _dniFrontPhotoTag, dniFrontPhotoPath: _dniFrontPhotoPath,
-        onDniFrontPhotoUploadedChanged: (v, res) => setState(() {
-          _dniFrontPhotoUploaded = v;
-          _dniFrontPhotoPath = (v && res is Map) ? res['localPath'] : null;
-        }),
-        onDniFrontPhotoTagChanged: (v) => setState(() => _dniFrontPhotoTag = v),
-        dniBackPhotoUploaded: _dniBackPhotoUploaded, dniBackPhotoTag: _dniBackPhotoTag, dniBackPhotoPath: _dniBackPhotoPath,
-        onDniBackPhotoUploadedChanged: (v, res) => setState(() {
-          _dniBackPhotoUploaded = v;
-          _dniBackPhotoPath = (v && res is Map) ? res['localPath'] : null;
-        }),
-        onDniBackPhotoTagChanged: (v) => setState(() => _dniBackPhotoTag = v),
         onDeliverVehicleChanged: (v) => setState(() => _deliverVehicle = v),
         onBack: _previousStep, 
         onContinue: () {
@@ -471,7 +460,28 @@ class _DeliveryPageState extends State<DeliveryPage> {
         onClientSignatureChanged: (v) => setState(() => _signatureClientPath = v),
         onBack: _previousStep, onContinue: _nextStep,
       );
-      case 10: 
+      case 10: return DeliveryDniStep(
+        taskId: widget.task['id'] ?? 0,
+        dniFrontPhotoUploaded: _dniFrontPhotoUploaded,
+        dniFrontPhotoTag: _dniFrontPhotoTag,
+        dniFrontPhotoPath: _dniFrontPhotoPath,
+        onDniFrontPhotoUploadedChanged: (v, res) => setState(() {
+          _dniFrontPhotoUploaded = v;
+          _dniFrontPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onDniFrontPhotoTagChanged: (v) => setState(() => _dniFrontPhotoTag = v),
+        dniBackPhotoUploaded: _dniBackPhotoUploaded,
+        dniBackPhotoTag: _dniBackPhotoTag,
+        dniBackPhotoPath: _dniBackPhotoPath,
+        onDniBackPhotoUploadedChanged: (v, res) => setState(() {
+          _dniBackPhotoUploaded = v;
+          _dniBackPhotoPath = (v && res is Map) ? res['localPath'] : null;
+        }),
+        onDniBackPhotoTagChanged: (v) => setState(() => _dniBackPhotoTag = v),
+        onBack: _previousStep,
+        onContinue: _nextStep,
+      );
+      case 11: 
         final docsCount = _getSectionCount(['Prueba de bloqueo / desbloqueo efectiva', 'Pasaporte de garantía y mantenimiento', 'Placas de rodaje y tercera placa', 'Manual del conductor', 'Conversión GNV/GLP – Pasaporte de proveedor', 'Certificado de Revisión técnica complementaria vigente']);
         final facilitiesCount = _getSectionCount(['Explicación de talleres', 'Explicación para agendar cita', 'Explicación de activación GNV/GLP']);
         final inspectionCount = _getSectionCount(['Limpieza y estado exterior del vehículo', 'Limpieza y estado interior del vehículo', 'Presión de llantas y niveles de líquidos (aceite, anticongelante, gasolina, otros)']);
@@ -496,6 +506,8 @@ class _DeliveryPageState extends State<DeliveryPage> {
           },
           hasOperarioSignature: _signatureOperarioPath != null,
           hasClientSignature: _signatureClientPath != null,
+          dniFrontUploaded: _dniFrontPhotoUploaded,
+          dniBackUploaded: _dniBackPhotoUploaded,
           onEditTaskInfo: () => setState(() => _currentStep = 0),
           onEditDeliveryInfo: () => setState(() => _currentStep = 1),
           onEditConfirmation: () => setState(() => _currentStep = 2),
@@ -503,10 +515,11 @@ class _DeliveryPageState extends State<DeliveryPage> {
           onEditInventory: () => setState(() => _currentStep = 4),
           onEditInspection: () => setState(() => _currentStep = 7),
           onEditSignatures: () => setState(() => _currentStep = 9),
+          onEditDni: () => setState(() => _currentStep = 10),
           onEditAll: () => setState(() => _currentStep = 0),
           onSend: () => _showConfirmation(context),
         );
-      case 11: return FlowSuccessStep(
+      case 12: return FlowSuccessStep(
         onBackToStart: () => Navigator.pop(context),
         isReschedule: _isAutoReschedule,
       );
@@ -571,7 +584,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
           'signature_client': clientUrl,
         },
       );
-      if (mounted) setState(() => _currentStep = 11);
+      if (mounted) setState(() => _currentStep = 12);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -626,7 +639,7 @@ class _DeliveryPageState extends State<DeliveryPage> {
       if (mounted) {
         setState(() {
           _isAutoReschedule = true;
-          _currentStep = 11;
+          _currentStep = 12;
         });
       }
     } finally {
