@@ -153,9 +153,9 @@ class GarageStep extends StatelessWidget {
     // - if isRoofing is true, we need roofing photo.
     // - if isBasement is true, we need basement photo.
     // - if both are false, we need a general garage photo (we'll use roofing fields for this).
-    bool needRoofingPhoto = isRoofing == true;
+    bool needRoofingPhoto = isRoofing == true && isBasement != true;
     bool needBasementPhoto = isBasement == true;
-    bool needGeneralPhoto = isRoofing == false && isBasement == false;
+    bool needGeneralPhoto = isRoofing == false;
 
     bool basePhotosUploaded = garageFacadeUploaded && 
                              (hasCameras == false || garageCamerasUploaded) &&
@@ -172,12 +172,14 @@ class GarageStep extends StatelessWidget {
                            extraImagesUploaded[2];
     }
 
+    bool hasBasementValue = isRoofing == false ? true : isBasement != null;
+
     bool isContinueEnabled = isGarageAtHome != null &&
                             hasSecurity != null &&
                             hasCameras != null &&
                             accessType != null &&
                             isRoofing != null &&
-                            isBasement != null &&
+                            hasBasementValue &&
                             garageDirection != null &&
                             streetAccessibility != null &&
                             basePhotosUploaded &&
@@ -295,12 +297,14 @@ class GarageStep extends StatelessWidget {
                   currentValue: isRoofing,
                   onChanged: onRoofingChanged,
                 ),
-                const SizedBox(height: 24),
-                FlowYesNoQuestion(
-                  question: 'Cochera se ubica en sótano',
-                  currentValue: isBasement,
-                  onChanged: onBasementChanged,
-                ),
+                if (isRoofing != false) ...[
+                  const SizedBox(height: 24),
+                  FlowYesNoQuestion(
+                    question: 'Cochera se ubica en sótano',
+                    currentValue: isBasement,
+                    onChanged: onBasementChanged,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 
                 if (needRoofingPhoto) ...[
@@ -361,7 +365,9 @@ class GarageStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 FlowPhotoInput(
-                  label: 'Foto de calle / condominio',
+                  label: garageDirection == 'Condominio'
+                      ? 'Foto del condominio'
+                      : (garageDirection == 'Calle' ? 'Foto de la calle' : 'Foto de calle / condominio'),
                   taskId: taskId,
                   photoLabel: 'cochera_direccion',
                   previewFileName: 'direccion.png',
@@ -382,7 +388,9 @@ class GarageStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 FlowPhotoInput(
-                  label: 'Foto accesibilidad de la calle',
+                  label: streetAccessibility == 'Calle con reja'
+                      ? 'Foto de la reja / acceso'
+                      : (streetAccessibility == 'Libre acceso' ? 'Foto del libre acceso a la calle' : 'Foto accesibilidad de la calle'),
                   taskId: taskId,
                   photoLabel: 'accesibilidad_calle',
                   previewFileName: 'accesibilidad.png',

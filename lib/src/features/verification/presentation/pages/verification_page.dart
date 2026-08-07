@@ -892,7 +892,15 @@ class _VerificationPageState extends State<VerificationPage> {
           onGarageAtHomeChanged: (val) {
             setState(() {
               _isGarageAtHome = val;
-              if (val == true) _isCocheraFuera = false;
+              if (val == true) {
+                _isCocheraFuera = false;
+                for (int i = 0; i < 3; i++) {
+                  _extraGarageImagesUploaded[i] = false;
+                  _extraGarageImagesTags[i] = null;
+                  _extraGarageImagesPaths[i] = null;
+                  _photoIds.remove('fachada_calle_extra_${i + 1}');
+                }
+              }
               if (val == false) _isCocheraFuera = true;
             });
           },
@@ -910,7 +918,15 @@ class _VerificationPageState extends State<VerificationPage> {
           }),
           onFacadeTagChanged: (val) => setState(() => _garageFacadeTag = val),
           onSecurityChanged: (val) => setState(() => _hasSecurity = val),
-          onCamerasChanged: (val) => setState(() => _hasCameras = val),
+          onCamerasChanged: (val) => setState(() {
+            _hasCameras = val;
+            if (val == false) {
+              _garageCamerasUploaded = false;
+              _garageCamerasPath = null;
+              _garageCamerasTag = null;
+              _photoIds.remove('camara_vigilancia');
+            }
+          }),
           onCamerasUploadedChanged: (val, res) => setState(() {
             _garageCamerasUploaded = val;
             if (val) _garageCamerasPath = res?['localPath'];
@@ -923,7 +939,16 @@ class _VerificationPageState extends State<VerificationPage> {
           }),
           onCamerasTagChanged: (val) => setState(() => _garageCamerasTag = val),
           onAccessTypeChanged: (val) => setState(() => _accessType = val),
-          onRoofingChanged: (val) => setState(() => _isRoofing = val),
+          onRoofingChanged: (val) => setState(() {
+            _isRoofing = val;
+            if (val == false) {
+              _isBasement = false;
+              _photoIds.remove('cochera_sotano');
+              _garageBasementUploaded = false;
+              _garageBasementPath = null;
+              _garageBasementTag = null;
+            }
+          }),
           onRoofingUploadedChanged: (val, res) => setState(() {
             _garageRoofingUploaded = val;
             if (val) _garageRoofingPath = res?['localPath'];
@@ -935,7 +960,12 @@ class _VerificationPageState extends State<VerificationPage> {
             }
           }),
           onRoofingTagChanged: (val) => setState(() => _garageRoofingTag = val),
-          onBasementChanged: (val) => setState(() => _isBasement = val),
+          onBasementChanged: (val) => setState(() {
+            _isBasement = val;
+            if (val == true) {
+              _isRoofing = true;
+            }
+          }),
           onBasementUploadedChanged: (val, res) => setState(() {
             _garageBasementUploaded = val;
             if (val) _garageBasementPath = res?['localPath'];
