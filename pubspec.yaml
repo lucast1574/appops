@@ -1,8 +1,8 @@
 name: leasy_ops_mobile
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 
-version: 0.9.0+2
+version: 0.9.0+6
 
 environment:
   sdk: ^3.9.2
@@ -48,7 +48,6 @@ dev_dependencies:
   mocktail: ^1.0.4
   bloc_test: ^10.0.0
   flutter_launcher_icons: ^0.13.1
-
 
 flutter_launcher_icons:
   android: true

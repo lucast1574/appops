@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.leasy.ops.leasy_ops_mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -27,7 +27,7 @@ android {
         
         // Es mejor poner 21 directamente para asegurar que el ZTE no se queje
         minSdk = flutter.minSdkVersion 
-        targetSdk = 35
+        targetSdk = 36
         
         versionCode = flutter.versionCode
         versionName = flutter.versionName
