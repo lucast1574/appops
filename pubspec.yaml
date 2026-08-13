@@ -2,7 +2,7 @@ name: leasy_ops_mobile
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 0.10.0+1
+version: 0.10.0+7
 
 environment:
   sdk: ^3.9.2
