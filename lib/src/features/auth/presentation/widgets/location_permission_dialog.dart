@@ -13,8 +13,8 @@ import 'package:google_fonts/google_fonts.dart';
 class LocationPermissionDialog {
   const LocationPermissionDialog._();
 
-  /// Shows the mandatory dialog. Always returns `true` because the only
-  /// available action is the primary CTA.
+  /// Shows the prominent disclosure modal for background location.
+  /// Returns `true` if the user clicked "Aceptar y continuar", or `false` if "No ahora".
   static Future<bool> show(BuildContext context) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
@@ -27,7 +27,7 @@ class LocationPermissionDialog {
         child: _DialogContent(),
       ),
     );
-    return result ?? true;
+    return result ?? false;
   }
 }
 
@@ -38,7 +38,7 @@ class _DialogContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.90,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -58,7 +58,7 @@ class _DialogContent extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Icon
             Container(
@@ -74,11 +74,11 @@ class _DialogContent extends StatelessWidget {
                 size: 32,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Title
             Text(
-              'Ubicación requerida',
+              'Ubicación en segundo plano',
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -86,29 +86,66 @@ class _DialogContent extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Description
-            Text(
-              'LeasyOps necesita acceder a tu ubicación en todo '
-              'momento para funcionar correctamente.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                height: 1.5,
-                color: const Color(0xFF668093),
+            // Prominent Disclosure Box (Required by Google Play Policy)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
               ),
-              textAlign: TextAlign.center,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Color(0xFF1D4ED8),
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Aviso importante de privacidad',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E40AF),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'LeasyOps recopila datos de ubicación para permitir el '
+                    'seguimiento de operativas de campo, asignación de tareas '
+                    'en tiempo real y verificación de vehículos, incluso cuando '
+                    'la aplicación está cerrada o no está en uso.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF1E3A8A),
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Step-by-step instructions (platform-aware)
             _buildStepsCard(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Highlighted target option
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFF4FA4B5).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
@@ -122,13 +159,13 @@ class _DialogContent extends StatelessWidget {
                   const Icon(
                     Icons.radio_button_checked,
                     color: Color(0xFF4FA4B5),
-                    size: 22,
+                    size: 20,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     Platform.isIOS ? 'Siempre' : 'Permitir todo el tiempo',
                     style: GoogleFonts.inter(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF002B4A),
                     ),
@@ -136,12 +173,12 @@ class _DialogContent extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Primary CTA — the ONLY way out
+            // Primary Consent CTA — Accept & Continue
             SizedBox(
               width: double.infinity,
-              height: 54,
+              height: 52,
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
@@ -153,10 +190,30 @@ class _DialogContent extends StatelessWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Ir a Configuración',
+                  'Aceptar y continuar',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Secondary CTA — Decline / Not now
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF64748B),
+                ),
+                child: Text(
+                  'No ahora',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
